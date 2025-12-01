@@ -124,6 +124,11 @@ export const branchService = {
     return response.data
   },
 
+  byCollegeCode: async (collegeCode: string): Promise<Branch[]> => {
+    const response = await api.get(`/branches/by-code/${collegeCode}/`)
+    return response.data
+  },
+
   cutoff: async (uniqueKey: string) => {
     const response = await api.get(`/branches/${uniqueKey}/cutoff/`)
     return response.data

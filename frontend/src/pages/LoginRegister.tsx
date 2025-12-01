@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { collegeService } from '../services/api'
+import { branchService } from '../services/api'
 import type { Branch } from '../types'
 
 const LoginRegister = () => {
@@ -33,22 +33,29 @@ const LoginRegister = () => {
   }
 
   const handleCollegeCodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const collegeCode = e.target.value
+    const collegeCode = e.target.value.trim()
     setFormData(prev => ({ ...prev, college_code: collegeCode }))
+    setError('')
     
-    if (collegeCode.length >= 2) {
-      try {
-        const colleges = await collegeService.list()
-        const college = colleges.find(c => c.college_code === collegeCode)
-        if (college) {
-          const detail = await collegeService.detail(college.college_id)
-          setBranches(detail.branches || [])
-        } else {
-          setBranches([])
-        }
-      } catch (err) {
-        console.error('Error fetching branches:', err)
-      }
+    if (collegeCode.length < 2) {
+      setBranches([])
+      setFormData(prev => ({ ...prev, unique_key: '' }))
+      return
+    }
+
+    try {
+      const branchList = await branchService.byCollegeCode(collegeCode)
+      setBranches(branchList)
+      setFormData(prev => ({
+        ...prev,
+        unique_key: branchList.some(branch => branch.unique_key === prev.unique_key)
+          ? prev.unique_key
+          : ''
+      }))
+    } catch (err) {
+      console.error('Error fetching branches:', err)
+      setBranches([])
+      setFormData(prev => ({ ...prev, unique_key: '' }))
     }
   }
 
@@ -271,7 +278,7 @@ const LoginRegister = () => {
                       required
                       value={formData.college_code}
                       onChange={handleCollegeCodeChange}
-                      placeholder="e.g., RVU"
+                      placeholder="e.g., E001"
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>

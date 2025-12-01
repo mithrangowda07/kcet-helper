@@ -42,6 +42,22 @@ def branch_detail(request, unique_key):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+def branches_by_college_code(request, college_code):
+    """
+    Return every branch for the supplied college_code. This is intended for
+    the studying-student registration flow where users pick the college
+    first (by code) and then need the corresponding branch list.
+    """
+    branches = Branch.objects.select_related('college', 'cluster').filter(
+        college__college_code=college_code
+    ).order_by('branch_name')
+    
+    serializer = BranchSerializer(branches, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def college_cutoff(request, college_id):
     try:
         college = College.objects.get(college_id=college_id)
@@ -132,28 +148,34 @@ def branch_cutoff(request, unique_key):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def search(request):
+    """
+    Unified search endpoint for colleges and branches. When no query is
+    provided we return the complete branch catalogue (with related college
+    and cluster info) so the UI can bootstrap its search page without
+    depending on the cutoff table.
+    """
     query = request.GET.get('query', '').strip()
     
-    if not query:
-        return Response({'error': 'Query parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+    colleges_qs = College.objects.all()
+    branches_qs = Branch.objects.select_related('college', 'cluster')
     
-    # Search in colleges
-    colleges = College.objects.filter(
-        Q(college_name__icontains=query) |
-        Q(college_code__icontains=query) |
-        Q(location__icontains=query)
-    )
+    if query:
+        college_filter = (
+            Q(college_name__icontains=query) |
+            Q(college_code__icontains=query) |
+            Q(location__icontains=query)
+        )
+        branch_filter = (
+            Q(branch_name__icontains=query) |
+            Q(college__college_name__icontains=query) |
+            Q(college__college_code__icontains=query) |
+            Q(college__location__icontains=query)
+        )
+        colleges_qs = colleges_qs.filter(college_filter)
+        branches_qs = branches_qs.filter(branch_filter)
     
-    # Search in branches
-    branches = Branch.objects.filter(
-        Q(branch_name__icontains=query) |
-        Q(college__college_name__icontains=query) |
-        Q(college__college_code__icontains=query) |
-        Q(college__location__icontains=query)
-    ).select_related('college', 'cluster')
-    
-    college_serializer = CollegeSerializer(colleges, many=True)
-    branch_serializer = BranchSerializer(branches, many=True)
+    college_serializer = CollegeSerializer(colleges_qs, many=True)
+    branch_serializer = BranchSerializer(branches_qs, many=True)
     
     return Response({
         'colleges': college_serializer.data,

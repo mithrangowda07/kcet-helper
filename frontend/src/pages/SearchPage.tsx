@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collegeService } from '../services/api'
 import type { College, Branch } from '../types'
@@ -11,13 +11,10 @@ const SearchPage = () => {
   })
   const [loading, setLoading] = useState(false)
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!query.trim()) return
-
+  const fetchResults = async (searchQuery: string) => {
     setLoading(true)
     try {
-      const data = await collegeService.search(query)
+      const data = await collegeService.search(searchQuery)
       setResults(data)
     } catch (err) {
       console.error('Error searching:', err)
@@ -25,6 +22,16 @@ const SearchPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    // On initial load, show all available colleges/branches
+    fetchResults('')
+  }, [])
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await fetchResults(query.trim())
   }
 
   return (

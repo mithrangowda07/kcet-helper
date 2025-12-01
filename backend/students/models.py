@@ -58,8 +58,9 @@ class Student(AbstractBaseUser, PermissionsMixin):
     
     @password.setter
     def password(self, value):
-        from django.contrib.auth.hashers import make_password
-        self.hashed_password = make_password(value) if value else value
+        # Let Django's built-in helpers (set_password) handle hashing; here we
+        # simply mirror whatever value AbstractBaseUser assigns.
+        self.hashed_password = value
 
     def save(self, *args, **kwargs):
         # Generate student_user_id if not set
