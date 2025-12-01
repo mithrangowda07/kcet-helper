@@ -1,0 +1,91 @@
+from django.db import models
+from django.db.models import Max
+from django.utils import timezone
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from colleges.models import Branch
+
+
+class StudentCounter(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    class Meta:
+        db_table = 'student_counter'
+        managed = True
+
+
+class Student(AbstractBaseUser, PermissionsMixin):
+    STUDENT_TYPE_CHOICES = [
+        ('counselling', 'Counselling'),
+        ('studying', 'Studying'),
+    ]
+
+    student_user_id = models.CharField(max_length=20, primary_key=True)
+    type_of_student = models.CharField(max_length=20, choices=STUDENT_TYPE_CHOICES)
+    unique_key = models.ForeignKey(
+        Branch, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        db_column='unique_key'
+    )
+    year_of_starting = models.IntegerField(null=True, blank=True)
+    college_code = models.CharField(max_length=10, null=True, blank=True)
+    phone_number = models.CharField(max_length=15)
+    email_id = models.EmailField(unique=True, max_length=100)
+    kcet_rank = models.IntegerField(null=True, blank=True)
+    hashed_password = models.CharField(max_length=255, db_column='hashed_password')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    last_login = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    profile_completed = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email_id'
+    REQUIRED_FIELDS = ['phone_number', 'type_of_student']
+    
+    class Meta:
+        db_table = 'student'
+        managed = True
+    
+    # Add id property for compatibility with JWT and other Django features
+    @property
+    def id(self):
+        return self.student_user_id
+    
+    @property
+    def password(self):
+        return self.hashed_password
+    
+    @password.setter
+    def password(self, value):
+        from django.contrib.auth.hashers import make_password
+        self.hashed_password = make_password(value) if value else value
+
+    def save(self, *args, **kwargs):
+        # Generate student_user_id if not set
+        if not self.student_user_id:
+            self.student_user_id = self._generate_student_id()
+        
+        super().save(*args, **kwargs)
+
+    def _generate_student_id(self):
+        """Generate student_user_id based on type_of_student"""
+        # Insert into student_counter to get next ID
+        counter = StudentCounter.objects.create()
+        next_id = counter.id
+        
+        if self.type_of_student == 'counselling':
+            # Format: YYYYNNNNNN
+            current_year = timezone.now().year
+            return f"{current_year}{next_id:06d}"
+        elif self.type_of_student == 'studying':
+            # Format: <college_code><NNNNNN>
+            if not self.college_code:
+                raise ValueError("college_code is required for studying students")
+            return f"{self.college_code}{next_id:06d}"
+        else:
+            raise ValueError(f"Invalid type_of_student: {self.type_of_student}")
+
+    def __str__(self):
+        return f"{self.student_user_id} - {self.email_id}"
+
