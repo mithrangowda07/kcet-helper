@@ -1,4 +1,4 @@
-from colleges.models import Branch, Cutoff
+from colleges.models import Branch, Cutoff, Category
 from django.db.models import Q
 
 
@@ -20,12 +20,24 @@ def get_recommendations(kcet_rank, category=None, year='2025', round='r1'):
     # Get all cutoffs for the specified year and round
     cutoffs = Cutoff.objects.select_related('unique_key__college', 'unique_key__cluster').all()
     
+    # If category is provided, get fall_back categories
+    valid_categories = set()
+    if category:
+        try:
+            cat_obj = Category.objects.get(category=category)
+            # Parse fall_back: "1R,1G,GM" -> ["1R", "1G", "GM"]
+            fall_back_list = [c.strip() for c in cat_obj.fall_back.split(',')]
+            valid_categories = set(fall_back_list)
+        except Category.DoesNotExist:
+            valid_categories = {category}
+    
     recommendations = []
     
     for cutoff in cutoffs:
-        # Filter by category if provided
-        if category and cutoff.category != category:
-            continue
+        # Filter by category if provided (including fall_back)
+        if category:
+            if cutoff.category not in valid_categories:
+                continue
         
         # Get the cutoff value for the specified year and round
         cutoff_value = getattr(cutoff, cutoff_field, None)

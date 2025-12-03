@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     college_list, college_detail, branch_detail,
-    college_cutoff, branch_cutoff, search, branches_by_college_code
+    college_cutoff, branch_cutoff, search, branches_by_college_code, category_list
 )
 
 urlpatterns = [
@@ -9,6 +9,7 @@ urlpatterns = [
     path('<str:college_id>/', college_detail, name='college-detail'),
     path('<str:college_id>/cutoff/', college_cutoff, name='college-cutoff'),
     path('search/', search, name='search'),
+    path('categories/', category_list, name='category-list'),
 ]
 
 # Branch URLs for separate routing

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { counsellingService, collegeService } from '../services/api'
-import type { Recommendation, CounsellingChoice } from '../types'
+import { counsellingService, categoryService } from '../services/api'
+import type { Recommendation, CounsellingChoice, Category } from '../types'
 
 const CounsellingDashboard = () => {
   const { user } = useAuth()
@@ -11,12 +11,19 @@ const CounsellingDashboard = () => {
   const [loading, setLoading] = useState(false)
   const [showRecommendations, setShowRecommendations] = useState(false)
   const [category, setCategory] = useState('')
+  const [categories, setCategories] = useState<Category[]>([])
   const [year, setYear] = useState('2025')
   const [round, setRound] = useState('r1')
+  const [draggedChoice, setDraggedChoice] = useState<number | null>(null)
 
   useEffect(() => {
     loadChoices()
-  }, [])
+    loadCategories()
+    // Set default category from user
+    if (user?.category) {
+      setCategory(user.category)
+    }
+  }, [user])
 
   const loadChoices = async () => {
     try {
@@ -25,6 +32,36 @@ const CounsellingDashboard = () => {
     } catch (err) {
       console.error('Error loading choices:', err)
     }
+  }
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoryService.list()
+      setCategories(data)
+    } catch (err) {
+      console.error('Error loading categories:', err)
+    }
+  }
+
+  const handleReorder = async (choiceId: number, newOrder: number) => {
+    try {
+      await counsellingService.choices.update(choiceId, newOrder)
+      await loadChoices()
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error reordering choice')
+    }
+  }
+
+  const moveChoice = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return
+    if (direction === 'down' && index === choices.length - 1) return
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1
+    const choice = choices[index]
+    const targetChoice = choices[newIndex]
+
+    handleReorder(choice.choice_id, targetChoice.order_of_list)
+    handleReorder(targetChoice.choice_id, choice.order_of_list)
   }
 
   const loadRecommendations = async () => {
@@ -112,11 +149,42 @@ const CounsellingDashboard = () => {
             <p className="text-gray-500">No choices saved yet</p>
           ) : (
             <div className="space-y-2">
-              {choices.map(choice => (
-                <div key={choice.choice_id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <div>
-                    <span className="font-semibold">{choice.order_of_list}.</span>{' '}
-                    {choice.unique_key_data?.college.college_name} - {choice.unique_key_data?.branch_name}
+              {choices.map((choice, index) => (
+                <div 
+                  key={choice.choice_id} 
+                  className="flex justify-between items-center p-2 bg-gray-50 rounded"
+                  draggable
+                  onDragStart={() => setDraggedChoice(choice.choice_id)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    if (draggedChoice && draggedChoice !== choice.choice_id) {
+                      handleReorder(draggedChoice, choice.order_of_list)
+                    }
+                    setDraggedChoice(null)
+                  }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className="flex flex-col">
+                      <button
+                        onClick={() => moveChoice(index, 'up')}
+                        disabled={index === 0}
+                        className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => moveChoice(index, 'down')}
+                        disabled={index === choices.length - 1}
+                        className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                    <div>
+                      <span className="font-semibold">{choice.order_of_list}.</span>{' '}
+                      {choice.unique_key_data?.college.college_name} - {choice.unique_key_data?.branch_name}
+                    </div>
                   </div>
                   <button
                     onClick={() => removeChoice(choice.choice_id)}
@@ -141,10 +209,11 @@ const CounsellingDashboard = () => {
               className="border rounded px-3 py-1"
             >
               <option value="">All Categories</option>
-              <option value="GM">GM</option>
-              <option value="SC">SC</option>
-              <option value="ST">ST</option>
-              <option value="OBC">OBC</option>
+              {categories.map(cat => (
+                <option key={cat.category} value={cat.category}>
+                  {cat.category} ({cat.fall_back})
+                </option>
+              ))}
             </select>
             <select
               value={year}

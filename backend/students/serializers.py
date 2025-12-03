@@ -1,4 +1,5 @@
 from rest_framework import serializers
+import re
 from .models import Student
 from colleges.serializers import BranchSerializer
 
@@ -9,7 +10,7 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = [
-            'student_user_id', 'type_of_student', 'unique_key', 'unique_key_data',
+            'student_user_id', 'type_of_student', 'name', 'category', 'unique_key', 'unique_key_data',
             'year_of_starting', 'college_code', 'phone_number', 'email_id',
             'kcet_rank', 'is_active', 'profile_completed', 'created_at', 'last_login'
         ]
@@ -23,9 +24,28 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = [
-            'type_of_student', 'email_id', 'phone_number', 'password', 'password_confirm',
+            'type_of_student', 'name', 'category', 'email_id', 'phone_number', 'password', 'password_confirm',
             'kcet_rank', 'college_code', 'unique_key', 'year_of_starting'
         ]
+
+    def validate_password(self, value):
+        """Validate password strength"""
+        if len(value) < 8:
+            raise serializers.ValidationError('Password must be at least 8 characters long')
+        
+        if not re.search(r'[A-Z]', value):
+            raise serializers.ValidationError('Password must contain at least one uppercase letter')
+        
+        if not re.search(r'[a-z]', value):
+            raise serializers.ValidationError('Password must contain at least one lowercase letter')
+        
+        if not re.search(r'[0-9]', value):
+            raise serializers.ValidationError('Password must contain at least one number')
+        
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+            raise serializers.ValidationError('Password must contain at least one special character')
+        
+        return value
 
     def validate(self, attrs):
         if 'password' in attrs and 'password_confirm' in attrs:

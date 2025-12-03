@@ -21,6 +21,8 @@ class Student(AbstractBaseUser, PermissionsMixin):
 
     student_user_id = models.CharField(max_length=20, primary_key=True)
     type_of_student = models.CharField(max_length=20, choices=STUDENT_TYPE_CHOICES)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    category = models.CharField(max_length=10, null=True, blank=True)
     unique_key = models.ForeignKey(
         Branch, 
         on_delete=models.SET_NULL, 

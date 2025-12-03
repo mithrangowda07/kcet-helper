@@ -1,6 +1,8 @@
 export interface Student {
   student_user_id: string
   type_of_student: 'counselling' | 'studying'
+  name?: string
+  category?: string
   email_id: string
   phone_number: string
   kcet_rank?: number
@@ -8,6 +10,11 @@ export interface Student {
   unique_key?: string
   year_of_starting?: number
   profile_completed: boolean
+}
+
+export interface Category {
+  category: string
+  fall_back: string
 }
 
 export interface College {
@@ -57,6 +64,7 @@ export interface CounsellingChoice {
 export interface Review {
   review_id: number
   student_user_id: string
+  student_user_id_data?: Student
   unique_key: string
   teaching_rating: number
   courses_rating: number
@@ -70,6 +78,16 @@ export interface Review {
   placement_rating: number
   preferred_day?: string
   preferred_time?: string
+  teaching_review?: string
+  courses_review?: string
+  library_review?: string
+  research_review?: string
+  internship_review?: string
+  infrastructure_review?: string
+  administration_review?: string
+  extracurricular_review?: string
+  safety_review?: string
+  placement_review?: string
 }
 
 export interface Meeting {

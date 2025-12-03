@@ -8,6 +8,7 @@ import StudyingDashboard from './pages/StudyingDashboard'
 import CollegeDetailPage from './pages/CollegeDetailPage'
 import SearchPage from './pages/SearchPage'
 import MeetingPage from './pages/MeetingPage'
+import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -42,6 +43,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MeetingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               }
             />

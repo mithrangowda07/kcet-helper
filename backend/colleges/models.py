@@ -69,6 +69,18 @@ class Cutoff(models.Model):
 
 # Model for excel_import table (if it exists in your database)
 # Mark as unmanaged so Django doesn't try to create/modify it
+class Category(models.Model):
+    category = models.CharField(max_length=10, primary_key=True)
+    fall_back = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'category'
+        managed = True
+
+    def __str__(self):
+        return f"{self.category} - {self.fall_back}"
+
+
 class ExcelImport(models.Model):
     """
     Placeholder model for excel_import table.

@@ -1,13 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { branchService } from '../services/api'
-import type { Branch } from '../types'
+import { branchService, categoryService } from '../services/api'
+import type { Branch, Category } from '../types'
 
 const LoginRegister = () => {
   const [isLogin, setIsLogin] = useState(true)
   const [studentType, setStudentType] = useState<'counselling' | 'studying'>('counselling')
+  const { user, login, register } = useAuth()
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
+    name: '',
+    category: '',
     email_id: '',
     phone_number: '',
     password: '',
@@ -18,13 +22,28 @@ const LoginRegister = () => {
     year_of_starting: '',
   })
   const [branches, setBranches] = useState<Branch[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
 
-  const { login, register } = useAuth()
-  const navigate = useNavigate()
+  useEffect(() => {
+    loadCategories()
+    // Set default category from user if logged in
+    if (isLogin && user?.category) {
+      setFormData(prev => ({ ...prev, category: user.category || '' }))
+    }
+  }, [isLogin, user])
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoryService.list()
+      setCategories(data)
+    } catch (err) {
+      console.error('Error loading categories:', err)
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -67,10 +86,12 @@ const LoginRegister = () => {
     try {
       if (isLogin) {
         await login(formData.email_id, formData.password)
-        navigate('/dashboard/counselling')
+        navigate(user?.type_of_student === 'counselling' ? '/dashboard/counselling' : '/dashboard/studying')
       } else {
         const registerData: any = {
           type_of_student: studentType,
+          name: formData.name,
+          category: formData.category || null,
           email_id: formData.email_id,
           phone_number: formData.phone_number,
           password: formData.password,
@@ -154,6 +175,33 @@ const LoginRegister = () => {
           {!isLogin && (
             <>
               <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">Select Category</option>
+                  {categories.map(cat => (
+                    <option key={cat.category} value={cat.category}>
+                      {cat.category} ({cat.fall_back})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
                 <input
                   type="email"
@@ -176,6 +224,25 @@ const LoginRegister = () => {
                 />
               </div>
             </>
+          )}
+
+          {isLogin && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Category (Optional)</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">Use Default ({user?.category || 'None'})</option>
+                {categories.map(cat => (
+                  <option key={cat.category} value={cat.category}>
+                    {cat.category} ({cat.fall_back})
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
 
           {isLogin && (
@@ -220,6 +287,9 @@ const LoginRegister = () => {
                 )}
               </button>
             </div>
+            {!isLogin && formData.password && (
+              <PasswordStrengthIndicator password={formData.password} />
+            )}
           </div>
 
           {!isLogin && (
@@ -334,6 +404,8 @@ const LoginRegister = () => {
                 setIsLogin(!isLogin)
                 setError('')
                 setFormData({
+                  name: '',
+                  category: '',
                   email_id: '',
                   phone_number: '',
                   password: '',
@@ -353,6 +425,46 @@ const LoginRegister = () => {
       </div>
     </div>
   )
+}
+
+const PasswordStrengthIndicator = ({ password }: { password: string }) => {
+  const { strength, checks } = getPasswordStrength(password)
+  const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong']
+  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500']
+
+  return (
+    <div className="mt-2">
+      <div className="flex items-center space-x-2 mb-1">
+        <div className="flex-1 bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all ${strengthColors[strength - 1] || 'bg-gray-400'}`}
+            style={{ width: `${(strength / 5) * 100}%` }}
+          />
+        </div>
+        <span className="text-xs text-gray-600">{strengthLabels[strength - 1] || 'Very Weak'}</span>
+      </div>
+      <div className="text-xs text-gray-600 space-y-1">
+        <div className={checks.length ? 'text-green-600' : 'text-gray-400'}>✓ At least 8 characters</div>
+        <div className={checks.upper ? 'text-green-600' : 'text-gray-400'}>✓ One uppercase letter</div>
+        <div className={checks.lower ? 'text-green-600' : 'text-gray-400'}>✓ One lowercase letter</div>
+        <div className={checks.number ? 'text-green-600' : 'text-gray-400'}>✓ One number</div>
+        <div className={checks.special ? 'text-green-600' : 'text-gray-400'}>✓ One special character</div>
+      </div>
+    </div>
+  )
+}
+
+function getPasswordStrength(password: string) {
+  let strength = 0
+  const checks = {
+    length: password.length >= 8,
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  }
+  strength = Object.values(checks).filter(Boolean).length
+  return { strength, checks }
 }
 
 export default LoginRegister

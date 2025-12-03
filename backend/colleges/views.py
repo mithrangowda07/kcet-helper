@@ -3,10 +3,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
-from .models import College, Branch, Cutoff
+from .models import College, Branch, Cutoff, Category
 from .serializers import (
     CollegeSerializer, CollegeDetailSerializer,
-    BranchSerializer, CutoffSerializer
+    BranchSerializer, CutoffSerializer, CategorySerializer
 )
 
 
@@ -110,12 +110,30 @@ def branch_cutoff(request, unique_key):
         branch = Branch.objects.get(unique_key=unique_key)
         cutoffs = Cutoff.objects.filter(unique_key=branch)
         
+        # Get category filter from query params (optional)
+        category_filter = request.GET.get('category', None)
+        valid_categories = set()
+        
+        if category_filter:
+            try:
+                from .models import Category
+                cat_obj = Category.objects.get(category=category_filter)
+                # Parse fall_back: "1R,1G,GM" -> ["1R", "1G", "GM"]
+                fall_back_list = [c.strip() for c in cat_obj.fall_back.split(',')]
+                valid_categories = set(fall_back_list)
+            except Category.DoesNotExist:
+                valid_categories = {category_filter}
+        
         cutoff_data = {
             'branch': BranchSerializer(branch).data,
             'categories': {}
         }
         
         for cutoff in cutoffs:
+            # Filter by category if provided
+            if category_filter and cutoff.category not in valid_categories:
+                continue
+            
             category_data = {
                 '2022': {
                     'r1': cutoff.cutoff_2022_r1,
@@ -181,4 +199,13 @@ def search(request):
         'colleges': college_serializer.data,
         'branches': branch_serializer.data,
     })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def category_list(request):
+    """Get all categories"""
+    categories = Category.objects.all().order_by('category')
+    serializer = CategorySerializer(categories, many=True)
+    return Response(serializer.data)
 

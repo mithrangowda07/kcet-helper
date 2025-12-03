@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { reviewService, meetingService } from '../services/api'
+import StarRating from '../components/StarRating'
 import type { Review, Meeting } from '../types'
 
 const StudyingDashboard = () => {
@@ -169,22 +170,17 @@ const StudyingDashboard = () => {
           <form onSubmit={handleReviewSubmit} className="space-y-6">
             {ratingFields.map(field => (
               <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {field.label} (1-5)
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {field.label}
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={reviewFormData[`${field.key}_rating` as keyof typeof reviewFormData] as number}
-                  onChange={(e) =>
+                <StarRating
+                  rating={reviewFormData[`${field.key}_rating` as keyof typeof reviewFormData] as number}
+                  onRatingChange={(rating) =>
                     setReviewFormData(prev => ({
                       ...prev,
-                      [`${field.key}_rating`]: parseInt(e.target.value),
+                      [`${field.key}_rating`]: rating,
                     }))
                   }
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
                 />
                 <textarea
                   placeholder={`${field.label} review...`}

@@ -90,3 +90,16 @@ def me(request):
     serializer = StudentSerializer(student)
     return Response(serializer.data)
 
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    """Update student profile"""
+    student = request.user
+    serializer = StudentSerializer(student, data=request.data, partial=True)
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

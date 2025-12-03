@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Student, Recommendation, CounsellingChoice, Review, Meeting, College, Branch } from '../types'
+import type { Student, Recommendation, CounsellingChoice, Review, Meeting, College, Branch, Category } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
@@ -87,6 +87,11 @@ export const authService = {
     return response.data
   },
 
+  updateProfile: async (data: Partial<Student>): Promise<Student> => {
+    const response = await api.patch('/auth/profile/', data)
+    return response.data
+  },
+
   refresh: async (refreshToken: string) => {
     const response = await api.post('/auth/refresh/', { refresh: refreshToken })
     return response.data
@@ -129,8 +134,9 @@ export const branchService = {
     return response.data
   },
 
-  cutoff: async (uniqueKey: string) => {
-    const response = await api.get(`/branches/${uniqueKey}/cutoff/`)
+  cutoff: async (uniqueKey: string, category?: string) => {
+    const params = category ? { category } : {}
+    const response = await api.get(`/branches/${uniqueKey}/cutoff/`, { params })
     return response.data
   },
 }
@@ -226,6 +232,13 @@ export const meetingService = {
 
   branchStudents: async (uniqueKey: string) => {
     const response = await api.get(`/meetings/branches/${uniqueKey}/students/`)
+    return response.data
+  },
+}
+
+export const categoryService = {
+  list: async (): Promise<Category[]> => {
+    const response = await api.get('/colleges/categories/')
     return response.data
   },
 }

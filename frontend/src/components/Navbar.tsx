@@ -47,13 +47,21 @@ const Navbar = () => {
                   Meetings
                 </Link>
               )}
+              {isAuthenticated && (
+                <Link
+                  to="/profile"
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Profile
+                </Link>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
                 <span className="text-gray-700 text-sm">
-                  {user?.email_id}
+                  {user?.name || user?.email_id}
                 </span>
                 <button
                   onClick={handleLogout}
