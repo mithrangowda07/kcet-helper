@@ -4,10 +4,12 @@ import { authService, categoryService } from '../services/api'
 import type { Category } from '../types'
 
 const ProfilePage = () => {
-  const { user, login } = useAuth()
+  const { user } = useAuth()
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -17,18 +19,30 @@ const ProfilePage = () => {
     kcet_rank: user?.kcet_rank?.toString() || '',
   })
 
+  // If user loads after first render, sync form once it’s available
   useEffect(() => {
+    if (!user) return
+    setFormData({
+      name: user.name || '',
+      category: user.category || '',
+      email_id: user.email_id || '',
+      phone_number: user.phone_number || '',
+      kcet_rank: user.kcet_rank != null ? String(user.kcet_rank) : '',
+    })
+  }, [user])
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await categoryService.list() // /api/colleges/categories/
+        setCategories(Array.isArray(data) ? data : [])
+      } catch (err) {
+        console.error('Error loading categories:', err)
+        setCategories([])
+      }
+    }
     loadCategories()
   }, [])
-
-  const loadCategories = async () => {
-    try {
-      const data = await categoryService.list()
-      setCategories(data)
-    } catch (err) {
-      console.error('Error loading categories:', err)
-    }
-  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -50,22 +64,25 @@ const ProfilePage = () => {
       }
 
       if (user?.type_of_student === 'counselling') {
-        updateData.kcet_rank = formData.kcet_rank ? parseInt(formData.kcet_rank) : null
+        updateData.kcet_rank =
+          formData.kcet_rank !== '' && formData.kcet_rank != null
+            ? parseInt(formData.kcet_rank, 10)
+            : null
       }
 
       const updatedUser = await authService.updateProfile(updateData)
-      
-      // Update auth context
+
+      // Keep localStorage user fresh so Navbar / other places see it
       const storedUser = localStorage.getItem('user')
       if (storedUser) {
         const userData = JSON.parse(storedUser)
         const newUserData = { ...userData, ...updatedUser }
         localStorage.setItem('user', JSON.stringify(newUserData))
       }
-      
+
       setSuccess('Profile updated successfully!')
-      // Reload page to update context
-      setTimeout(() => window.location.reload(), 1000)
+      // Reload to refresh AuthContext from localStorage
+      setTimeout(() => window.location.reload(), 800)
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || 'Error updating profile')
     } finally {
@@ -174,4 +191,3 @@ const ProfilePage = () => {
 }
 
 export default ProfilePage
-

@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { branchService, categoryService } from '../services/api'
-import type { Branch, Category } from '../types'
+import { branchService } from '../services/api'
+import type { Branch } from '../types'
 
 const LoginRegister = () => {
   const [isLogin, setIsLogin] = useState(true)
   const [studentType, setStudentType] = useState<'counselling' | 'studying'>('counselling')
   const { user, login, register } = useAuth()
   const navigate = useNavigate()
+
   const [formData, setFormData] = useState({
     name: '',
-    category: '',
     email_id: '',
     phone_number: '',
     password: '',
@@ -21,29 +21,12 @@ const LoginRegister = () => {
     unique_key: '',
     year_of_starting: '',
   })
+
   const [branches, setBranches] = useState<Branch[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
-
-  useEffect(() => {
-    loadCategories()
-    // Set default category from user if logged in
-    if (isLogin && user?.category) {
-      setFormData(prev => ({ ...prev, category: user.category || '' }))
-    }
-  }, [isLogin, user])
-
-  const loadCategories = async () => {
-    try {
-      const data = await categoryService.list()
-      setCategories(data)
-    } catch (err) {
-      console.error('Error loading categories:', err)
-    }
-  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -91,7 +74,6 @@ const LoginRegister = () => {
         const registerData: any = {
           type_of_student: studentType,
           name: formData.name,
-          category: formData.category || null,
           email_id: formData.email_id,
           phone_number: formData.phone_number,
           password: formData.password,
@@ -110,7 +92,6 @@ const LoginRegister = () => {
         navigate(studentType === 'counselling' ? '/dashboard/counselling' : '/dashboard/studying')
       }
     } catch (err: any) {
-      // Handle detailed validation errors
       if (err.response?.data?.errors) {
         const errors = err.response.data.errors
         const errorMessages = Object.entries(errors)
@@ -143,9 +124,7 @@ const LoginRegister = () => {
               type="button"
               onClick={() => setStudentType('counselling')}
               className={`flex-1 py-2 px-4 rounded-md ${
-                studentType === 'counselling'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-200 text-gray-700'
+                studentType === 'counselling' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
               Counselling Student
@@ -154,9 +133,7 @@ const LoginRegister = () => {
               type="button"
               onClick={() => setStudentType('studying')}
               className={`flex-1 py-2 px-4 rounded-md ${
-                studentType === 'studying'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-200 text-gray-700'
+                studentType === 'studying' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
               Studying Student
@@ -185,22 +162,7 @@ const LoginRegister = () => {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Category</label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat.category} value={cat.category}>
-                      {cat.category} ({cat.fall_back})
-                    </option>
-                  ))}
-                </select>
-              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
                 <input
@@ -212,6 +174,7 @@ const LoginRegister = () => {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Phone Number</label>
                 <input
@@ -224,25 +187,6 @@ const LoginRegister = () => {
                 />
               </div>
             </>
-          )}
-
-          {isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Category (Optional)</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Use Default ({user?.category || 'None'})</option>
-                {categories.map(cat => (
-                  <option key={cat.category} value={cat.category}>
-                    {cat.category} ({cat.fall_back})
-                  </option>
-                ))}
-              </select>
-            </div>
           )}
 
           {isLogin && (
@@ -405,7 +349,6 @@ const LoginRegister = () => {
                 setError('')
                 setFormData({
                   name: '',
-                  category: '',
                   email_id: '',
                   phone_number: '',
                   password: '',
@@ -468,4 +411,3 @@ function getPasswordStrength(password: string) {
 }
 
 export default LoginRegister
-

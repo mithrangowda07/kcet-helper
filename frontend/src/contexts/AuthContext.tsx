@@ -19,41 +19,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [tokens, setTokens] = useState<{ access: string; refresh: string } | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Helper to persist user and tokens consistently
+  const setAndPersistTokens = (t: { access: string; refresh: string }) => {
+    setTokens(t)
+    localStorage.setItem('tokens', JSON.stringify(t))
+    authService.setTokens(t)
+  }
+  const setAndPersistUser = (u: Student) => {
+    setUser(u)
+    localStorage.setItem('user', JSON.stringify(u))
+  }
+
   useEffect(() => {
-    // Load from localStorage on mount
-    const storedTokens = localStorage.getItem('tokens')
-    const storedUser = localStorage.getItem('user')
-    
-    if (storedTokens && storedUser) {
+    // Hydrate from localStorage, then (if tokens exist) fetch fresh /auth/me
+    const init = async () => {
       try {
-        setTokens(JSON.parse(storedTokens))
-        setUser(JSON.parse(storedUser))
-        authService.setTokens(JSON.parse(storedTokens))
+        const storedTokens = localStorage.getItem('tokens')
+        const storedUser = localStorage.getItem('user')
+
+        if (storedTokens) {
+          const parsedTokens = JSON.parse(storedTokens)
+          setAndPersistTokens(parsedTokens)
+        }
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
+
+        // If we have tokens, prefer a fresh user from /auth/me (ensures name is present)
+        if (storedTokens) {
+          const me = await authService.me()
+          setAndPersistUser(me)
+        }
       } catch (e) {
-        console.error('Error loading auth data:', e)
+        console.error('Error during auth init:', e)
         localStorage.removeItem('tokens')
         localStorage.removeItem('user')
+        setUser(null)
+        setTokens(null)
+        authService.clearTokens()
+      } finally {
+        setLoading(false)
       }
     }
-    setLoading(false)
+    init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const login = async (email: string, password: string) => {
+    // Your /auth/login/ response shape can vary.
+    // We always trust /auth/me/ to return the authoritative profile with `name`.
     const response = await authService.login(email, password)
-    setUser(response.student)
-    setTokens(response.tokens)
-    localStorage.setItem('tokens', JSON.stringify(response.tokens))
-    localStorage.setItem('user', JSON.stringify(response.student))
-    authService.setTokens(response.tokens)
+    const t = response.tokens ?? { access: response.access, refresh: response.refresh }
+    setAndPersistTokens(t)
+
+    const me = await authService.me()
+    setAndPersistUser(me)
   }
 
   const register = async (data: any) => {
     const response = await authService.register(data)
-    setUser(response.student)
-    setTokens(response.tokens)
-    localStorage.setItem('tokens', JSON.stringify(response.tokens))
-    localStorage.setItem('user', JSON.stringify(response.student))
-    authService.setTokens(response.tokens)
+    const t = response.tokens ?? { access: response.access, refresh: response.refresh }
+    setAndPersistTokens(t)
+
+    const me = await authService.me()
+    setAndPersistUser(me)
   }
 
   const logout = () => {
@@ -88,4 +117,3 @@ export const useAuth = () => {
   }
   return context
 }
-

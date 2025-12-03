@@ -10,6 +10,9 @@ import SearchPage from './pages/SearchPage'
 import MeetingPage from './pages/MeetingPage'
 import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
+// + add this import
+import BranchDetailPage from './pages/BranchDetailPage'
+
 
 function App() {
   return (
@@ -36,6 +39,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/branches/:uniqueKey" element={<BranchDetailPage />} />
+
             <Route path="/colleges/:collegeId" element={<CollegeDetailPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route
