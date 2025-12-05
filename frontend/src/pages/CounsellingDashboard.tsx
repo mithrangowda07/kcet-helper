@@ -156,7 +156,7 @@ const moveChoice = async (index: number, direction: 'up' | 'down') => {
 </p>
 
 
-        </p>
+      </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-8">

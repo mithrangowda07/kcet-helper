@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { authService, categoryService } from '../services/api'
-import type { Category } from '../types'
+import { authService, categoryService, collegeService, branchService } from '../services/api'
+import type { Category, College, Branch } from '../types'
 
 const ProfilePage = () => {
   const { user } = useAuth()
@@ -10,39 +10,91 @@ const ProfilePage = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  // dropdown data
   const [categories, setCategories] = useState<Category[]>([])
+  const [colleges, setColleges] = useState<College[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
+
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    category: user?.category || '',
+    category: (user as any)?.category || '',
     email_id: user?.email_id || '',
     phone_number: user?.phone_number || '',
-    kcet_rank: user?.kcet_rank?.toString() || '',
+    kcet_rank: user?.kcet_rank != null ? String(user.kcet_rank) : '',
+    // studying fields
+    college_code: (user as any)?.college_code || '',
+    unique_key: (user as any)?.unique_key || '',
+    year_of_starting:
+      (user as any)?.year_of_starting != null ? String((user as any).year_of_starting) : '',
   })
+
+  const isCounselling = user?.type_of_student === 'counselling'
+  const isStudying = user?.type_of_student === 'studying'
 
   // If user loads after first render, sync form once it’s available
   useEffect(() => {
     if (!user) return
     setFormData({
       name: user.name || '',
-      category: user.category || '',
+      category: (user as any).category || '',
       email_id: user.email_id || '',
       phone_number: user.phone_number || '',
       kcet_rank: user.kcet_rank != null ? String(user.kcet_rank) : '',
+      college_code: (user as any).college_code || '',
+      unique_key: (user as any).unique_key || '',
+      year_of_starting:
+        (user as any).year_of_starting != null ? String((user as any).year_of_starting) : '',
     })
   }, [user])
 
+  // Load categories (for counselling students)
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const data = await categoryService.list() // /api/colleges/categories/
-        setCategories(Array.isArray(data) ? data : [])
-      } catch (err) {
+    if (!isCounselling) return
+    categoryService
+      .list()
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch((err) => {
         console.error('Error loading categories:', err)
         setCategories([])
-      }
+      })
+  }, [isCounselling])
+
+  // Load colleges (for studying students)
+  useEffect(() => {
+    if (!isStudying) return
+    collegeService
+      .list()
+      .then(setColleges)
+      .catch((err) => {
+        console.error('Error loading colleges:', err)
+        setColleges([])
+      })
+  }, [isStudying])
+
+  // When college changes, (re)load branches
+  useEffect(() => {
+    if (!isStudying) return
+    const code = formData.college_code?.toString().trim()
+    if (!code) {
+      setBranches([])
+      setFormData((p) => ({ ...p, unique_key: '' }))
+      return
     }
-    loadCategories()
-  }, [])
+    branchService
+      .byCollegeCode(code)
+      .then((list) => {
+        setBranches(list)
+        // clear branch if not part of the new college
+        if (!list.some((b) => b.unique_key === formData.unique_key)) {
+          setFormData((p) => ({ ...p, unique_key: '' }))
+        }
+      })
+      .catch((err) => {
+        console.error('Error loading branches:', err)
+        setBranches([])
+        setFormData((p) => ({ ...p, unique_key: '' }))
+      })
+  }, [isStudying, formData.college_code]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -60,13 +112,23 @@ const ProfilePage = () => {
     try {
       const updateData: any = {
         name: formData.name,
+        // allow updating category for both if backend supports; safe to send null
         category: formData.category || null,
       }
 
-      if (user?.type_of_student === 'counselling') {
+      if (isCounselling) {
         updateData.kcet_rank =
           formData.kcet_rank !== '' && formData.kcet_rank != null
             ? parseInt(formData.kcet_rank, 10)
+            : null
+      }
+
+      if (isStudying) {
+        updateData.college_code = formData.college_code || null
+        updateData.unique_key = formData.unique_key || null
+        updateData.year_of_starting =
+          formData.year_of_starting !== '' && formData.year_of_starting != null
+            ? parseInt(formData.year_of_starting, 10)
             : null
       }
 
@@ -112,6 +174,7 @@ const ProfilePage = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Name</label>
             <input
@@ -123,6 +186,7 @@ const ProfilePage = () => {
             />
           </div>
 
+          {/* Category (mainly for counselling; shown for both if you want) */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Category</label>
             <select
@@ -140,6 +204,7 @@ const ProfilePage = () => {
             </select>
           </div>
 
+          {/* Email (immutable) */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
@@ -151,6 +216,7 @@ const ProfilePage = () => {
             <p className="mt-1 text-sm text-gray-500">Email cannot be changed</p>
           </div>
 
+          {/* Phone (immutable) */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Phone Number</label>
             <input
@@ -162,7 +228,8 @@ const ProfilePage = () => {
             <p className="mt-1 text-sm text-gray-500">Phone number cannot be changed</p>
           </div>
 
-          {user.type_of_student === 'counselling' && (
+          {/* KCET Rank for counselling students */}
+          {isCounselling && (
             <div>
               <label className="block text-sm font-medium text-gray-700">KCET Rank</label>
               <input
@@ -173,6 +240,62 @@ const ProfilePage = () => {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
+          )}
+
+          {/* Studying student editable fields */}
+          {isStudying && (
+            <>
+              {/* College */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">College</label>
+                <select
+                  name="college_code"
+                  value={formData.college_code}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">Select a college</option>
+                  {colleges.map((c) => (
+                    <option key={c.id} value={c.college_code}>
+                      {c.college_name} ({c.college_code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Branch (depends on college) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Branch</label>
+                <select
+                  name="unique_key"
+                  value={formData.unique_key}
+                  onChange={handleInputChange}
+                  disabled={!formData.college_code}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
+                >
+                  <option value="">Select a branch</option>
+                  {branches.map(branch => (
+                    <option key={branch.unique_key} value={branch.unique_key}>
+                      {branch.branch_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Year of Starting */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Year of Starting</label>
+                <input
+                  type="number"
+                  name="year_of_starting"
+                  value={formData.year_of_starting}
+                  onChange={handleInputChange}
+                  min={2020}
+                  max={new Date().getFullYear()}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+            </>
           )}
 
           <div>
