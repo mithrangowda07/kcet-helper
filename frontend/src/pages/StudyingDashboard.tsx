@@ -10,6 +10,8 @@ const StudyingDashboard = () => {
   const [invitations, setInvitations] = useState<Meeting[]>([])
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [branchName, setBranchName] = useState('')
+  const [existingReview, setExistingReview] = useState<Review | null>(null)
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   // remember the last submitted review so we can edit it
   const reviewFormInit = {
@@ -38,7 +40,6 @@ const StudyingDashboard = () => {
     preferred_time: '',
   }
   const [reviewFormData, setReviewFormData] = useState(reviewFormInit)
-  const [lastSubmitted, setLastSubmitted] = useState<typeof reviewFormInit | null>(null)
 
   useEffect(() => {
     // load branch display name
@@ -66,20 +67,70 @@ const StudyingDashboard = () => {
       }
     }
 
+    // load existing review
+    const loadExistingReview = async () => {
+      try {
+        if (user?.unique_key) {
+          const review = await reviewService.myReview(user.unique_key)
+          setExistingReview(review)
+          if (review) {
+            // Pre-fill form with existing review data
+            setReviewFormData({
+              unique_key: user.unique_key,
+              teaching_rating: review.teaching_rating || 5,
+              teaching_review: review.teaching_review || '',
+              courses_rating: review.courses_rating || 5,
+              courses_review: review.courses_review || '',
+              library_rating: review.library_rating || 5,
+              library_review: review.library_review || '',
+              research_rating: review.research_rating || 5,
+              research_review: review.research_review || '',
+              internship_rating: review.internship_rating || 5,
+              internship_review: review.internship_review || '',
+              infrastructure_rating: review.infrastructure_rating || 5,
+              infrastructure_review: review.infrastructure_review || '',
+              administration_rating: review.administration_rating || 5,
+              administration_review: review.administration_review || '',
+              extracurricular_rating: review.extracurricular_rating || 5,
+              extracurricular_review: review.extracurricular_review || '',
+              safety_rating: review.safety_rating || 5,
+              safety_review: review.safety_review || '',
+              placement_rating: review.placement_rating || 5,
+              placement_review: review.placement_review || '',
+              preferred_day: review.preferred_day || '',
+              preferred_time: review.preferred_time || '',
+            })
+          }
+        }
+      } catch (err) {
+        console.error('Error loading existing review:', err)
+      }
+    }
+
     loadBranch()
     loadInvitations()
+    loadExistingReview()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.unique_key])
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submittingReview) return // Prevent multiple submissions
+    
+    setSubmittingReview(true)
     try {
       await reviewService.create(reviewFormData)
-      alert('Review submitted successfully!')
-      setLastSubmitted(reviewFormData) // save what we sent so we can edit later
+      alert(existingReview ? 'Review updated successfully!' : 'Review submitted successfully!')
+      // Reload existing review
+      if (user?.unique_key) {
+        const review = await reviewService.myReview(user.unique_key)
+        setExistingReview(review)
+      }
       setShowReviewForm(false)         // collapse the form after submit
     } catch (err: any) {
       alert(err.response?.data?.error || 'Error submitting review')
+    } finally {
+      setSubmittingReview(false)
     }
   }
 
@@ -110,7 +161,7 @@ const StudyingDashboard = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Studying Dashboard</h1>
-        <p className="mt-2 text-gray-600">Welcome, {user?.name ?? user?.email_id}</p>
+        <p className="mt-2 text-gray-600">Welcome, {user?.name || 'User'}</p>
         {user?.unique_key && (
           <p className="text-sm text-gray-500">
             Branch: {branchName || 'Loading...'} | Year: {user.year_of_starting}
@@ -121,22 +172,22 @@ const StudyingDashboard = () => {
       {/* FIRST: Write / Edit Review */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-2">Write a Review</h2>
+          <h2 className="text-xl font-semibold mb-2">
+            {existingReview ? 'Edit Your Review' : 'Write a Review'}
+          </h2>
           <p className="text-sm text-gray-500 mb-4">
-            Share your experience about courses, teaching, placements, and more.
+            {existingReview 
+              ? 'Update your review about courses, teaching, placements, and more.'
+              : 'Share your experience about courses, teaching, placements, and more.'}
           </p>
 
           <button
             onClick={() => {
-              // When opening, prefill with last submitted if available
-              if (!showReviewForm) {
-                setReviewFormData(lastSubmitted ?? reviewFormInit)
-              }
               setShowReviewForm(v => !v)
             }}
             className="w-full bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
           >
-            {showReviewForm ? 'Close' : lastSubmitted ? 'Edit My Review' : 'Write Review'}
+            {showReviewForm ? 'Close' : existingReview ? 'Edit My Review' : 'Write Review'}
           </button>
         </div>
 
@@ -177,7 +228,7 @@ const StudyingDashboard = () => {
       {showReviewForm && (
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">
-            {lastSubmitted ? 'Edit Your Review' : 'Submit Review'}
+            {existingReview ? 'Edit Your Review' : 'Submit Review'}
           </h2>
 
           <form onSubmit={handleReviewSubmit} className="space-y-6">
@@ -244,19 +295,11 @@ const StudyingDashboard = () => {
             <div className="flex items-center gap-3">
               <button
                 type="submit"
-                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
+                disabled={submittingReview}
+                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {lastSubmitted ? 'Save Changes' : 'Submit Review'}
+                {submittingReview ? 'Saving...' : existingReview ? 'Save Changes' : 'Submit Review'}
               </button>
-              {lastSubmitted && (
-                <button
-                  type="button"
-                  onClick={() => setReviewFormData(lastSubmitted)}
-                  className="px-4 py-2 rounded-md border"
-                >
-                  Reset to Last Submitted
-                </button>
-              )}
             </div>
           </form>
         </div>

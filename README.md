@@ -170,28 +170,32 @@ The project uses the following main tables:
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register/` - Register new student
+- `POST /api/auth/register/` - Register new student (with category selection for counselling students)
 - `POST /api/auth/login/` - Login
 - `POST /api/auth/refresh/` - Refresh access token
 - `GET /api/auth/me/` - Get current user
+- `PATCH /api/auth/profile/` - Update user profile (including category)
 
 ### Colleges & Branches
 - `GET /api/colleges/` - List all colleges
 - `GET /api/colleges/{college_id}/` - College details with branches
 - `GET /api/colleges/{college_id}/cutoff/` - Cutoff data for college
 - `GET /api/branches/{unique_key}/` - Branch details
-- `GET /api/branches/{unique_key}/cutoff/` - Cutoff trends for branch
+- `GET /api/branches/{unique_key}/cutoff/` - Cutoff trends for branch (supports category filter)
+- `GET /api/colleges/categories/` - List all available categories
 - `GET /api/search/?query=...` - Search colleges and branches
 
 ### Counselling
 - `POST /api/counselling/recommendations/` - Get rank-based recommendations
-- `GET /api/counselling/choices/` - List saved choices
+- `GET /api/counselling/choices/` - List saved choices with cutoff information
 - `POST /api/counselling/choices/create/` - Add choice
 - `PATCH /api/counselling/choices/{id}/update/` - Update choice order
+- `POST /api/counselling/choices/bulk-update/` - Bulk update choice orders
 - `DELETE /api/counselling/choices/{id}/delete/` - Remove choice
 
 ### Reviews
-- `POST /api/reviews/` - Submit review (studying students only)
+- `POST /api/reviews/` - Submit or update review (studying students only, one per branch)
+- `GET /api/reviews/my-review/{unique_key}/` - Get current user's review for a branch
 - `GET /api/reviews/branches/{unique_key}/` - Get reviews for branch
 - `GET /api/reviews/colleges/{college_id}/` - Get aggregated reviews for college
 
@@ -205,27 +209,32 @@ The project uses the following main tables:
 ## User Roles
 
 ### Counselling Students
-- Register with KCET rank
+- Register with KCET rank and category selection
 - Get rank-based recommendations
-- Save counseling choices
+- Save counseling choices in a table format with cutoff information
+- Reorder choices via drag-and-drop with save functionality
 - Search colleges and branches
 - Request meetings with studying students
-- View cutoff trends and reviews
+- View cutoff trends and reviews (defaults to their category)
 
 ### Studying Students
 - Register with college and branch information
-- Submit detailed reviews for their branch
+- Submit or edit detailed reviews for their branch (one review per branch)
 - Accept/reject meeting requests
 - View scheduled meetings with Google Meet links
+- Update profile including category selection
 
 ## Features
 
 1. **Rank-Based Recommendations**: Personalized suggestions based on KCET rank and historical cutoffs
-2. **Cutoff Trends Visualization**: Interactive charts showing cutoff trends over years and rounds
-3. **Review System**: Comprehensive rating system across 10 categories
+2. **Cutoff Trends Visualization**: Interactive charts showing cutoff trends over years and rounds (defaults to user's category if logged in)
+3. **Review System**: Comprehensive rating system across 10 categories (one review per branch per user)
 4. **Meeting Integration**: Automatic Google Calendar event creation with Google Meet links
-5. **Choice Management**: Save and organize preferred college-branch combinations
+5. **Choice Management**: Save and organize preferred college-branch combinations with drag-and-drop reordering
 6. **Search Functionality**: Search by college name, code, branch, or location
+7. **Category Selection**: Users can select their category during registration from available categories
+8. **Personal List Table**: Counselling students can view their choices in a table format with cutoff information
+9. **Review Editing**: Studying students can edit their existing reviews instead of creating duplicates
 
 ## Deployment
 
@@ -254,6 +263,10 @@ The project uses the following main tables:
 - Cutoff data is admin-only (entered via Django admin)
 - Google Calendar integration requires service account with calendar access
 - JWT tokens are stored in localStorage (consider httpOnly cookies for production)
+- Category selection is required for counselling students during registration
+- Reviews are limited to one per branch per user (existing reviews can be edited)
+- Cutoff information in personal list uses user's category with fallback to GM category
+- Review table columns are widened and text is aligned left and top for better readability
 
 ## License
 

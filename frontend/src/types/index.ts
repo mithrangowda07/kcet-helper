@@ -58,6 +58,7 @@ export interface CounsellingChoice {
   order_of_list: number
   unique_key: string
   unique_key_data: Branch
+  cutoff?: string | null
   created_at: string
 }
 

@@ -180,6 +180,13 @@ export const counsellingService = {
       return response.data
     },
 
+    bulkUpdate: async (choices: Array<{ choice_id: number; order_of_list: number }>): Promise<CounsellingChoice[]> => {
+      const response = await api.post('/counselling/choices/bulk-update/', {
+        choices: choices,
+      })
+      return response.data
+    },
+
     delete: async (choiceId: number): Promise<void> => {
       await api.delete(`/counselling/choices/${choiceId}/delete/`)
     },
@@ -190,6 +197,11 @@ export const reviewService = {
   create: async (data: Partial<Review>): Promise<Review> => {
     const response = await api.post('/reviews/', data)
     return response.data
+  },
+
+  myReview: async (uniqueKey: string): Promise<Review | null> => {
+    const response = await api.get(`/reviews/my-review/${uniqueKey}/`)
+    return response.data.review || null
   },
 
   branchReviews: async (uniqueKey: string): Promise<{
@@ -242,8 +254,15 @@ export const meetingService = {
 
 export const categoryService = {
   list: async (): Promise<Category[]> => {
-    const response = await api.get('/colleges/categories/')
-    return response.data
+    try {
+      const response = await api.get('/colleges/categories/')
+      return response.data
+    } catch (error) {
+      // Fallback to hardcoded categories if API fails
+      console.warn('Failed to load categories from API, using fallback list')
+      const { HARDCODED_CATEGORIES } = await import('../data/categories')
+      return HARDCODED_CATEGORIES
+    }
   },
 }
 

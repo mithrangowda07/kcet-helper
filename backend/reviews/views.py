@@ -11,7 +11,9 @@ from colleges.models import Branch
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def review_create(request):
-    """Create a review (only for studying students)"""
+    """Create or update a review (only for studying students) - one review per branch per user"""
+    from colleges.models import Branch
+    
     student = request.user
     
     if student.type_of_student != 'studying':
@@ -22,22 +24,40 @@ def review_create(request):
     
     serializer = CollegeReviewCreateSerializer(data=request.data)
     if serializer.is_valid():
+        # Get the unique_key string and convert to Branch object
+        unique_key_str = serializer.validated_data['unique_key']
+        
+        try:
+            branch = Branch.objects.get(unique_key=unique_key_str)
+        except Branch.DoesNotExist:
+            return Response(
+                {'error': 'Branch not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
         # Check if student already reviewed this branch
-        unique_key = serializer.validated_data['unique_key']
         existing = CollegeReview.objects.filter(
             student_user_id=student,
-            unique_key=unique_key
+            unique_key=branch
         ).first()
         
         if existing:
+            # Update existing review
+            for key, value in serializer.validated_data.items():
+                if key != 'unique_key':  # Don't update unique_key
+                    setattr(existing, key, value)
+            existing.save()
+            
             return Response(
-                {'error': 'You have already reviewed this branch'},
-                status=status.HTTP_400_BAD_REQUEST
+                CollegeReviewSerializer(existing).data,
+                status=status.HTTP_200_OK
             )
         
+        # Create new review
         review = CollegeReview.objects.create(
             student_user_id=student,
-            **serializer.validated_data
+            unique_key=branch,
+            **{k: v for k, v in serializer.validated_data.items() if k != 'unique_key'}
         )
         
         return Response(
@@ -46,6 +66,37 @@ def review_create(request):
         )
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_review(request, unique_key):
+    """Get current user's review for a specific branch"""
+    student = request.user
+    
+    if student.type_of_student != 'studying':
+        return Response(
+            {'error': 'Only studying students can access reviews'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    try:
+        branch = Branch.objects.get(unique_key=unique_key)
+    except Branch.DoesNotExist:
+        return Response(
+            {'error': 'Branch not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    try:
+        review = CollegeReview.objects.get(
+            student_user_id=student,
+            unique_key=branch
+        )
+        serializer = CollegeReviewSerializer(review)
+        return Response(serializer.data)
+    except CollegeReview.DoesNotExist:
+        return Response({'review': None}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

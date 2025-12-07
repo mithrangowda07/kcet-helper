@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from students.models import Student
+from colleges.models import Cutoff, Category, Branch
 from .models import CounsellingChoice
 from .serializers import CounsellingChoiceSerializer, CounsellingChoiceCreateSerializer
 from .utils import get_recommendations
@@ -53,7 +54,7 @@ def recommendations(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def choices_list(request):
-    """Get all counselling choices for the logged-in student"""
+    """Get all counselling choices for the logged-in student with cutoff information"""
     student = request.user
     
     if student.type_of_student != 'counselling':
@@ -67,7 +68,57 @@ def choices_list(request):
     ).order_by('order_of_list').select_related('unique_key__college', 'unique_key__cluster')
     
     serializer = CounsellingChoiceSerializer(choices, many=True)
-    return Response(serializer.data)
+    choices_data = serializer.data
+    
+    # Get user's category and fallback categories
+    user_category = student.category
+    valid_categories = set()
+    if user_category:
+        try:
+            cat_obj = Category.objects.get(category=user_category)
+            fall_back_list = [c.strip() for c in cat_obj.fall_back.split(',')]
+            valid_categories = set(fall_back_list)
+        except Category.DoesNotExist:
+            valid_categories = {user_category} if user_category else set()
+    
+    # Add cutoff information for each choice
+    year = request.GET.get('year', '2025')
+    round_name = request.GET.get('round', 'r1')
+    cutoff_field = f'cutoff_{year}_{round_name}'
+    
+    for choice_data in choices_data:
+        unique_key_str = choice_data['unique_key']  # This is a string
+        cutoff_value = None
+        
+        # Get the Branch object
+        try:
+            branch = Branch.objects.get(unique_key=unique_key_str)
+        except Branch.DoesNotExist:
+            choice_data['cutoff'] = None
+            continue
+        
+        # Try to find cutoff for user's category or fallback categories
+        if valid_categories:
+            for cat in valid_categories:
+                try:
+                    cutoff = Cutoff.objects.get(unique_key=branch, category=cat)
+                    cutoff_value = getattr(cutoff, cutoff_field, None)
+                    if cutoff_value:
+                        break
+                except Cutoff.DoesNotExist:
+                    continue
+        
+        # If no cutoff found, try GM as fallback
+        if not cutoff_value:
+            try:
+                cutoff = Cutoff.objects.get(unique_key=branch, category='GM')
+                cutoff_value = getattr(cutoff, cutoff_field, None)
+            except Cutoff.DoesNotExist:
+                pass
+        
+        choice_data['cutoff'] = cutoff_value
+    
+    return Response(choices_data)
 
 
 @api_view(['POST'])
@@ -190,3 +241,124 @@ def choices_delete(request, choice_id):
             status=status.HTTP_404_NOT_FOUND
         )
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def choices_bulk_update(request):
+    """Bulk update order_of_list for multiple choices"""
+    from django.db import transaction
+    
+    student = request.user
+    
+    if student.type_of_student != 'counselling':
+        return Response(
+            {'error': 'Only counselling students can update choices'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Expecting: { "choices": [{"choice_id": 1, "order_of_list": 1}, ...] }
+    # Handle both dict and list formats
+    if isinstance(request.data, list):
+        choices_data = request.data
+    else:
+        choices_data = request.data.get('choices', [])
+    
+    if not choices_data or not isinstance(choices_data, list):
+        return Response(
+            {'error': 'choices array is required', 'received': type(request.data).__name__},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        with transaction.atomic():
+            # First, set all orders to negative values to avoid conflicts
+            for item in choices_data:
+                choice_id = item.get('choice_id')
+                if choice_id is None:
+                    continue
+                try:
+                    choice = CounsellingChoice.objects.get(
+                        choice_id=choice_id,
+                        student_user_id=student
+                    )
+                    choice.order_of_list = -(abs(choice.order_of_list))
+                    choice.save()
+                except CounsellingChoice.DoesNotExist:
+                    continue
+            
+            # Now update to the new orders
+            for item in choices_data:
+                choice_id = item.get('choice_id')
+                new_order = item.get('order_of_list')
+                
+                if choice_id is None or new_order is None:
+                    continue
+                
+                try:
+                    choice = CounsellingChoice.objects.get(
+                        choice_id=choice_id,
+                        student_user_id=student
+                    )
+                    choice.order_of_list = new_order
+                    choice.save()
+                except CounsellingChoice.DoesNotExist:
+                    continue
+        
+        # Return updated choices with cutoff info
+        choices = CounsellingChoice.objects.filter(
+            student_user_id=student
+        ).order_by('order_of_list').select_related('unique_key__college', 'unique_key__cluster')
+        
+        serializer = CounsellingChoiceSerializer(choices, many=True)
+        choices_data = serializer.data
+        
+        # Add cutoff information (same logic as choices_list)
+        user_category = student.category
+        valid_categories = set()
+        if user_category:
+            try:
+                cat_obj = Category.objects.get(category=user_category)
+                fall_back_list = [c.strip() for c in cat_obj.fall_back.split(',')]
+                valid_categories = set(fall_back_list)
+            except Category.DoesNotExist:
+                valid_categories = {user_category} if user_category else set()
+        
+        year = request.data.get('year', '2025')
+        round_name = request.data.get('round', 'r1')
+        cutoff_field = f'cutoff_{year}_{round_name}'
+        
+        for choice_data in choices_data:
+            unique_key_str = choice_data['unique_key']
+            cutoff_value = None
+            
+            try:
+                branch = Branch.objects.get(unique_key=unique_key_str)
+            except Branch.DoesNotExist:
+                choice_data['cutoff'] = None
+                continue
+            
+            if valid_categories:
+                for cat in valid_categories:
+                    try:
+                        cutoff = Cutoff.objects.get(unique_key=branch, category=cat)
+                        cutoff_value = getattr(cutoff, cutoff_field, None)
+                        if cutoff_value:
+                            break
+                    except Cutoff.DoesNotExist:
+                        continue
+            
+            if not cutoff_value:
+                try:
+                    cutoff = Cutoff.objects.get(unique_key=branch, category='GM')
+                    cutoff_value = getattr(cutoff, cutoff_field, None)
+                except Cutoff.DoesNotExist:
+                    pass
+            
+            choice_data['cutoff'] = cutoff_value
+        
+        return Response(choices_data)
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )

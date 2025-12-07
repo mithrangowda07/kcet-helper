@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import { branchService, reviewService } from '../services/api'
 import StarRating from '../components/StarRating'
 import type { Branch, Review } from '../types'
@@ -50,6 +51,7 @@ const FALLBACK_ORDER: Record<string, string[]> = {
 
 const BranchDetailPage = () => {
   const { uniqueKey } = useParams<{ uniqueKey: string }>()
+  const { user } = useAuth()
   const [branch, setBranch] = useState<Branch | null>(null)
   const [cutoff, setCutoff] = useState<BranchCutoffResponse | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
@@ -94,6 +96,11 @@ const BranchDetailPage = () => {
 
         const reviewData = await reviewService.branchReviews(uniqueKey)
         setReviews(reviewData)
+
+        // Set default category to user's category if logged in
+        if (user?.category && !selectedCategory) {
+          setSelectedCategory(user.category)
+        }
       } catch (err) {
         console.error(err)
       } finally {
@@ -102,16 +109,33 @@ const BranchDetailPage = () => {
     }
 
     load()
-  }, [uniqueKey])
+  }, [uniqueKey, user?.category])
 
   if (loading) return <div className="p-8">Loading…</div>
   if (!branch) return <div className="p-8">Branch not found.</div>
 
   // BUILD CHART LIST
+  // If user is logged in and has a category, default to showing that category
+  // but still allow changing via the dropdown
   let chartCategories: string[] = []
 
   if (!selectedCategory) {
-    chartCategories = categories
+    // If user is logged in and has category, use it; otherwise show all
+    if (user?.category) {
+      const chain = FALLBACK_ORDER[user.category] || [user.category, "GM"]
+      const seen = new Set<string>()
+      chartCategories = chain.filter(c => {
+        if (seen.has(c)) return false
+        seen.add(c)
+        return cutoff?.categories?.[c]
+      })
+      // If no categories found for user's category, show all
+      if (chartCategories.length === 0) {
+        chartCategories = categories
+      }
+    } else {
+      chartCategories = categories
+    }
   } else {
     const chain = FALLBACK_ORDER[selectedCategory] || [selectedCategory, "GM"]
     const seen = new Set<string>()
@@ -180,9 +204,9 @@ const BranchDetailPage = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="R1" />
-                  <Line type="monotone" dataKey="R2" />
-                  <Line type="monotone" dataKey="R3" />
+                  <Line type="monotone" dataKey="R1" stroke="#2563eb"/>
+                  <Line type="monotone" dataKey="R2" stroke="#16a34a"/>
+                  <Line type="monotone" dataKey="R3" stroke="#dc2626"/>
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -223,11 +247,11 @@ const BranchDetailPage = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase w-48">
                     Reviewer
                   </th>
                   {FIELDS.map(f => (
-                    <th key={f.key} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th key={f.key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase min-w-[200px]">
                       {f.label}
                     </th>
                   ))}
@@ -237,15 +261,17 @@ const BranchDetailPage = () => {
               <tbody>
                 {reviews.reviews.map(r => (
                   <tr key={r.review_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 font-medium">
+                    <td className="px-6 py-4 align-top font-medium text-sm">
                       {r.student_user_id_data?.name ||
                        r.student_user_id_data?.email_id ||
                        r.student_user_id}
                     </td>
 
                     {FIELDS.map(f => (
-                      <td key={f.key} className="px-4 py-4">
-                        {(r as any)[f.key]?.trim() || "—"}
+                      <td key={f.key} className="px-6 py-4 align-top text-sm text-left">
+                        <div className="whitespace-normal break-words">
+                          {(r as any)[f.key]?.trim() || "—"}
+                        </div>
                       </td>
                     ))}
                   </tr>

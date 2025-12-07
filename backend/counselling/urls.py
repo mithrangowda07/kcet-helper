@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     recommendations, choices_list, choices_create,
-    choices_update, choices_delete
+    choices_update, choices_delete, choices_bulk_update
 )
 
 urlpatterns = [
@@ -10,5 +10,6 @@ urlpatterns = [
     path('choices/create/', choices_create, name='choices-create'),
     path('choices/<int:choice_id>/update/', choices_update, name='choices-update'),
     path('choices/<int:choice_id>/delete/', choices_delete, name='choices-delete'),
+    path('choices/bulk-update/', choices_bulk_update, name='choices-bulk-update'),
 ]
 

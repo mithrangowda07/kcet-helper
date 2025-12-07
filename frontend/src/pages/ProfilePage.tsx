@@ -47,17 +47,22 @@ const ProfilePage = () => {
     })
   }, [user])
 
-  // Load categories (for counselling students)
+  // Load categories (for all users)
   useEffect(() => {
-    if (!isCounselling) return
     categoryService
       .list()
       .then((data) => setCategories(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.error('Error loading categories:', err)
-        setCategories([])
+      .catch(async (err) => {
+        console.error('Error loading categories, using fallback:', err)
+        // Fallback to hardcoded categories
+        try {
+          const { HARDCODED_CATEGORIES } = await import('../data/categories')
+          setCategories(HARDCODED_CATEGORIES)
+        } catch {
+          setCategories([])
+        }
       })
-  }, [isCounselling])
+  }, [])
 
   // Load colleges (for studying students)
   useEffect(() => {

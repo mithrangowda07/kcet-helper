@@ -14,27 +14,26 @@ const CounsellingDashboard = () => {
   const [categories, setCategories] = useState<Category[]>([])
   const [year, setYear] = useState('2025')
   const [round, setRound] = useState('r1')
-  const [draggedChoice, setDraggedChoice] = useState<number | null>(null)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-
-  
   // compute the best display name once
   const displayName = useMemo(() => {
-  // 1) if backend sent a name, show first name
-  const full = user?.name?.trim();
-  if (full) return full.split(' ')[0];
+    // 1) if backend sent a name, show first name
+    const full = user?.name?.trim();
+    if (full) return full.split(' ')[0];
 
-  // 2) else derive from email (before @), clean dots/underscores/digits
-  const username = (user?.email_id || '').split('@')[0] || '';
-  // take first token before ., _, or -
-  const token = username.split(/[._-]/)[0] || username;
-  // strip digits like is23 -> is
-  const noDigits = token.replace(/\d+/g, '');
-  // capitalize first letter
-  if (!noDigits) return 'User';
-  return noDigits.charAt(0).toUpperCase() + noDigits.slice(1);
-}, [user]);
-
+    // 2) else derive from email (before @), clean dots/underscores/digits
+    const username = (user?.email_id || '').split('@')[0] || '';
+    // take first token before ., _, or -
+    const token = username.split(/[._-]/)[0] || username;
+    // strip digits like is23 -> is
+    const noDigits = token.replace(/\d+/g, '');
+    // capitalize first letter
+    if (!noDigits) return 'User';
+    return noDigits.charAt(0).toUpperCase() + noDigits.slice(1);
+  }, [user]);
 
   useEffect(() => {
     loadChoices()
@@ -46,6 +45,7 @@ const CounsellingDashboard = () => {
     try {
       const data = await counsellingService.choices.list()
       setChoices(data.sort((a, b) => a.order_of_list - b.order_of_list))
+      setHasUnsavedChanges(false)
     } catch (err) {
       console.error('Error loading choices:', err)
     }
@@ -56,49 +56,56 @@ const CounsellingDashboard = () => {
       const data = await categoryService.list()
       setCategories(data)
     } catch (err) {
-      console.error('Error loading categories:', err)
+      console.error('Error loading categories, using fallback:', err)
+      // Fallback to hardcoded categories
+      try {
+        const { HARDCODED_CATEGORIES } = await import('../data/categories')
+        setCategories(HARDCODED_CATEGORIES)
+      } catch {
+        setCategories([])
+      }
     }
   }
 
-  const handleReorder = async (choiceId: number, newOrder: number) => {
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    if (draggedIndex === null) return
+
+    if (draggedIndex !== index) {
+      const newChoices = [...choices]
+      const draggedItem = newChoices[draggedIndex]
+      newChoices.splice(draggedIndex, 1)
+      newChoices.splice(index, 0, draggedItem)
+      setChoices(newChoices)
+      setDraggedIndex(index)
+      setHasUnsavedChanges(true)
+    }
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+  }
+
+  const handleSaveOrder = async () => {
+    setSaving(true)
     try {
-      await counsellingService.choices.update(choiceId, newOrder)
+      const choicesToUpdate = choices.map((choice, index) => ({
+        choice_id: choice.choice_id,
+        order_of_list: index + 1,
+      }))
+      await counsellingService.choices.bulkUpdate(choicesToUpdate)
       await loadChoices()
+      alert('Order saved successfully!')
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error reordering choice')
+      alert(err.response?.data?.error || 'Error saving order')
+    } finally {
+      setSaving(false)
     }
   }
-
-  // Replace this function only
-const moveChoice = async (index: number, direction: 'up' | 'down') => {
-  if (direction === 'up' && index === 0) return
-  if (direction === 'down' && index === choices.length - 1) return
-
-  const neighborIndex = direction === 'up' ? index - 1 : index + 1
-  const current = choices[index]
-  const neighbor = choices[neighborIndex]
-
-  // Optimistic UI swap (so it feels instant)
-  const prev = choices
-  const next = [...choices]
-  next[index] = neighbor
-  next[neighborIndex] = current
-  setChoices(next)
-
-  try {
-    // Do a true swap on the server, sequentially, to avoid "already taken"
-    await counsellingService.choices.update(current.choice_id, neighbor.order_of_list)
-    await counsellingService.choices.update(neighbor.choice_id, current.order_of_list)
-
-    // Refresh to sync with server truth
-    await loadChoices()
-  } catch (err: any) {
-    // Revert UI on error
-    setChoices(prev)
-    alert(err.response?.data?.error || 'Error reordering choice')
-  }
-}
-
 
   const loadRecommendations = async () => {
     if (!user?.kcet_rank) {
@@ -150,95 +157,121 @@ const moveChoice = async (index: number, direction: 'up' | 'down') => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Counselling Dashboard</h1>
         <p className="mt-2 text-gray-600">
-          <p className="mt-2 text-gray-600">
-  Welcome, {displayName}.{' '}
-  Your KCET Rank: <strong>{user?.kcet_rank || 'Not set'}</strong>
-</p>
-
-
-      </p>
+          Welcome, {displayName}.{' '}
+          Your KCET Rank: <strong>{user?.kcet_rank || 'Not set'}</strong>
+        </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-          <div className="space-y-3">
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+        {/* Reduced Quick Actions size */}
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <h2 className="text-lg font-semibold mb-3">Quick Actions</h2>
+          <div className="space-y-2">
             <button
               onClick={loadRecommendations}
               disabled={loading}
-              className="w-full bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50"
+              className="w-full bg-primary-600 text-white px-3 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50 text-sm"
             >
               {loading ? 'Loading...' : 'View Recommendations'}
             </button>
             <Link
               to="/search"
-              className="block w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-center"
+              className="block w-full bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 text-center text-sm"
             >
               Search Colleges
             </Link>
             <Link
               to="/meetings"
-              className="block w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-center"
+              className="block w-full bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-center text-sm"
             >
               Meet Seniors
             </Link>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">
-            My Saved Choices ({choices.length})
-          </h2>
+        {/* Personal List Table - Takes more space */}
+        <div className="md:col-span-3 bg-white p-6 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">
+              My Personal List ({choices.length})
+            </h2>
+            {hasUnsavedChanges && (
+              <button
+                onClick={handleSaveOrder}
+                disabled={saving}
+                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50 text-sm"
+              >
+                {saving ? 'Saving...' : 'Save Order'}
+              </button>
+            )}
+          </div>
+
           {choices.length === 0 ? (
             <p className="text-gray-500">No choices saved yet</p>
           ) : (
-            <div className="space-y-2">
-              {choices.map((choice, index) => (
-                <div
-                  key={choice.choice_id}
-                  className="flex justify-between items-center p-2 bg-gray-50 rounded"
-                  draggable
-                  onDragStart={() => setDraggedChoice(choice.choice_id)}
-                  onDragOver={e => e.preventDefault()}
-                  onDrop={e => {
-                    e.preventDefault()
-                    if (draggedChoice && draggedChoice !== choice.choice_id) {
-                      handleReorder(draggedChoice, choice.order_of_list)
-                    }
-                    setDraggedChoice(null)
-                  }}
-                >
-                  <div className="flex items-center space-x-2">
-                    <div className="flex flex-col">
-                      <button
-                        onClick={() => moveChoice(index, 'up')}
-                        disabled={index === 0}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        onClick={() => moveChoice(index, 'down')}
-                        disabled={index === choices.length - 1}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                    </div>
-                    <div>
-                      <span className="font-semibold">{choice.order_of_list}.</span>{' '}
-                      {choice.unique_key_data?.college.college_name} -{' '}
-                      {choice.unique_key_data?.branch_name}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeChoice(choice.choice_id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-16">
+                      Order
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      College Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Branch
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Cluster
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Cutoff
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-20">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {choices.map((choice, index) => (
+                    <tr
+                      key={choice.choice_id}
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragEnd={handleDragEnd}
+                      className={`hover:bg-gray-50 cursor-move ${
+                        draggedIndex === index ? 'opacity-50' : ''
+                      }`}
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {choice.unique_key_data?.college.college_name || 'N/A'}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {choice.unique_key_data?.branch_name || 'N/A'}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {choice.unique_key_data?.cluster.cluster_name || 'N/A'}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {choice.cutoff || 'N/A'}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => removeChoice(choice.choice_id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

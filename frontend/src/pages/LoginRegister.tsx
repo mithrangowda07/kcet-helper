@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { branchService, collegeService } from '../services/api'
-import type { Branch, College } from '../types'
+import { branchService, collegeService, categoryService } from '../services/api'
+import type { Branch, College, Category } from '../types'
 
 const LoginRegister = () => {
   const [isLogin, setIsLogin] = useState(true)
@@ -16,6 +16,7 @@ const LoginRegister = () => {
     phone_number: '',
     password: '',
     password_confirm: '',
+    category: '',
     kcet_rank: '',
     college_code: '',
     unique_key: '',
@@ -24,6 +25,7 @@ const LoginRegister = () => {
 
   const [branches, setBranches] = useState<Branch[]>([])
   const [colleges, setColleges] = useState<College[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -73,6 +75,27 @@ const LoginRegister = () => {
     }
   }, [isLogin, studentType])
 
+  // Load categories when Counselling form is visible
+  useEffect(() => {
+    if (!isLogin && studentType === 'counselling') {
+      categoryService
+        .list()
+        .then((data) => {
+          setCategories(Array.isArray(data) ? data : [])
+        })
+        .catch(async (err) => {
+          console.error('Error loading categories, using fallback:', err)
+          // Fallback to hardcoded categories
+          try {
+            const { HARDCODED_CATEGORIES } = await import('../data/categories')
+            setCategories(HARDCODED_CATEGORIES)
+          } catch {
+            setCategories([])
+          }
+        })
+    }
+  }, [isLogin, studentType])
+
   // If a college is already selected (e.g., user toggled tabs), ensure branches are loaded
   useEffect(() => {
     if (!isLogin && studentType === 'studying' && formData.college_code) {
@@ -107,6 +130,7 @@ const LoginRegister = () => {
 
         if (studentType === 'counselling') {
           registerData.kcet_rank = formData.kcet_rank ? parseInt(formData.kcet_rank) : null
+          registerData.category = formData.category || null
         } else {
           registerData.college_code = formData.college_code
           registerData.unique_key = formData.unique_key || null
@@ -294,17 +318,36 @@ const LoginRegister = () => {
               </div>
 
               {studentType === 'counselling' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">KCET Rank</label>
-                  <input
-                    type="number"
-                    name="kcet_rank"
-                    required
-                    value={formData.kcet_rank}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  />
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <select
+                      name="category"
+                      required
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map(cat => (
+                        <option key={cat.category} value={cat.category}>
+                          {cat.category} ({cat.fall_back})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">KCET Rank</label>
+                    <input
+                      type="number"
+                      name="kcet_rank"
+                      required
+                      value={formData.kcet_rank}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+                </>
               )}
 
               {studentType === 'studying' && (
@@ -388,6 +431,7 @@ const LoginRegister = () => {
                   phone_number: '',
                   password: '',
                   password_confirm: '',
+                  category: '',
                   kcet_rank: '',
                   college_code: '',
                   unique_key: '',
