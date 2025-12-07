@@ -5,8 +5,20 @@ from django.contrib import admin
 from django.urls import path, include
 from colleges.urls import branch_urlpatterns
 from colleges.views import search
+from django.http import HttpResponseRedirect
 
+def api_root(request):
+    return JsonResponse({
+        "auth": "/api/auth/",
+        "colleges": "/api/colleges/",
+        "branches": "/api/branches/",
+        "search": "/api/search/?query=<text>",
+        "counselling": "/api/counselling/",
+        "reviews": "/api/reviews/",
+        "meetings": "/api/meetings/",
+    })
 urlpatterns = [
+    path('', lambda request: HttpResponseRedirect('/api/')),
     path('admin/', admin.site.urls),
     path('api/auth/', include('students.urls')),
     path('api/colleges/', include('colleges.urls')),

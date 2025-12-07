@@ -1,42 +1,39 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collegeService } from '../services/api'
-import type { College, Branch } from '../types'
+import type { College } from '../types'
 
 const SearchPage = () => {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<{ colleges: College[]; branches: Branch[] }>({
-    colleges: [],
-    branches: [],
-  })
+  const [colleges, setColleges] = useState<College[]>([])
   const [loading, setLoading] = useState(false)
 
-  const fetchResults = async (searchQuery: string) => {
+  const fetchColleges = async (searchQuery: string) => {
     setLoading(true)
     try {
-      const data = await collegeService.search(searchQuery)
-      setResults(data)
+      const data = await collegeService.search(searchQuery) // returns College[]
+      setColleges(data)
     } catch (err) {
-      console.error('Error searching:', err)
-      setResults({ colleges: [], branches: [] })
+      console.error('Error searching colleges:', err)
+      setColleges([])
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    // On initial load, show all available colleges/branches
-    fetchResults('')
+    // initial: show all colleges
+    fetchColleges('')
   }, [])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    await fetchResults(query.trim())
+    await fetchColleges(query.trim())
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold mb-6">Search Colleges & Branches</h1>
+      <h1 className="text-3xl font-bold mb-6">Search Colleges</h1>
 
       <form onSubmit={handleSearch} className="mb-8">
         <div className="flex gap-4">
@@ -44,7 +41,7 @@ const SearchPage = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by college name, code, branch, or location..."
+            placeholder="Search by college name, code, or location..."
             className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <button
@@ -57,11 +54,11 @@ const SearchPage = () => {
         </div>
       </form>
 
-      {results.colleges.length > 0 && (
+      {colleges.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Colleges ({results.colleges.length})</h2>
+          <h2 className="text-xl font-semibold mb-4">Colleges ({colleges.length})</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {results.colleges.map(college => (
+            {colleges.map((college) => (
               <Link
                 key={college.college_id}
                 to={`/colleges/${college.college_id}`}
@@ -76,28 +73,9 @@ const SearchPage = () => {
         </div>
       )}
 
-      {results.branches.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Branches ({results.branches.length})</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            {results.branches.map(branch => (
-              <Link
-                key={branch.unique_key}
-                to={`/colleges/${branch.college.college_id}`}
-                className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition"
-              >
-                <h3 className="font-semibold text-lg">{branch.branch_name}</h3>
-                <p className="text-gray-600 text-sm">{branch.college.college_name}</p>
-                <p className="text-gray-600 text-sm">Cluster: {branch.cluster.cluster_name}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!loading && query && results.colleges.length === 0 && results.branches.length === 0 && (
+      {!loading && query && colleges.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          No results found for "{query}"
+          No colleges found for “{query}”
         </div>
       )}
     </div>
@@ -105,4 +83,3 @@ const SearchPage = () => {
 }
 
 export default SearchPage
-

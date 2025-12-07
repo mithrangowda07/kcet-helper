@@ -117,11 +117,15 @@ export const collegeService = {
     return response.data
   },
 
-  search: async (query: string) => {
-    const response = await api.get('/search/', { params: { query } })
-    return response.data
+  // ✅ CHANGED: search colleges only
+  search: async (query: string): Promise<College[]> => {
+    const response = await api.get('/colleges/', {
+      params: { search: query || '' },
+    })
+    return response.data            // <-- array of colleges ONLY
   },
 }
+
 
 export const branchService = {
   detail: async (uniqueKey: string): Promise<Branch> => {

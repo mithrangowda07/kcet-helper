@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { branchService, categoryService } from '../services/api'
-import type { Branch, Category } from '../types'
+import { branchService, collegeService } from '../services/api'
+import type { Branch, College } from '../types'
 
 const LoginRegister = () => {
   const [isLogin, setIsLogin] = useState(true)
   const [studentType, setStudentType] = useState<'counselling' | 'studying'>('counselling')
   const { user, login, register } = useAuth()
   const navigate = useNavigate()
+
   const [formData, setFormData] = useState({
     name: '',
-    category: '',
     email_id: '',
     phone_number: '',
     password: '',
@@ -21,29 +21,13 @@ const LoginRegister = () => {
     unique_key: '',
     year_of_starting: '',
   })
+
   const [branches, setBranches] = useState<Branch[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const [colleges, setColleges] = useState<College[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
-
-  useEffect(() => {
-    loadCategories()
-    // Set default category from user if logged in
-    if (isLogin && user?.category) {
-      setFormData(prev => ({ ...prev, category: user.category || '' }))
-    }
-  }, [isLogin, user])
-
-  const loadCategories = async () => {
-    try {
-      const data = await categoryService.list()
-      setCategories(data)
-    } catch (err) {
-      console.error('Error loading categories:', err)
-    }
-  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -51,12 +35,13 @@ const LoginRegister = () => {
     setError('')
   }
 
-  const handleCollegeCodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const collegeCode = e.target.value.trim()
+  // College change handler (for <select>)
+  const handleCollegeCodeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const collegeCode = e.target.value
     setFormData(prev => ({ ...prev, college_code: collegeCode }))
     setError('')
-    
-    if (collegeCode.length < 2) {
+
+    if (!collegeCode) {
       setBranches([])
       setFormData(prev => ({ ...prev, unique_key: '' }))
       return
@@ -78,6 +63,29 @@ const LoginRegister = () => {
     }
   }
 
+  // Load colleges when Studying form is visible (and also if returning to this tab)
+  useEffect(() => {
+    if (!isLogin && studentType === 'studying') {
+      collegeService
+        .list()
+        .then(setColleges)
+        .catch(() => setColleges([]))
+    }
+  }, [isLogin, studentType])
+
+  // If a college is already selected (e.g., user toggled tabs), ensure branches are loaded
+  useEffect(() => {
+    if (!isLogin && studentType === 'studying' && formData.college_code) {
+      branchService
+        .byCollegeCode(formData.college_code)
+        .then(setBranches)
+        .catch(() => setBranches([]))
+    } else if (studentType !== 'studying') {
+      setBranches([])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLogin, studentType])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -91,7 +99,6 @@ const LoginRegister = () => {
         const registerData: any = {
           type_of_student: studentType,
           name: formData.name,
-          category: formData.category || null,
           email_id: formData.email_id,
           phone_number: formData.phone_number,
           password: formData.password,
@@ -110,7 +117,6 @@ const LoginRegister = () => {
         navigate(studentType === 'counselling' ? '/dashboard/counselling' : '/dashboard/studying')
       }
     } catch (err: any) {
-      // Handle detailed validation errors
       if (err.response?.data?.errors) {
         const errors = err.response.data.errors
         const errorMessages = Object.entries(errors)
@@ -143,9 +149,7 @@ const LoginRegister = () => {
               type="button"
               onClick={() => setStudentType('counselling')}
               className={`flex-1 py-2 px-4 rounded-md ${
-                studentType === 'counselling'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-200 text-gray-700'
+                studentType === 'counselling' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
               Counselling Student
@@ -154,9 +158,7 @@ const LoginRegister = () => {
               type="button"
               onClick={() => setStudentType('studying')}
               className={`flex-1 py-2 px-4 rounded-md ${
-                studentType === 'studying'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-200 text-gray-700'
+                studentType === 'studying' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
               Studying Student
@@ -185,22 +187,7 @@ const LoginRegister = () => {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Category</label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat.category} value={cat.category}>
-                      {cat.category} ({cat.fall_back})
-                    </option>
-                  ))}
-                </select>
-              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
                 <input
@@ -212,6 +199,7 @@ const LoginRegister = () => {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Phone Number</label>
                 <input
@@ -224,25 +212,6 @@ const LoginRegister = () => {
                 />
               </div>
             </>
-          )}
-
-          {isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Category (Optional)</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Use Default ({user?.category || 'None'})</option>
-                {categories.map(cat => (
-                  <option key={cat.category} value={cat.category}>
-                    {cat.category} ({cat.fall_back})
-                  </option>
-                ))}
-              </select>
-            </div>
           )}
 
           {isLogin && (
@@ -312,7 +281,7 @@ const LoginRegister = () => {
                   >
                     {showPasswordConfirm ? (
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                       </svg>
                     ) : (
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -340,18 +309,25 @@ const LoginRegister = () => {
 
               {studentType === 'studying' && (
                 <>
+                  {/* College dropdown (replaces text input) */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">College Code</label>
-                    <input
-                      type="text"
+                    <label className="block text-sm font-medium text-gray-700">College</label>
+                    <select
                       name="college_code"
                       required
                       value={formData.college_code}
                       onChange={handleCollegeCodeChange}
-                      placeholder="e.g., E001"
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    />
+                    >
+                      <option value="">Select a college</option>
+                      {colleges.map((c) => (
+                        <option key={c.id} value={c.college_code}>
+                          {c.college_name} ({c.college_code})
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Branch</label>
                     <select
@@ -359,7 +335,8 @@ const LoginRegister = () => {
                       required
                       value={formData.unique_key}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      disabled={!formData.college_code}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
                     >
                       <option value="">Select a branch</option>
                       {branches.map(branch => (
@@ -403,9 +380,10 @@ const LoginRegister = () => {
               onClick={() => {
                 setIsLogin(!isLogin)
                 setError('')
+                setBranches([])
+                setColleges([])
                 setFormData({
                   name: '',
-                  category: '',
                   email_id: '',
                   phone_number: '',
                   password: '',
@@ -468,4 +446,3 @@ function getPasswordStrength(password: string) {
 }
 
 export default LoginRegister
-
