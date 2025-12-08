@@ -2,11 +2,46 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.db import transaction
 from students.models import Student
 from colleges.models import Cutoff, Category, Branch
 from .models import CounsellingChoice
 from .serializers import CounsellingChoiceSerializer, CounsellingChoiceCreateSerializer
 from .utils import get_recommendations
+
+
+def _get_cutoff_rank(student, branch, year='2025', round_name='r1'):
+    """
+    Resolve cutoff rank for a branch using student's category with fallbacks.
+    Returns an integer rank if available, else None.
+    """
+    cutoff_field = f'cutoff_{year}_{round_name}'
+
+    categories_to_try = []
+    if student.category:
+        try:
+            cat_obj = Category.objects.get(category=student.category)
+            categories_to_try = [student.category] + [
+                c.strip() for c in cat_obj.fall_back.split(',') if c.strip()
+            ]
+        except Category.DoesNotExist:
+            categories_to_try = [student.category]
+
+    if 'GM' not in categories_to_try:
+        categories_to_try.append('GM')
+
+    for cat in categories_to_try:
+        cutoff_obj = Cutoff.objects.filter(unique_key=branch, category=cat).first()
+        if not cutoff_obj:
+            continue
+        value = getattr(cutoff_obj, cutoff_field, None)
+        if value in [None, '', 'NA', '-', 'nan']:
+            continue
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            continue
+    return None
 
 
 @api_view(['POST'])
@@ -135,41 +170,53 @@ def choices_create(request):
     
     serializer = CounsellingChoiceCreateSerializer(data=request.data)
     if serializer.is_valid():
-        # Check if unique_key already exists for this student
         unique_key = serializer.validated_data['unique_key']
-        order_of_list = serializer.validated_data['order_of_list']
-        
-        existing = CounsellingChoice.objects.filter(
-            student_user_id=student,
-            unique_key=unique_key
-        ).first()
-        
-        if existing:
+
+        # avoid duplicates
+        if CounsellingChoice.objects.filter(student_user_id=student, unique_key=unique_key).exists():
             return Response(
                 {'error': 'This branch is already in your choices'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        existing_order = CounsellingChoice.objects.filter(
-            student_user_id=student,
-            order_of_list=order_of_list
-        ).first()
-        
-        if existing_order:
-            return Response(
-                {'error': f'Order {order_of_list} is already taken'},
-                status=status.HTTP_400_BAD_REQUEST
+
+        with transaction.atomic():
+            # fetch existing choices ordered
+            existing_choices = list(
+                CounsellingChoice.objects.filter(student_user_id=student)
+                .order_by('order_of_list')
+                .select_related('unique_key')
             )
-        
-        choice = CounsellingChoice.objects.create(
-            student_user_id=student,
-            **serializer.validated_data
-        )
-        
-        return Response(
-            CounsellingChoiceSerializer(choice).data,
-            status=status.HTTP_201_CREATED
-        )
+
+            new_rank = _get_cutoff_rank(student, unique_key, '2025', 'r1')
+            insert_position = len(existing_choices) + 1
+
+            for idx, choice in enumerate(existing_choices, start=1):
+                existing_rank = _get_cutoff_rank(student, choice.unique_key, '2025', 'r1')
+
+                if new_rank is None:
+                    # If we don't have rank info, place after ranked items but before other unknowns
+                    if existing_rank is None:
+                        insert_position = idx
+                        break
+                    continue
+
+                if existing_rank is None or new_rank <= existing_rank:
+                    insert_position = idx
+                    break
+
+            # shift orders to make room
+            for choice in reversed(existing_choices):
+                if choice.order_of_list >= insert_position:
+                    choice.order_of_list += 1
+                    choice.save(update_fields=['order_of_list'])
+
+            choice = CounsellingChoice.objects.create(
+                student_user_id=student,
+                unique_key=unique_key,
+                order_of_list=insert_position
+            )
+
+        return Response(CounsellingChoiceSerializer(choice).data, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

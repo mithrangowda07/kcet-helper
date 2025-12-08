@@ -261,7 +261,7 @@ const ProfilePage = () => {
                 >
                   <option value="">Select a college</option>
                   {colleges.map((c) => (
-                    <option key={c.id} value={c.college_code}>
+                    <option key={c.college_id} value={c.college_code}>
                       {c.college_name} ({c.college_code})
                     </option>
                   ))}

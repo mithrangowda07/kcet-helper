@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { branchService, reviewService } from '../services/api'
+import { branchService, reviewService, meetingService } from '../services/api'
 import StarRating from '../components/StarRating'
 import type { Branch, Review } from '../types'
 import {
@@ -61,6 +61,7 @@ const BranchDetailPage = () => {
     total_reviews: number
   } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [requestingMeeting, setRequestingMeeting] = useState<string | null>(null)
 
   const prepareChartData = (
     categoryData?: Record<string, { r1?: any; r2?: any; r3?: any }>
@@ -110,6 +111,22 @@ const BranchDetailPage = () => {
 
     load()
   }, [uniqueKey, user?.category])
+
+  const requestMeeting = async (studyingUserId?: string) => {
+    if (!studyingUserId) {
+      alert('Unable to request meeting for this reviewer.')
+      return
+    }
+    setRequestingMeeting(studyingUserId)
+    try {
+      await meetingService.request(studyingUserId)
+      alert('Meeting request sent. Track it on the Meetings page.')
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error sending meeting request')
+    } finally {
+      setRequestingMeeting(null)
+    }
+  }
 
   if (loading) return <div className="p-8">Loading…</div>
   if (!branch) return <div className="p-8">Branch not found.</div>
@@ -189,32 +206,40 @@ const BranchDetailPage = () => {
           </select>
         </div>
 
-        {chartCategories.map(cat => {
-          const data = prepareChartData(cutoff?.categories?.[cat])
-          if (!data.length) return null
+        <div className="grid gap-6 md:grid-cols-2">
+          {chartCategories.map(cat => {
+            const data = prepareChartData(cutoff?.categories?.[cat])
+            if (!data.length) return null
 
-          return (
-            <div key={cat} className="mb-6">
-              <h3 className="font-medium mb-2">Category: {cat}</h3>
-
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="R1" stroke="#2563eb"/>
-                  <Line type="monotone" dataKey="R2" stroke="#16a34a"/>
-                  <Line type="monotone" dataKey="R3" stroke="#dc2626"/>
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )
-        })}
+            return (
+              <div
+                key={cat}
+                className="rounded-lg border border-gray-100 shadow-sm bg-gradient-to-br from-white to-gray-50 p-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">Category: {cat}</h3>
+                  <span className="text-xs px-2 py-1 rounded-full bg-primary-50 text-primary-700 border border-primary-100">
+                    2025 • R1-R3
+                  </span>
+                </div>
+                <ResponsiveContainer width="100%" height={230}>
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="year" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="R1" stroke="#16a34a" strokeWidth={2}/>
+                    <Line type="monotone" dataKey="R2" stroke="#2563eb" strokeWidth={2}/>
+                    <Line type="monotone" dataKey="R3" stroke="#dc2626" strokeWidth={2}/>
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )
+          })}
+        </div>
 
       </div>
-
       {/* Average Ratings */}
       {reviews?.average_ratings && (
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -240,7 +265,7 @@ const BranchDetailPage = () => {
 
       {/* Reviews Table */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Reviews (By Student)</h2>
+        <h2 className="text-xl font-semibold mb-4">Reviews (By Students)</h2>
 
         {reviews?.reviews?.length ? (
           <div className="overflow-x-auto">
@@ -250,11 +275,20 @@ const BranchDetailPage = () => {
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase w-48">
                     Reviewer
                   </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                    Preferred Day
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                    Preferred Time
+                  </th>
                   {FIELDS.map(f => (
                     <th key={f.key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase min-w-[200px]">
                       {f.label}
                     </th>
                   ))}
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                    Meeting
+                  </th>
                 </tr>
               </thead>
 
@@ -267,6 +301,13 @@ const BranchDetailPage = () => {
                        r.student_user_id}
                     </td>
 
+                    <td className="px-6 py-4 align-top text-sm text-gray-800">
+                      {r.preferred_day?.trim() || '—'}
+                    </td>
+                    <td className="px-6 py-4 align-top text-sm text-gray-800">
+                      {r.preferred_time?.trim() || '—'}
+                    </td>
+
                     {FIELDS.map(f => (
                       <td key={f.key} className="px-6 py-4 align-top text-sm text-left">
                         <div className="whitespace-normal break-words">
@@ -274,6 +315,19 @@ const BranchDetailPage = () => {
                         </div>
                       </td>
                     ))}
+                    <td className="px-6 py-4 align-top text-sm">
+                      {user?.type_of_student === 'counselling' ? (
+                        <button
+                          onClick={() => requestMeeting(r.student_user_id_data?.student_user_id)}
+                          disabled={!r.student_user_id_data?.student_user_id || requestingMeeting === r.student_user_id_data?.student_user_id}
+                          className="text-primary-600 hover:text-primary-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+                        >
+                          {requestingMeeting === r.student_user_id_data?.student_user_id ? 'Requesting...' : 'Request Meeting'}
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Counselling students only</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -8,10 +8,14 @@ const CollegeDetailPage = () => {
   const { collegeId } = useParams<{ collegeId: string }>()
   const { user } = useAuth()
   const [college, setCollege] = useState<any>(null)
+  const [choiceKeys, setChoiceKeys] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (collegeId) {
       loadCollege()
+    }
+    if (user?.type_of_student === 'counselling') {
+      loadChoices()
     }
   }, [collegeId])
 
@@ -24,12 +28,20 @@ const CollegeDetailPage = () => {
     }
   }
 
+  const loadChoices = async () => {
+    try {
+      const list = await counsellingService.choices.list()
+      setChoiceKeys(new Set(list.map(item => item.unique_key)))
+    } catch (err) {
+      console.error('Error loading choices:', err)
+      setChoiceKeys(new Set())
+    }
+  }
+
   const addToChoices = async (uniqueKey: string) => {
     try {
-      // place at end of list
-      const choices = await (await import('../services/api')).counsellingService.choices.list()
-      const nextOrder = choices.length > 0 ? Math.max(...choices.map(c => c.order_of_list)) + 1 : 1
-      await counsellingService.choices.create(uniqueKey, nextOrder)
+      await counsellingService.choices.create(uniqueKey)
+      setChoiceKeys(prev => new Set(prev).add(uniqueKey))
       alert('Added to your choices!')
     } catch (err: any) {
       alert(err.response?.data?.error || 'Error adding choice')
@@ -72,12 +84,18 @@ const CollegeDetailPage = () => {
                   <td className="px-4 py-3">{branch.cluster.cluster_name}</td>
                   <td className="px-4 py-3">
                     {user?.type_of_student === 'counselling' && (
-                      <button
-                        onClick={() => addToChoices(branch.unique_key)}
-                        className="text-primary-600 hover:text-primary-800 text-sm"
-                      >
-                        Add to Choices
-                      </button>
+                      choiceKeys.has(branch.unique_key) ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                          Added
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => addToChoices(branch.unique_key)}
+                          className="text-primary-600 hover:text-primary-800 text-sm"
+                        >
+                          Add to Choices
+                        </button>
+                      )
                     )}
                     <Link
                       to={`/branches/${branch.unique_key}`}

@@ -19,4 +19,7 @@ class CounsellingChoiceCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CounsellingChoice
         fields = ['unique_key', 'order_of_list']
+        extra_kwargs = {
+            'order_of_list': {'required': False}
+        }
 

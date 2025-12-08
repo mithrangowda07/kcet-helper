@@ -165,11 +165,12 @@ export const counsellingService = {
       return response.data
     },
 
-    create: async (uniqueKey: string, orderOfList: number): Promise<CounsellingChoice> => {
-      const response = await api.post('/counselling/choices/create/', {
-        unique_key: uniqueKey,
-        order_of_list: orderOfList,
-      })
+    create: async (uniqueKey: string, orderOfList?: number): Promise<CounsellingChoice> => {
+      const payload: Record<string, any> = { unique_key: uniqueKey }
+      if (orderOfList !== undefined) {
+        payload.order_of_list = orderOfList
+      }
+      const response = await api.post('/counselling/choices/create/', payload)
       return response.data
     },
 
@@ -201,7 +202,12 @@ export const reviewService = {
 
   myReview: async (uniqueKey: string): Promise<Review | null> => {
     const response = await api.get(`/reviews/my-review/${uniqueKey}/`)
-    return response.data.review || null
+    const data = response.data
+    if (data === null) return null
+    if (typeof data === 'object' && 'review' in data) {
+      return data.review || null
+    }
+    return data as Review
   },
 
   branchReviews: async (uniqueKey: string): Promise<{

@@ -17,6 +17,7 @@ const CounsellingDashboard = () => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [exportingPdf, setExportingPdf] = useState(false)
 
   // compute the best display name once
   const displayName = useMemo(() => {
@@ -132,9 +133,7 @@ const CounsellingDashboard = () => {
 
   const addToChoices = async (uniqueKey: string) => {
     try {
-      const nextOrder =
-        choices.length > 0 ? Math.max(...choices.map(c => c.order_of_list)) + 1 : 1
-      await counsellingService.choices.create(uniqueKey, nextOrder)
+      await counsellingService.choices.create(uniqueKey)
       await loadChoices()
       alert('Added to your choices!')
     } catch (err: any) {
@@ -149,6 +148,68 @@ const CounsellingDashboard = () => {
       await loadChoices()
     } catch {
       alert('Error removing choice')
+    }
+  }
+
+  const exportChoicesToPdf = async () => {
+    if (!choices.length) {
+      alert('No choices to export yet')
+      return
+    }
+
+    setExportingPdf(true)
+    try {
+      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable'),
+      ])
+      const autoTable = autoTableModule.default
+      const doc = new jsPDF({ orientation: 'landscape' })
+
+      doc.setFontSize(16)
+      doc.text('KCET Helper - My Personal List', 14, 14)
+      doc.setFontSize(10)
+      doc.text(`Total choices: ${choices.length}`, 14, 22)
+
+      autoTable(doc, {
+        startY: 28,
+        head: [['#', 'College', 'Branch', 'Cluster', 'Cutoff']],
+        body: choices.map((choice, idx) => [
+          idx + 1,
+          choice.unique_key_data?.college.college_name || 'N/A',
+          choice.unique_key_data?.branch_name || 'N/A',
+          choice.unique_key_data?.cluster.cluster_name || 'N/A',
+          choice.cutoff || 'N/A',
+        ]),
+        styles: { halign: 'left' },
+        headStyles: { fillColor: [22, 101, 52] },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        columnStyles: {
+          0: { cellWidth: 12, halign: 'center' },
+          4: { cellWidth: 25, halign: 'center' },
+        },
+      })
+
+      // watermark on every page
+      const pageCount = doc.getNumberOfPages()
+      for (let i = 1; i <= pageCount; i += 1) {
+        doc.setPage(i)
+        const pageWidth = doc.internal.pageSize.getWidth()
+        const pageHeight = doc.internal.pageSize.getHeight()
+        doc.setTextColor(220, 220, 220)
+        doc.setFontSize(48)
+        doc.text('KCET-Helper', pageWidth / 2, pageHeight / 2, {
+          angle: -30,
+          align: 'center',
+        })
+      }
+
+      doc.save('kcet-helper-choices.pdf')
+    } catch (err) {
+      console.error('PDF export failed', err)
+      alert('Could not generate PDF. Please try again.')
+    } finally {
+      setExportingPdf(false)
     }
   }
 
@@ -195,15 +256,24 @@ const CounsellingDashboard = () => {
             <h2 className="text-xl font-semibold">
               My Personal List ({choices.length})
             </h2>
-            {hasUnsavedChanges && (
+            <div className="flex gap-2">
               <button
-                onClick={handleSaveOrder}
-                disabled={saving}
-                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50 text-sm"
+                onClick={exportChoicesToPdf}
+                disabled={exportingPdf}
+                className="bg-white border border-gray-300 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-50 text-sm"
               >
-                {saving ? 'Saving...' : 'Save Order'}
+                {exportingPdf ? 'Preparing PDF...' : 'Download PDF'}
               </button>
-            )}
+              {hasUnsavedChanges && (
+                <button
+                  onClick={handleSaveOrder}
+                  disabled={saving}
+                  className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50 text-sm"
+                >
+                  {saving ? 'Saving...' : 'Save Order'}
+                </button>
+              )}
+            </div>
           </div>
 
           {choices.length === 0 ? (

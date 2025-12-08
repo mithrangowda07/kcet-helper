@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { reviewService, meetingService, branchService } from '../services/api'
 import StarRating from '../components/StarRating'
-import type { Meeting } from '../types'
+import type { Meeting, Review } from '../types'
 
 const StudyingDashboard = () => {
   const { user } = useAuth()
@@ -100,7 +100,11 @@ const StudyingDashboard = () => {
               preferred_day: review.preferred_day || '',
               preferred_time: review.preferred_time || '',
             })
+          } else {
+            setReviewFormData(reviewFormInit)
           }
+        } else {
+          setExistingReview(null)
         }
       } catch (err) {
         console.error('Error loading existing review:', err)
@@ -116,6 +120,10 @@ const StudyingDashboard = () => {
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (submittingReview) return // Prevent multiple submissions
+    if (!user?.unique_key) {
+      alert('Please set your branch in your profile before submitting a review.')
+      return
+    }
     
     setSubmittingReview(true)
     try {

@@ -75,9 +75,9 @@ const LoginRegister = () => {
     }
   }, [isLogin, studentType])
 
-  // Load categories when Counselling form is visible
+  // Load categories when registration view is open (for both student types)
   useEffect(() => {
-    if (!isLogin && studentType === 'counselling') {
+    if (!isLogin) {
       categoryService
         .list()
         .then((data) => {
@@ -94,7 +94,7 @@ const LoginRegister = () => {
           }
         })
     }
-  }, [isLogin, studentType])
+  }, [isLogin])
 
   // If a college is already selected (e.g., user toggled tabs), ensure branches are loaded
   useEffect(() => {
@@ -135,6 +135,7 @@ const LoginRegister = () => {
           registerData.college_code = formData.college_code
           registerData.unique_key = formData.unique_key || null
           registerData.year_of_starting = formData.year_of_starting ? parseInt(formData.year_of_starting) : null
+          registerData.category = formData.category || null
         }
 
         await register(registerData)
@@ -352,6 +353,24 @@ const LoginRegister = () => {
 
               {studentType === 'studying' && (
                 <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <select
+                      name="category"
+                      required
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map(cat => (
+                        <option key={cat.category} value={cat.category}>
+                          {cat.category} ({cat.fall_back})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* College dropdown (replaces text input) */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700">College</label>
@@ -364,7 +383,7 @@ const LoginRegister = () => {
                     >
                       <option value="">Select a college</option>
                       {colleges.map((c) => (
-                        <option key={c.id} value={c.college_code}>
+                        <option key={c.college_id} value={c.college_code}>
                           {c.college_name} ({c.college_code})
                         </option>
                       ))}
