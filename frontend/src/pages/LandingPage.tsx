@@ -87,7 +87,7 @@ const LandingPage = () => {
               <h3 className="font-semibold text-lg mb-2">How do meetings work?</h3>
               <p className="text-gray-600">
                 Counselling students can request meetings with studying students. Once accepted, a Google Meet link is
-                automatically generated and sent to both parties.
+                automatically generated and avaible in the website.
               </p>
             </div>
           </div>
@@ -98,8 +98,7 @@ const LandingPage = () => {
       <div className="bg-yellow-50 border-t border-yellow-200 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-sm text-yellow-800 text-center">
-            <strong>Disclaimer:</strong> The cutoff data and recommendations provided are for informational purposes only.
-            Always refer to official KCET counseling websites for the most accurate and up-to-date information.
+            <strong>Disclaimer:</strong> The cutoffs are taken only from the official KCET counselling website. For further confirmation, you may visit the official KCET website.
           </p>
         </div>
       </div>

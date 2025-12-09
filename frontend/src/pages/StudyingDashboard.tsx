@@ -155,6 +155,24 @@ const StudyingDashboard = () => {
     }
   }
 
+  const handleDeleteReview = async () => {
+    if (!user?.unique_key) return
+    
+    if (!confirm('Are you sure you want to delete your review? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      await reviewService.delete(user.unique_key)
+      setExistingReview(null)
+      setReviewFormData(reviewFormInit)
+      setShowReviewForm(false)
+      alert('Review deleted successfully!')
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error deleting review')
+    }
+  }
+
   const handleMeetingStatus = async (meetingId: number, status: string) => {
     try {
       await meetingService.updateStatus(meetingId, status)
@@ -212,14 +230,24 @@ const StudyingDashboard = () => {
               : 'Share your experience about courses, teaching, placements, and more.'}
           </p>
 
-          <button
-            onClick={() => {
-              setShowReviewForm(v => !v)
-            }}
-            className="w-full bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-400"
-          >
-            {showReviewForm ? 'Close' : existingReview ? 'Edit My Review' : 'Write Review'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setShowReviewForm(v => !v)
+              }}
+              className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+            >
+              {showReviewForm ? 'Close' : existingReview ? 'Edit My Review' : 'Write Review'}
+            </button>
+            {existingReview && (
+              <button
+                onClick={handleDeleteReview}
+                className="bg-red-400 text-white px-4 py-2 rounded-md hover:bg-red-500"
+              >
+                Delete My Review
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Meeting Requests stays second */}

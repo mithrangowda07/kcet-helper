@@ -13,7 +13,8 @@ const CounsellingDashboard = () => {
   const [category, setCategory] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [year, setYear] = useState('2025')
-  const [round, setRound] = useState('r1')
+  const [openingRank, setOpeningRank] = useState<number>(0)
+  const [closingRank, setClosingRank] = useState<number>(0)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -23,7 +24,7 @@ const CounsellingDashboard = () => {
   const displayName = useMemo(() => {
     // 1) if backend sent a name, show first name
     const full = user?.name?.trim();
-    if (full) return full.split(' ')[0];
+    if (full) return full;
 
     // 2) else derive from email (before @), clean dots/underscores/digits
     const username = (user?.email_id || '').split('@')[0] || '';
@@ -40,6 +41,11 @@ const CounsellingDashboard = () => {
     loadChoices()
     loadCategories()
     if (user?.category) setCategory(user.category)
+    // Initialize opening and closing ranks based on user's rank
+    if (user?.kcet_rank) {
+      setOpeningRank(Math.floor(user.kcet_rank * 0.5))
+      setClosingRank(Math.floor(user.kcet_rank * 1.75))
+    }
   }, [user])
 
   const loadChoices = async () => {
@@ -120,7 +126,8 @@ const CounsellingDashboard = () => {
         user.kcet_rank,
         category || undefined,
         year,
-        round
+        openingRank,
+        closingRank
       )
       setRecommendations(data.recommendations)
       setShowRecommendations(true)
@@ -129,6 +136,11 @@ const CounsellingDashboard = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Check if a branch is already in choices
+  const isInChoices = (uniqueKey: string): boolean => {
+    return choices.some(choice => choice.unique_key === uniqueKey)
   }
 
   const addToChoices = async (uniqueKey: string) => {
@@ -218,7 +230,7 @@ const CounsellingDashboard = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Counselling Dashboard</h1>
         <>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-1 text-gray-700">
           <strong>Welcome,</strong> {displayName}
         </p>
         <p className='text-gray-600'>
@@ -264,9 +276,9 @@ const CounsellingDashboard = () => {
               <button
                 onClick={exportChoicesToPdf}
                 disabled={exportingPdf}
-                className="bg-white border border-gray-300 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-50 text-sm"
+                className="bg-gray-400 border border-black text-white px-3 py-2 rounded-md hover:bg-gray-500 text-sm"
               >
-                {exportingPdf ? 'Preparing PDF...' : 'Download PDF'}
+                {exportingPdf ? 'Preparing PDF...' : '⬇️ Download PDF'}
               </button>
               {hasUnsavedChanges && (
                 <button
@@ -324,10 +336,22 @@ const CounsellingDashboard = () => {
                         {index + 1}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {choice.unique_key_data?.college.college_name || 'N/A'}
+                        <Link
+                          to={`/colleges/${choice.unique_key_data?.college.college_id || ''}`}
+                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {choice.unique_key_data?.college.college_name || 'N/A'}
+                        </Link>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {choice.unique_key_data?.branch_name || 'N/A'}
+                        <Link
+                          to={`/branches/${choice.unique_key || ''}`}
+                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {choice.unique_key_data?.branch_name || 'N/A'}
+                        </Link>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                         {choice.unique_key_data?.cluster.cluster_name || 'N/A'}
@@ -378,15 +402,26 @@ const CounsellingDashboard = () => {
               <option value="2024">2024</option>
               <option value="2023">2023</option>
             </select>
-            <select
-              value={round}
-              onChange={e => setRound(e.target.value)}
-              className="border rounded px-3 py-1"
-            >
-              <option value="r1">Round 1</option>
-              <option value="r2">Round 2</option>
-              <option value="r3">Round 3</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Opening Rank:</label>
+              <input
+                type="number"
+                value={openingRank}
+                onChange={e => setOpeningRank(Number(e.target.value))}
+                className="border rounded px-3 py-1 w-24"
+                min="0"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Closing Rank:</label>
+              <input
+                type="number"
+                value={closingRank}
+                onChange={e => setClosingRank(Number(e.target.value))}
+                className="border rounded px-3 py-1 w-24"
+                min="0"
+              />
+            </div>
             <button
               onClick={loadRecommendations}
               className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
@@ -399,7 +434,7 @@ const CounsellingDashboard = () => {
             <p className="text-gray-500">No recommendations found</p>
           ) : (
             <div className="overflow-x-auto">
-              <div className="max-h-96 overflow-y-auto">
+              <div className="max-h-[40em] overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -410,10 +445,10 @@ const CounsellingDashboard = () => {
                       Branch
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Opening Rank
+                      Round 1 Cutoff
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Closing Rank
+                      Round 3 Cutoff
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Distance
@@ -429,13 +464,18 @@ const CounsellingDashboard = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Link
                           to={`/colleges/${rec.college.college_id}`}
-                          className="text-primary-600 hover:underline"
+                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
                         >
                           {rec.college.college_name}
                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {rec.branch.branch_name}
+                        <Link
+                          to={`/branches/${rec.unique_key}`}
+                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                        >
+                          {rec.branch.branch_name}
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{rec.opening_rank}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{rec.closing_rank}</td>
@@ -443,12 +483,18 @@ const CounsellingDashboard = () => {
                         {rec.distance_from_rank}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => addToChoices(rec.unique_key)}
-                          className="text-primary-600 hover:text-primary-800"
-                        >
-                          Add to Choices
-                        </button>
+                        {isInChoices(rec.unique_key) ? (
+                          <span className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-sm cursor-not-allowed">
+                            Added
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => addToChoices(rec.unique_key)}
+                            className="text-primary-600 hover:text-primary-800"
+                          >
+                            Add to Choices
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

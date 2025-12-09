@@ -146,7 +146,7 @@ export const branchService = {
 }
 
 export const counsellingService = {
-  recommendations: async (kcetRank: number, category?: string, year?: string, round?: string): Promise<{
+  recommendations: async (kcetRank: number, category?: string, year?: string, openingRank?: number, closingRank?: number): Promise<{
     recommendations: Recommendation[]
     count: number
   }> => {
@@ -154,7 +154,8 @@ export const counsellingService = {
       kcet_rank: kcetRank,
       category,
       year: year || '2025',
-      round: round || 'r1',
+      opening_rank: openingRank,
+      closing_rank: closingRank,
     })
     return response.data
   },
@@ -208,6 +209,10 @@ export const reviewService = {
       return data.review || null
     }
     return data as Review
+  },
+
+  delete: async (uniqueKey: string): Promise<void> => {
+    await api.delete(`/reviews/my-review/${uniqueKey}/delete/`)
   },
 
   branchReviews: async (uniqueKey: string): Promise<{

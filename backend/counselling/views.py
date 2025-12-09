@@ -49,7 +49,7 @@ def _get_cutoff_rank(student, branch, year='2025', round_name='r1'):
 def recommendations(request):
     """
     Get rank-based recommendations for counselling students.
-    Body: { kcet_rank, category?, year?, round? }
+    Body: { kcet_rank, category?, year?, opening_rank?, closing_rank? }
     """
     student = request.user
     
@@ -72,15 +72,29 @@ def recommendations(request):
     
     category = request.data.get('category')
     year = request.data.get('year', '2025')
-    round_name = request.data.get('round', 'r1')
+    opening_rank = request.data.get('opening_rank')
+    closing_rank = request.data.get('closing_rank')
     
-    recommendations_list = get_recommendations(kcet_rank, category, year, round_name)
+    # Convert to integers if provided
+    if opening_rank is not None:
+        try:
+            opening_rank = int(opening_rank)
+        except (ValueError, TypeError):
+            opening_rank = None
+    if closing_rank is not None:
+        try:
+            closing_rank = int(closing_rank)
+        except (ValueError, TypeError):
+            closing_rank = None
+    
+    recommendations_list = get_recommendations(kcet_rank, category, year, opening_rank, closing_rank)
     
     return Response({
         'kcet_rank': kcet_rank,
         'category': category,
         'year': year,
-        'round': round_name,
+        'opening_rank': opening_rank,
+        'closing_rank': closing_rank,
         'recommendations': recommendations_list,
         'count': len(recommendations_list),
     })
