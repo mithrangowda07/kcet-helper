@@ -16,6 +16,40 @@ class StudentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['student_user_id', 'created_at', 'last_login']
 
+    def validate(self, attrs):
+        """
+        Prevent studying students from changing college/branch once set.
+        Still allow initial population if missing (legacy users).
+        """
+        instance = getattr(self, 'instance', None)
+        if instance and instance.type_of_student == 'studying':
+            # Enforce college_code immutability once present
+            if 'college_code' in attrs:
+                incoming = attrs.get('college_code')
+                current = instance.college_code
+                if current and incoming is not None and incoming != current:
+                    raise serializers.ValidationError({
+                        'college_code': 'Studying students cannot change their college.'
+                    })
+                if incoming in [None, '']:
+                    raise serializers.ValidationError({
+                        'college_code': 'College code is required for studying students.'
+                    })
+
+            # Enforce unique_key immutability once present
+            if 'unique_key' in attrs:
+                incoming_branch = attrs.get('unique_key')
+                current_branch = instance.unique_key
+                if current_branch and incoming_branch is not None and incoming_branch != current_branch:
+                    raise serializers.ValidationError({
+                        'unique_key': 'Studying students cannot change their branch.'
+                    })
+                if incoming_branch is None:
+                    raise serializers.ValidationError({
+                        'unique_key': 'Branch is required for studying students.'
+                    })
+        return super().validate(attrs)
+
 
 class StudentRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)

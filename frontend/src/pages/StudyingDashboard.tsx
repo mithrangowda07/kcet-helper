@@ -10,6 +10,7 @@ const StudyingDashboard = () => {
   const [invitations, setInvitations] = useState<Meeting[]>([])
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [branchName, setBranchName] = useState('')
+  const [collegeName, setCollegeName] = useState('')
   const [existingReview, setExistingReview] = useState<Review | null>(null)
   const [submittingReview, setSubmittingReview] = useState(false)
 
@@ -48,12 +49,15 @@ const StudyingDashboard = () => {
         if (user?.unique_key) {
           const data = await branchService.detail(user.unique_key)
           setBranchName(data.branch_name || '')
+          setCollegeName(data.college.college_name || '')
         } else {
           setBranchName('')
+          setCollegeName('')
         }
       } catch (err) {
         console.error('Error loading branch:', err)
         setBranchName('')
+        setCollegeName('')
       }
     }
 
@@ -171,9 +175,15 @@ const StudyingDashboard = () => {
         <h1 className="text-3xl font-bold text-gray-900">Studying Dashboard</h1>
         <p className="mt-2 text-gray-600">Welcome, {user?.name || 'User'}</p>
         {user?.unique_key && (
-          <p className="text-sm text-gray-500">
-            Branch: {branchName || 'Loading...'} | Year: {user.year_of_starting}
-          </p>
+          <>
+            <p className="text-sm text-gray-500">
+              College: {collegeName || 'Loading...'}
+            </p>
+
+            <p className="text-sm text-gray-500">
+              Branch: {branchName || 'Loading...'} | Year: {user.year_of_starting}
+            </p>
+          </>
         )}
       </div>
 

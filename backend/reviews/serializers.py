@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from colleges.models import Branch
 from .models import CollegeReview
 from students.serializers import StudentSerializer
 from colleges.serializers import BranchSerializer
@@ -30,6 +31,16 @@ class CollegeReviewSerializer(serializers.ModelSerializer):
 
 
 class CollegeReviewCreateSerializer(serializers.ModelSerializer):
+    # Accept the unique_key in payload for backward compatibility, but the
+    # server will ultimately rely on the authenticated studying student's
+    # profile unique_key when creating/updating a review.
+    unique_key = serializers.SlugRelatedField(
+        slug_field='unique_key',
+        queryset=Branch.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = CollegeReview
         fields = [
@@ -46,4 +57,7 @@ class CollegeReviewCreateSerializer(serializers.ModelSerializer):
             'placement_rating', 'placement_review',
             'preferred_day', 'preferred_time',
         ]
+        extra_kwargs = {
+            'unique_key': {'required': False},
+        }
 

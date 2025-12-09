@@ -21,7 +21,7 @@ const ProfilePage = () => {
     email_id: user?.email_id || '',
     phone_number: user?.phone_number || '',
     kcet_rank: user?.kcet_rank != null ? String(user.kcet_rank) : '',
-    // studying fields
+    // studying fields (locked once set)
     college_code: (user as any)?.college_code || '',
     unique_key: (user as any)?.unique_key || '',
     year_of_starting:
@@ -129,6 +129,7 @@ const ProfilePage = () => {
       }
 
       if (isStudying) {
+        // College and branch are locked for studying students; send as-is for safety
         updateData.college_code = formData.college_code || null
         updateData.unique_key = formData.unique_key || null
         updateData.year_of_starting =
@@ -250,41 +251,52 @@ const ProfilePage = () => {
           {/* Studying student editable fields */}
           {isStudying && (
             <>
-              {/* College */}
+              {/* College (locked) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">College</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  College (locked for studying students)
+                </label>
                 <select
                   name="college_code"
                   value={formData.college_code}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  disabled
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700"
                 >
-                  <option value="">Select a college</option>
+                  <option value="">{formData.college_code ? 'Locked' : 'Not set'}</option>
                   {colleges.map((c) => (
                     <option key={c.college_id} value={c.college_code}>
                       {c.college_name} ({c.college_code})
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  College is fixed based on registration.
+                </p>
               </div>
 
-              {/* Branch (depends on college) */}
+              {/* Branch (locked) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Branch</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Branch (locked for studying students)
+                </label>
                 <select
                   name="unique_key"
                   value={formData.unique_key}
                   onChange={handleInputChange}
-                  disabled={!formData.college_code}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
+                  disabled
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700"
                 >
-                  <option value="">Select a branch</option>
+                  <option value="">{formData.unique_key ? 'Locked' : 'Not set'}</option>
                   {branches.map(branch => (
                     <option key={branch.unique_key} value={branch.unique_key}>
                       {branch.branch_name}
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Branch is fixed based on registration.
+                </p>
               </div>
 
               {/* Year of Starting */}

@@ -12,60 +12,63 @@ from colleges.models import Branch
 @permission_classes([IsAuthenticated])
 def review_create(request):
     """Create or update a review (only for studying students) - one review per branch per user"""
-    from colleges.models import Branch
-    
     student = request.user
-    
+
     if student.type_of_student != 'studying':
         return Response(
             {'error': 'Only studying students can create reviews'},
             status=status.HTTP_403_FORBIDDEN
         )
-    
-    serializer = CollegeReviewCreateSerializer(data=request.data)
-    if serializer.is_valid():
-        # Get the unique_key string and convert to Branch object
-        unique_key_str = serializer.validated_data['unique_key']
-        
-        try:
-            branch = Branch.objects.get(unique_key=unique_key_str)
-        except Branch.DoesNotExist:
-            return Response(
-                {'error': 'Branch not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Check if student already reviewed this branch
-        existing = CollegeReview.objects.filter(
-            student_user_id=student,
-            unique_key=branch
-        ).first()
-        
-        if existing:
-            # Update existing review
-            for key, value in serializer.validated_data.items():
-                if key != 'unique_key':  # Don't update unique_key
-                    setattr(existing, key, value)
-            existing.save()
-            
-            return Response(
-                CollegeReviewSerializer(existing).data,
-                status=status.HTTP_200_OK
-            )
-        
-        # Create new review
-        review = CollegeReview.objects.create(
-            student_user_id=student,
-            unique_key=branch,
-            **{k: v for k, v in serializer.validated_data.items() if k != 'unique_key'}
-        )
-        
+
+    # The student's profile must already have a branch assigned.
+    branch = getattr(student, 'unique_key', None)
+    if branch is None:
         return Response(
-            CollegeReviewSerializer(review).data,
-            status=status.HTTP_201_CREATED
+            {'error': 'Your profile is missing a branch. Please contact support.'},
+            status=status.HTTP_400_BAD_REQUEST
         )
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = CollegeReviewCreateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # Prevent users from spoofing another branch; always use the profile branch.
+    payload_unique_key = serializer.validated_data.get('unique_key')
+    if payload_unique_key and payload_unique_key != branch:
+        return Response(
+            {'error': 'You can only review your own branch.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if student already reviewed this branch
+    existing = CollegeReview.objects.filter(
+        student_user_id=student,
+        unique_key=branch
+    ).first()
+
+    if existing:
+        # Update existing review
+        for key, value in serializer.validated_data.items():
+            if key != 'unique_key':  # Don't update unique_key
+                setattr(existing, key, value)
+        existing.save()
+
+        return Response(
+            CollegeReviewSerializer(existing).data,
+            status=status.HTTP_200_OK
+        )
+
+    # Create new review
+    review = CollegeReview.objects.create(
+        student_user_id=student,
+        unique_key=branch,
+        **{k: v for k, v in serializer.validated_data.items() if k != 'unique_key'}
+    )
+
+    return Response(
+        CollegeReviewSerializer(review).data,
+        status=status.HTTP_201_CREATED
+    )
 
 
 @api_view(['GET'])
@@ -73,21 +76,30 @@ def review_create(request):
 def my_review(request, unique_key):
     """Get current user's review for a specific branch"""
     student = request.user
-    
+
     if student.type_of_student != 'studying':
         return Response(
             {'error': 'Only studying students can access reviews'},
             status=status.HTTP_403_FORBIDDEN
         )
-    
-    try:
-        branch = Branch.objects.get(unique_key=unique_key)
-    except Branch.DoesNotExist:
+
+    branch = getattr(student, 'unique_key', None)
+    if branch is None:
         return Response(
-            {'error': 'Branch not found'},
-            status=status.HTTP_404_NOT_FOUND
+            {'error': 'Your profile is missing a branch. Please contact support.'},
+            status=status.HTTP_400_BAD_REQUEST
         )
-    
+
+    # Keep the path parameter for backward compatibility but enforce profile branch.
+    if unique_key and unique_key != branch.unique_key:
+        return Response(
+            {
+                'error': 'You can only access the review for your assigned branch.',
+                'branch': branch.unique_key,
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     try:
         review = CollegeReview.objects.get(
             student_user_id=student,
@@ -97,6 +109,46 @@ def my_review(request, unique_key):
         return Response(serializer.data)
     except CollegeReview.DoesNotExist:
         return Response({'review': None}, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_my_review(request, unique_key):
+    """Delete the current student's review for their branch"""
+    student = request.user
+
+    if student.type_of_student != 'studying':
+        return Response(
+            {'error': 'Only studying students can delete reviews'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    branch = getattr(student, 'unique_key', None)
+    if branch is None:
+        return Response(
+            {'error': 'Your profile is missing a branch. Please contact support.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if unique_key and unique_key != branch.unique_key:
+        return Response(
+            {
+                'error': 'You can only delete the review for your assigned branch.',
+                'branch': branch.unique_key,
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        review = CollegeReview.objects.get(
+            student_user_id=student,
+            unique_key=branch
+        )
+    except CollegeReview.DoesNotExist:
+        return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    review.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
