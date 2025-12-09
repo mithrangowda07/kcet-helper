@@ -14,6 +14,11 @@ const StudyingDashboard = () => {
   const [existingReview, setExistingReview] = useState<Review | null>(null)
   const [submittingReview, setSubmittingReview] = useState(false)
 
+  const daysOfWeek = [
+    "Monday", "Tuesday", "Wednesday",
+    "Thursday", "Friday", "Saturday", "Sunday"
+  ]
+
   // remember the last submitted review so we can edit it
   const reviewFormInit = {
     unique_key: user?.unique_key || '',
@@ -41,6 +46,10 @@ const StudyingDashboard = () => {
     preferred_time: '',
   }
   const [reviewFormData, setReviewFormData] = useState(reviewFormInit)
+
+  const selectedDays = reviewFormData.preferred_day
+  ? reviewFormData.preferred_day.split(", ").map(d => d.trim())
+  : []
 
   useEffect(() => {
     // load branch display name
@@ -173,15 +182,19 @@ const StudyingDashboard = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Studying Dashboard</h1>
-        <p className="mt-2 text-gray-600">Welcome, {user?.name || 'User'}</p>
+        <p className="mt-2 text-gray-600"><span className="font-bold">Welcome,</span> {user?.name || 'User'}</p>
         {user?.unique_key && (
           <>
             <p className="text-sm text-gray-500">
-              College: {collegeName || 'Loading...'}
+              <span className="font-bold">College Name :</span> {collegeName || 'Loading...'}
             </p>
 
             <p className="text-sm text-gray-500">
-              Branch: {branchName || 'Loading...'} | Year: {user.year_of_starting}
+              <span className="font-bold">Branch Name :</span> {branchName || 'Loading...'}
+            </p>
+
+            <p className='text-sm text-gray-500'>
+              <span className="font-bold">Year of Admission :</span> {user.year_of_starting}
             </p>
           </>
         )}
@@ -203,7 +216,7 @@ const StudyingDashboard = () => {
             onClick={() => {
               setShowReviewForm(v => !v)
             }}
-            className="w-full bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
+            className="w-full bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-400"
           >
             {showReviewForm ? 'Close' : existingReview ? 'Edit My Review' : 'Write Review'}
           </button>
@@ -281,19 +294,39 @@ const StudyingDashboard = () => {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Preferred Day for Meetings
-                </label>
-                <input
-                  type="text"
-                  value={reviewFormData.preferred_day}
-                  onChange={(e) =>
-                    setReviewFormData(prev => ({ ...prev, preferred_day: e.target.value }))
-                  }
-                  placeholder="e.g., Monday, Wednesday"
-                  className="w-full px-3 py-2 border rounded-md"
-                />
-              </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Preferred Days for Meetings
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {daysOfWeek.map(day => (
+                      <label key={day} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedDays.includes(day)}
+                          onChange={() => {
+                            let updatedDays;
+
+                            if (selectedDays.includes(day)) {
+                              // remove day
+                              updatedDays = selectedDays.filter(d => d !== day);
+                            } else {
+                              // add day
+                              updatedDays = [...selectedDays, day];
+                            }
+
+                            setReviewFormData(prev => ({
+                              ...prev,
+                              preferred_day: updatedDays.join(", ")
+                            }));
+                          }}
+                        />
+                        {day}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Preferred Time for Meetings

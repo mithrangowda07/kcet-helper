@@ -217,10 +217,14 @@ const CounsellingDashboard = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Counselling Dashboard</h1>
+        <>
         <p className="mt-2 text-gray-600">
-          Welcome, {displayName}.{' '}
-          Your KCET Rank: <strong>{user?.kcet_rank || 'Not set'}</strong>
+          <strong>Welcome,</strong> {displayName}
         </p>
+        <p className='text-gray-600'>
+          <strong>Your KCET Rank :</strong> {user?.kcet_rank || <span className="text-red-600">'Not set'</span>}
+        </p>
+        </>
       </div>
 
       <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -280,6 +284,7 @@ const CounsellingDashboard = () => {
             <p className="text-gray-500">No choices saved yet</p>
           ) : (
             <div className="overflow-x-auto">
+              <div className="max-h-[37rem] overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -342,6 +347,7 @@ const CounsellingDashboard = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
@@ -393,6 +399,7 @@ const CounsellingDashboard = () => {
             <p className="text-gray-500">No recommendations found</p>
           ) : (
             <div className="overflow-x-auto">
+              <div className="max-h-96 overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -447,6 +454,7 @@ const CounsellingDashboard = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

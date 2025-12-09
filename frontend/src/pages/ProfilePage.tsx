@@ -204,7 +204,7 @@ const ProfilePage = () => {
               <option value="">Select Category</option>
               {categories.map(cat => (
                 <option key={cat.category} value={cat.category}>
-                  {cat.category} ({cat.fall_back})
+                  {cat.category}
                 </option>
               ))}
             </select>
@@ -254,7 +254,7 @@ const ProfilePage = () => {
               {/* College (locked) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  College (locked for studying students)
+                  College
                 </label>
                 <select
                   name="college_code"
@@ -263,7 +263,7 @@ const ProfilePage = () => {
                   disabled
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700"
                 >
-                  <option value="">{formData.college_code ? 'Locked' : 'Not set'}</option>
+                  <option value="">{formData.college_code ? 'Loading...' : 'Not set'}</option>
                   {colleges.map((c) => (
                     <option key={c.college_id} value={c.college_code}>
                       {c.college_name} ({c.college_code})
@@ -278,7 +278,7 @@ const ProfilePage = () => {
               {/* Branch (locked) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Branch (locked for studying students)
+                  Branch
                 </label>
                 <select
                   name="unique_key"
@@ -287,7 +287,7 @@ const ProfilePage = () => {
                   disabled
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700"
                 >
-                  <option value="">{formData.unique_key ? 'Locked' : 'Not set'}</option>
+                  <option value="">{formData.unique_key ? 'Loading...' : 'Not set'}</option>
                   {branches.map(branch => (
                     <option key={branch.unique_key} value={branch.unique_key}>
                       {branch.branch_name}
@@ -306,6 +306,7 @@ const ProfilePage = () => {
                   type="number"
                   name="year_of_starting"
                   value={formData.year_of_starting}
+                  disabled
                   onChange={handleInputChange}
                   min={2020}
                   max={new Date().getFullYear()}
