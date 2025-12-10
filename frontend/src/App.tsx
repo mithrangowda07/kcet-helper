@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Navbar from './components/Navbar'
 import LandingPage from './pages/LandingPage'
 import LoginRegister from './pages/LoginRegister'
@@ -16,11 +17,12 @@ import BranchDetailPage from './pages/BranchDetailPage'
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar />
-          <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-slate-50 dark:bg-[#111827]">
+            <Navbar />
+            <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<LoginRegister />} />
             <Route
@@ -61,9 +63,10 @@ function App() {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+          </div>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

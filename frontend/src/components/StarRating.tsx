@@ -70,7 +70,7 @@ const StarRating = ({ rating, onRatingChange, readonly = false, size = 'md' }: S
         </button>
       ))}
       {!readonly && (
-        <span className="ml-2 text-sm text-gray-600">{rating}/5</span>
+        <span className="ml-2 text-sm text-slate-600 dark:text-gray-400">{rating}/5</span>
       )}
     </div>
   )

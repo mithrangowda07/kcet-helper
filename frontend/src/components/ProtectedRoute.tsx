@@ -11,8 +11,8 @@ const ProtectedRoute = ({ children, requiredType }: ProtectedRouteProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#111827]">
+        <div className="text-lg text-slate-800 dark:text-gray-100">Loading...</div>
       </div>
     )
   }

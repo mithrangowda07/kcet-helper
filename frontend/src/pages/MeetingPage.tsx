@@ -42,45 +42,45 @@ const MeetingPage = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'accepted':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
       case 'rejected':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
       case 'completed':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
       case 'cancelled':
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-gray-300'
       default:
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
     }
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold mb-6">Meetings</h1>
+      <h1 className="text-3xl font-bold mb-6 text-slate-800 dark:text-gray-100">Meetings</h1>
 
       {user?.type_of_student === 'counselling' && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">My Meeting Requests</h2>
+          <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-gray-100">My Meeting Requests</h2>
           {loading ? (
-            <div className="text-center py-12">Loading...</div>
+            <div className="text-center py-12 text-slate-600 dark:text-gray-400">Loading...</div>
           ) : requests.length === 0 ? (
-            <div className="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center text-slate-500 dark:text-gray-400 border border-slate-300 dark:border-slate-700">
               No meeting requests yet
             </div>
           ) : (
             <div className="space-y-4">
               {requests.map(meeting => (
-                <div key={meeting.meeting_id} className="bg-white p-6 rounded-lg shadow-md">
+                <div key={meeting.meeting_id} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold">Meeting with: {meeting.studying_user_id}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-semibold text-slate-800 dark:text-gray-100">Meeting with: {meeting.studying_user_id}</p>
+                      <p className="text-sm text-slate-600 dark:text-gray-400">
                         Status: <span className={`px-2 py-1 rounded ${getStatusColor(meeting.status)}`}>
                           {meeting.status}
                         </span>
                       </p>
                       {meeting.scheduled_time && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600 dark:text-gray-400">
                           Scheduled: {new Date(meeting.scheduled_time).toLocaleString()}
                         </p>
                       )}
@@ -89,7 +89,7 @@ const MeetingPage = () => {
                           href={meeting.meet_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary-600 hover:underline text-sm mt-2 inline-block"
+                          className="text-blue-600 dark:text-sky-400 hover:underline text-sm mt-2 inline-block"
                         >
                           Join Google Meet
                         </a>
@@ -123,27 +123,27 @@ const MeetingPage = () => {
 
       {user?.type_of_student === 'studying' && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Meeting Invitations</h2>
+          <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-gray-100">Meeting Invitations</h2>
           {loading ? (
-            <div className="text-center py-12">Loading...</div>
+            <div className="text-center py-12 text-slate-600 dark:text-gray-400">Loading...</div>
           ) : invitations.length === 0 ? (
-            <div className="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center text-slate-500 dark:text-gray-400 border border-slate-300 dark:border-slate-700">
               No meeting invitations
             </div>
           ) : (
             <div className="space-y-4">
               {invitations.map(meeting => (
-                <div key={meeting.meeting_id} className="bg-white p-6 rounded-lg shadow-md">
+                <div key={meeting.meeting_id} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold">Request from: {meeting.counselling_user_id}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-semibold text-slate-800 dark:text-gray-100">Request from: {meeting.counselling_user_id}</p>
+                      <p className="text-sm text-slate-600 dark:text-gray-400">
                         Status: <span className={`px-2 py-1 rounded ${getStatusColor(meeting.status)}`}>
                           {meeting.status}
                         </span>
                       </p>
                       {meeting.scheduled_time && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600 dark:text-gray-400">
                           Scheduled: {new Date(meeting.scheduled_time).toLocaleString()}
                         </p>
                       )}
@@ -152,7 +152,7 @@ const MeetingPage = () => {
                           href={meeting.meet_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary-600 hover:underline text-sm mt-2 inline-block"
+                          className="text-blue-600 dark:text-sky-400 hover:underline text-sm mt-2 inline-block"
                         >
                           Join Google Meet
                         </a>

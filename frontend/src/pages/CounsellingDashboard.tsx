@@ -228,32 +228,32 @@ const CounsellingDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Counselling Dashboard</h1>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-gray-100">Counselling Dashboard</h1>
         <>
-        <p className="mt-1 text-gray-700">
+        <p className="mt-1 text-slate-700 dark:text-gray-300">
           <strong>Welcome,</strong> {displayName}
         </p>
-        <p className='text-gray-600'>
-          <strong>Your KCET Rank :</strong> {user?.kcet_rank || <span className="text-red-600">'Not set'</span>}
+        <p className='text-slate-600 dark:text-gray-400'>
+          <strong>Your KCET Rank :</strong> {user?.kcet_rank || <span className="text-red-600 dark:text-red-400">'Not set'</span>}
         </p>
         </>
       </div>
 
       <div className="grid md:grid-cols-4 gap-6 mb-8">
         {/* Reduced Quick Actions size */}
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold mb-3">Quick Actions</h2>
+        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
+          <h2 className="text-lg font-semibold mb-3 text-slate-800 dark:text-gray-100">Quick Actions</h2>
           <div className="space-y-2">
             <button
               onClick={loadRecommendations}
               disabled={loading}
-              className="w-full bg-primary-600 text-white px-3 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50 text-sm"
+              className="w-full bg-blue-600 dark:bg-sky-400 text-white px-3 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500 disabled:opacity-50 text-sm"
             >
               {loading ? 'Loading...' : 'View Recommendations'}
             </button>
             <Link
               to="/search"
-              className="block w-full bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 text-center text-sm"
+              className="block w-full bg-slate-600 dark:bg-slate-500 text-white px-3 py-2 rounded-md hover:bg-slate-700 dark:hover:bg-slate-600 text-center text-sm"
             >
               Search Colleges
             </Link>
@@ -267,16 +267,16 @@ const CounsellingDashboard = () => {
         </div>
 
         {/* Personal List Table - Takes more space */}
-        <div className="md:col-span-3 bg-white p-6 rounded-lg shadow-md">
+        <div className="md:col-span-3 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-gray-100">
               My Personal List ({choices.length})
             </h2>
             <div className="flex gap-2">
               <button
                 onClick={exportChoicesToPdf}
                 disabled={exportingPdf}
-                className="bg-gray-400 border border-black text-white px-3 py-2 rounded-md hover:bg-gray-500 text-sm"
+                className="bg-slate-400 dark:bg-slate-600 border border-slate-700 dark:border-slate-500 text-white px-3 py-2 rounded-md hover:bg-slate-500 dark:hover:bg-slate-700 text-sm"
               >
                 {exportingPdf ? 'Preparing PDF...' : '⬇️ Download PDF'}
               </button>
@@ -284,7 +284,7 @@ const CounsellingDashboard = () => {
                 <button
                   onClick={handleSaveOrder}
                   disabled={saving}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50 text-sm"
+                  className="bg-blue-600 dark:bg-sky-400 text-white px-4 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500 disabled:opacity-50 text-sm"
                 >
                   {saving ? 'Saving...' : 'Save Order'}
                 </button>
@@ -293,34 +293,34 @@ const CounsellingDashboard = () => {
           </div>
 
           {choices.length === 0 ? (
-            <p className="text-gray-500">No choices saved yet</p>
+            <p className="text-slate-500 dark:text-gray-400">No choices saved yet</p>
           ) : (
             <div className="overflow-x-auto">
               <div className="max-h-[37rem] overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                <thead className="bg-slate-50 dark:bg-slate-700">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-16">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase w-16">
                       Order
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       College Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       Branch
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       Cluster
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       Cutoff
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-20">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase w-20">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                   {choices.map((choice, index) => (
                     <tr
                       key={choice.choice_id}
@@ -328,41 +328,41 @@ const CounsellingDashboard = () => {
                       onDragStart={() => handleDragStart(index)}
                       onDragOver={(e) => handleDragOver(e, index)}
                       onDragEnd={handleDragEnd}
-                      className={`hover:bg-gray-50 cursor-move ${
+                      className={`hover:bg-slate-50 dark:hover:bg-slate-700 cursor-move ${
                         draggedIndex === index ? 'opacity-50' : ''
                       }`}
                     >
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-gray-100">
                         {index + 1}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-gray-100">
                         <Link
                           to={`/colleges/${choice.unique_key_data?.college.college_id || ''}`}
-                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                          className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {choice.unique_key_data?.college.college_name || 'N/A'}
                         </Link>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-gray-100">
                         <Link
                           to={`/branches/${choice.unique_key || ''}`}
-                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                          className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {choice.unique_key_data?.branch_name || 'N/A'}
                         </Link>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-gray-100">
                         {choice.unique_key_data?.cluster.cluster_name || 'N/A'}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-gray-100">
                         {choice.cutoff || 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm">
                         <button
                           onClick={() => removeChoice(choice.choice_id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                         >
                           Remove
                         </button>
@@ -378,13 +378,13 @@ const CounsellingDashboard = () => {
       </div>
 
       {showRecommendations && (
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
           <div className="mb-4 flex flex-wrap gap-4 items-center">
-            <h2 className="text-xl font-semibold">Recommendations</h2>
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-gray-100">Recommendations</h2>
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="border rounded px-3 py-1"
+              className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
             >
               <option value="">All Categories</option>
               {categories.map(cat => (
@@ -396,101 +396,101 @@ const CounsellingDashboard = () => {
             <select
               value={year}
               onChange={e => setYear(e.target.value)}
-              className="border rounded px-3 py-1"
+              className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
             >
               <option value="2025">2025</option>
               <option value="2024">2024</option>
               <option value="2023">2023</option>
             </select>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Opening Rank:</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-gray-300">Opening Rank:</label>
               <input
                 type="number"
                 value={openingRank}
                 onChange={e => setOpeningRank(Number(e.target.value))}
-                className="border rounded px-3 py-1 w-24"
+                className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 w-24 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                 min="0"
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Closing Rank:</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-gray-300">Closing Rank:</label>
               <input
                 type="number"
                 value={closingRank}
                 onChange={e => setClosingRank(Number(e.target.value))}
-                className="border rounded px-3 py-1 w-24"
+                className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 w-24 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                 min="0"
               />
             </div>
             <button
               onClick={loadRecommendations}
-              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
+              className="bg-blue-600 dark:bg-sky-400 text-white px-4 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500"
             >
               Refresh
             </button>
           </div>
 
           {recommendations.length === 0 ? (
-            <p className="text-gray-500">No recommendations found</p>
+            <p className="text-slate-500 dark:text-gray-400">No recommendations found</p>
           ) : (
             <div className="overflow-x-auto">
               <div className="max-h-[40em] overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                <thead className="bg-slate-50 dark:bg-slate-700">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       College
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       Branch
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       Round 1 Cutoff
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       Round 3 Cutoff
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       Distance
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                   {recommendations.map(rec => (
-                    <tr key={rec.unique_key} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <tr key={rec.unique_key} className="hover:bg-slate-50 dark:hover:bg-slate-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
                         <Link
                           to={`/colleges/${rec.college.college_id}`}
-                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                          className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
                         >
                           {rec.college.college_name}
                         </Link>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
                         <Link
                           to={`/branches/${rec.unique_key}`}
-                          className="text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                          className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
                         >
                           {rec.branch.branch_name}
                         </Link>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{rec.opening_rank}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{rec.closing_rank}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">{rec.opening_rank}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">{rec.closing_rank}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
                         {rec.distance_from_rank}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
                         {isInChoices(rec.unique_key) ? (
-                          <span className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-sm cursor-not-allowed">
+                          <span className="px-2 py-1 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-gray-300 rounded text-sm cursor-not-allowed">
                             Added
                           </span>
                         ) : (
                           <button
                             onClick={() => addToChoices(rec.unique_key)}
-                            className="text-primary-600 hover:text-primary-800"
+                            className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300"
                           >
                             Add to Choices
                           </button>

@@ -54,44 +54,44 @@ const CollegeDetailPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h1 className="text-3xl font-bold mb-2">{college.college_name}</h1>
-        <p className="text-gray-600">Code: {college.college_code} | Location: {college.location}</p>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 mb-6 border border-slate-300 dark:border-slate-700">
+        <h1 className="text-3xl font-bold mb-2 text-slate-800 dark:text-gray-100">{college.college_name}</h1>
+        <p className="text-slate-600 dark:text-gray-400">Code: {college.college_code} | Location: {college.location}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Branches</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 border border-slate-300 dark:border-slate-700">
+        <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-gray-100">Branches</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cluster</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">Branch</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">Cluster</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">Action</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
               {college.branches?.map((branch: Branch) => (
-                <tr key={branch.unique_key} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
+                <tr key={branch.unique_key} className="hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <td className="px-4 py-3 text-slate-900 dark:text-gray-100">
                     <Link
                       to={`/branches/${branch.unique_key}`}
-                      className="text-primary-600 hover:underline"
+                      className="text-blue-600 dark:text-sky-400 hover:underline"
                     >
                       {branch.branch_name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">{branch.cluster.cluster_name}</td>
+                  <td className="px-4 py-3 text-slate-900 dark:text-gray-100">{branch.cluster.cluster_name}</td>
                   <td className="px-4 py-3">
                     {user?.type_of_student === 'counselling' && (
                       choiceKeys.has(branch.unique_key) ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                           Added
                         </span>
                       ) : (
                         <button
                           onClick={() => addToChoices(branch.unique_key)}
-                          className="text-primary-600 hover:text-primary-800 text-sm"
+                          className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 text-sm"
                         >
                           Add to Choices
                         </button>
@@ -99,7 +99,7 @@ const CollegeDetailPage = () => {
                     )}
                     <Link
                       to={`/branches/${branch.unique_key}`}
-                      className="ml-4 text-sm text-gray-700 hover:underline"
+                      className="ml-4 text-sm text-slate-700 dark:text-gray-300 hover:underline"
                     >
                       View Details
                     </Link>

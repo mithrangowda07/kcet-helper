@@ -164,17 +164,17 @@ const ProfilePage = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold mb-6">Edit Profile</h1>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 border border-slate-300 dark:border-slate-700">
+        <h1 className="text-3xl font-bold mb-6 text-slate-800 dark:text-gray-100">Edit Profile</h1>
 
         {error && (
-          <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-300 px-4 py-3 rounded mb-4">
             {success}
           </div>
         )}
@@ -182,24 +182,24 @@ const ProfilePage = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Name</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
             />
           </div>
 
           {/* Category (mainly for counselling; shown for both if you want) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Category</label>
             <select
               name="category"
               value={formData.category}
               onChange={handleInputChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
             >
               <option value="">Select Category</option>
               {categories.map(cat => (
@@ -212,38 +212,38 @@ const ProfilePage = () => {
 
           {/* Email (immutable) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Email</label>
             <input
               type="email"
               value={formData.email_id}
               disabled
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100"
+              className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-400"
             />
-            <p className="mt-1 text-sm text-gray-500">Email cannot be changed</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">Email cannot be changed</p>
           </div>
 
           {/* Phone (immutable) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Phone Number</label>
             <input
               type="tel"
               value={formData.phone_number}
               disabled
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100"
+              className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-400"
             />
-            <p className="mt-1 text-sm text-gray-500">Phone number cannot be changed</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">Phone number cannot be changed</p>
           </div>
 
           {/* KCET Rank for counselling students */}
           {isCounselling && (
             <div>
-              <label className="block text-sm font-medium text-gray-700">KCET Rank</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">KCET Rank</label>
               <input
                 type="number"
                 name="kcet_rank"
                 value={formData.kcet_rank}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
               />
             </div>
           )}
@@ -253,7 +253,7 @@ const ProfilePage = () => {
             <>
               {/* College (locked) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">
                   College
                 </label>
                 <select
@@ -261,7 +261,7 @@ const ProfilePage = () => {
                   value={formData.college_code}
                   onChange={handleInputChange}
                   disabled
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700"
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-gray-400"
                 >
                   <option value="">{formData.college_code ? 'Loading...' : 'Not set'}</option>
                   {colleges.map((c) => (
@@ -270,14 +270,14 @@ const ProfilePage = () => {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
                   College is fixed based on registration.
                 </p>
               </div>
 
               {/* Branch (locked) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">
                   Branch
                 </label>
                 <select
@@ -285,7 +285,7 @@ const ProfilePage = () => {
                   value={formData.unique_key}
                   onChange={handleInputChange}
                   disabled
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700"
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-gray-400"
                 >
                   <option value="">{formData.unique_key ? 'Loading...' : 'Not set'}</option>
                   {branches.map(branch => (
@@ -294,14 +294,14 @@ const ProfilePage = () => {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
                   Branch is fixed based on registration.
                 </p>
               </div>
 
               {/* Year of Starting */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Year of Starting</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Year of Starting</label>
                 <input
                   type="number"
                   name="year_of_starting"
@@ -310,7 +310,7 @@ const ProfilePage = () => {
                   onChange={handleInputChange}
                   min={2020}
                   max={new Date().getFullYear()}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                 />
               </div>
             </>
@@ -320,7 +320,7 @@ const ProfilePage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 dark:bg-sky-400 hover:bg-blue-700 dark:hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-sky-400 disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { branchService, reviewService, meetingService } from '../services/api'
 import StarRating from '../components/StarRating'
+import CustomTooltip from '../components/charts/CustomTooltip';
 import type { Branch, Review } from '../types'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -128,8 +129,8 @@ const BranchDetailPage = () => {
     }
   }
 
-  if (loading) return <div className="p-8">Loading…</div>
-  if (!branch) return <div className="p-8">Branch not found.</div>
+  if (loading) return <div className="p-8 text-slate-600 dark:text-gray-400">Loading…</div>
+  if (!branch) return <div className="p-8 text-slate-600 dark:text-gray-400">Branch not found.</div>
 
   // BUILD CHART LIST
   // If user is logged in and has a category, default to showing that category
@@ -180,24 +181,24 @@ const BranchDetailPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      <Link to={`/colleges/${branch.college.college_id}`} className="text-primary-600 hover:underline">
+      <Link to={`/colleges/${branch.college.college_id}`} className="text-blue-600 dark:text-sky-400 hover:underline">
         ← Back to {branch.college.college_name}
       </Link>
 
-      <h1 className="text-3xl font-bold mt-4">{branch.branch_name}</h1>
-      <p className="text-gray-600 mb-6">
+      <h1 className="text-3xl font-bold mt-4 text-slate-800 dark:text-gray-100">{branch.branch_name}</h1>
+      <p className="text-slate-600 dark:text-gray-400 mb-6">
         College: <strong>{branch.college.college_name}</strong> • Cluster: {branch.cluster.cluster_name}
       </p>
 
       {/* Cutoff */}
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 mb-8 border border-slate-300 dark:border-slate-700">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Cutoff Trends</h2>
+          <h2 className="text-xl font-semibold text-slate-800 dark:text-gray-100">Cutoff Trends</h2>
 
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border rounded px-3 py-1"
+            className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
           >
             <option value="">All Categories</option>
             {categories.map(cat => (
@@ -214,12 +215,12 @@ const BranchDetailPage = () => {
             return (
               <div
                 key={cat}
-                className="rounded-lg border border-gray-100 shadow-sm bg-gradient-to-br from-white to-gray-50 p-4"
+                className="rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 p-4"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-900">Category: {cat}</h3>
-                  <span className="text-xs px-2 py-1 rounded-full bg-primary-50 text-primary-700 border border-primary-100">
-                    2025 • R1-R3
+                  <h3 className="font-medium text-slate-900 dark:text-gray-100">Category: {cat}</h3>
+                  <span className="text-xs px-2 py-1 rounded-full bg-blue-50 dark:bg-sky-900/30 text-blue-700 dark:text-sky-300 border border-blue-100 dark:border-sky-800">
+                    2022-25 • R1-R3
                   </span>
                 </div>
                 <ResponsiveContainer width="100%" height={230}>
@@ -227,7 +228,7 @@ const BranchDetailPage = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis dataKey="year" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Line type="monotone" dataKey="R1" stroke="#16a34a" strokeWidth={2}/>
                     <Line type="monotone" dataKey="R2" stroke="#2563eb" strokeWidth={2}/>
@@ -242,8 +243,8 @@ const BranchDetailPage = () => {
       </div>
       {/* Average Ratings */}
       {reviews?.average_ratings && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Overall Average Ratings</h2>
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 mb-6 border border-slate-300 dark:border-slate-700">
+          <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-gray-100">Overall Average Ratings</h2>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {Object.entries(reviews.average_ratings).map(([key, value]) => (
@@ -251,10 +252,10 @@ const BranchDetailPage = () => {
                 <div className="flex justify-center mb-1">
                   <StarRating rating={Math.round(value || 0)} readonly size="sm" />
                 </div>
-                <div className="text-sm font-semibold text-primary-600">
+                <div className="text-sm font-semibold text-blue-600 dark:text-sky-400">
                   {value?.toFixed?.(1) || "N/A"}
                 </div>
-                <div className="text-xs text-gray-600">
+                <div className="text-xs text-slate-600 dark:text-gray-400">
                   {key.replace("avg_", "").replace("_", " ")}
                 </div>
               </div>
@@ -264,29 +265,29 @@ const BranchDetailPage = () => {
       )}
 
       {/* Reviews Table */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Reviews (By Students)</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 border border-slate-300 dark:border-slate-700">
+        <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-gray-100">Reviews (By Students)</h2>
 
         {reviews?.reviews?.length ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-700">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase w-48">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase w-48">
                     Reviewer
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                     Preferred Day
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                     Preferred Time
                   </th>
                   {FIELDS.map(f => (
-                    <th key={f.key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase min-w-[200px]">
+                    <th key={f.key} className="px-6 py-4 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase min-w-[200px]">
                       {f.label}
                     </th>
                   ))}
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
                     Meeting
                   </th>
                 </tr>
@@ -294,22 +295,22 @@ const BranchDetailPage = () => {
 
               <tbody>
                 {reviews.reviews.map(r => (
-                  <tr key={r.review_id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 align-top font-medium text-sm">
+                  <tr key={r.review_id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <td className="px-6 py-4 align-top font-medium text-sm text-slate-900 dark:text-gray-100">
                       {r.student_user_id_data?.name ||
                        r.student_user_id_data?.email_id ||
                        r.student_user_id}
                     </td>
 
-                    <td className="px-6 py-4 align-top text-sm text-gray-800">
+                    <td className="px-6 py-4 align-top text-sm text-slate-800 dark:text-gray-200">
                       {r.preferred_day?.trim() || '—'}
                     </td>
-                    <td className="px-6 py-4 align-top text-sm text-gray-800">
+                    <td className="px-6 py-4 align-top text-sm text-slate-800 dark:text-gray-200">
                       {r.preferred_time?.trim() || '—'}
                     </td>
 
                     {FIELDS.map(f => (
-                      <td key={f.key} className="px-6 py-4 align-top text-sm text-left">
+                      <td key={f.key} className="px-6 py-4 align-top text-sm text-left text-slate-900 dark:text-gray-100">
                         <div className="whitespace-normal break-words">
                           {(r as any)[f.key]?.trim() || "—"}
                         </div>
@@ -320,12 +321,12 @@ const BranchDetailPage = () => {
                         <button
                           onClick={() => requestMeeting(r.student_user_id_data?.student_user_id)}
                           disabled={!r.student_user_id_data?.student_user_id || requestingMeeting === r.student_user_id_data?.student_user_id}
-                          className="text-primary-600 hover:text-primary-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+                          className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 disabled:text-slate-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed"
                         >
                           {requestingMeeting === r.student_user_id_data?.student_user_id ? 'Requesting...' : 'Request Meeting'}
                         </button>
                       ) : (
-                        <span className="text-gray-400 text-xs">Counselling students only</span>
+                        <span className="text-slate-400 dark:text-gray-500 text-xs">Counselling students only</span>
                       )}
                     </td>
                   </tr>
@@ -335,7 +336,7 @@ const BranchDetailPage = () => {
             </table>
           </div>
         ) : (
-          <p className="text-gray-500">No reviews yet for this branch.</p>
+          <p className="text-slate-500 dark:text-gray-400">No reviews yet for this branch.</p>
         )}
       </div>
     </div>

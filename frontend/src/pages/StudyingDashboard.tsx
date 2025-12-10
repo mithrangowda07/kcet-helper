@@ -199,19 +199,19 @@ const StudyingDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Studying Dashboard</h1>
-        <p className="mt-2 text-gray-600"><span className="font-bold">Welcome,</span> {user?.name || 'User'}</p>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-gray-100">Studying Dashboard</h1>
+        <p className="mt-2 text-slate-600 dark:text-gray-400"><span className="font-bold">Welcome,</span> {user?.name || 'User'}</p>
         {user?.unique_key && (
           <>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500 dark:text-gray-400">
               <span className="font-bold">College Name :</span> {collegeName || 'Loading...'}
             </p>
 
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500 dark:text-gray-400">
               <span className="font-bold">Branch Name :</span> {branchName || 'Loading...'}
             </p>
 
-            <p className='text-sm text-gray-500'>
+            <p className='text-sm text-slate-500 dark:text-gray-400'>
               <span className="font-bold">Year of Admission :</span> {user.year_of_starting}
             </p>
           </>
@@ -220,11 +220,11 @@ const StudyingDashboard = () => {
 
       {/* FIRST: Write / Edit Review */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-2">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
+          <h2 className="text-xl font-semibold mb-2 text-slate-800 dark:text-gray-100">
             {existingReview ? 'Edit Your Review' : 'Write a Review'}
           </h2>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-slate-500 dark:text-gray-400 mb-4">
             {existingReview 
               ? 'Update your review about courses, teaching, placements, and more.'
               : 'Share your experience about courses, teaching, placements, and more.'}
@@ -235,14 +235,14 @@ const StudyingDashboard = () => {
               onClick={() => {
                 setShowReviewForm(v => !v)
               }}
-              className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              className="flex-1 bg-slate-500 dark:bg-slate-600 text-white px-4 py-2 rounded-md hover:bg-slate-600 dark:hover:bg-slate-700"
             >
               {showReviewForm ? 'Close' : existingReview ? 'Edit My Review' : 'Write Review'}
             </button>
             {existingReview && (
               <button
                 onClick={handleDeleteReview}
-                className="bg-red-400 text-white px-4 py-2 rounded-md hover:bg-red-500"
+                className="bg-red-400 dark:bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-500 dark:hover:bg-red-600"
               >
                 Delete My Review
               </button>
@@ -251,17 +251,17 @@ const StudyingDashboard = () => {
         </div>
 
         {/* Meeting Requests stays second */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
+          <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-gray-100">
             Meeting Requests ({invitations.length})
           </h2>
           {invitations.length === 0 ? (
-            <p className="text-gray-500">No pending requests</p>
+            <p className="text-slate-500 dark:text-gray-400">No pending requests</p>
           ) : (
             <div className="space-y-2">
               {invitations.map(meeting => (
-                <div key={meeting.meeting_id} className="p-3 bg-gray-50 rounded">
-                  <p className="text-sm">Request from: {meeting.counselling_user_id}</p>
+                <div key={meeting.meeting_id} className="p-3 bg-slate-50 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600">
+                  <p className="text-sm text-slate-800 dark:text-gray-200">Request from: {meeting.counselling_user_id}</p>
                   <div className="mt-2 flex gap-2">
                     <button
                       onClick={() => handleMeetingStatus(meeting.meeting_id, 'accepted')}
@@ -285,15 +285,15 @@ const StudyingDashboard = () => {
 
       {/* The review form (opens for Write or Edit) */}
       {showReviewForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
+          <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-gray-100">
             {existingReview ? 'Edit Your Review' : 'Submit Review'}
           </h2>
 
           <form onSubmit={handleReviewSubmit} className="space-y-6">
             {ratingFields.map(field => (
               <div key={field.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
                   {field.label}
                 </label>
                 <StarRating
@@ -314,7 +314,7 @@ const StudyingDashboard = () => {
                       [`${field.key}_review`]: e.target.value,
                     }))
                   }
-                  className="mt-2 w-full px-3 py-2 border rounded-md"
+                  className="mt-2 w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-500"
                   rows={2}
                 />
               </div>
@@ -322,13 +322,13 @@ const StudyingDashboard = () => {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">
                     Preferred Days for Meetings
                   </label>
 
                   <div className="grid grid-cols-2 gap-2">
                     {daysOfWeek.map(day => (
-                      <label key={day} className="flex items-center gap-2">
+                      <label key={day} className="flex items-center gap-2 text-slate-700 dark:text-gray-300">
                         <input
                           type="checkbox"
                           checked={selectedDays.includes(day)}
@@ -348,6 +348,7 @@ const StudyingDashboard = () => {
                               preferred_day: updatedDays.join(", ")
                             }));
                           }}
+                          className="text-blue-600 dark:text-sky-400"
                         />
                         {day}
                       </label>
@@ -356,7 +357,7 @@ const StudyingDashboard = () => {
                 </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">
                   Preferred Time for Meetings
                 </label>
                 <input
@@ -366,7 +367,7 @@ const StudyingDashboard = () => {
                     setReviewFormData(prev => ({ ...prev, preferred_time: e.target.value }))
                   }
                   placeholder="e.g., 6 PM - 8 PM"
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -375,7 +376,7 @@ const StudyingDashboard = () => {
               <button
                 type="submit"
                 disabled={submittingReview}
-                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-sky-400 dark:hover:bg-sky-500 text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submittingReview ? 'Saving...' : existingReview ? 'Save Changes' : 'Submit Review'}
               </button>

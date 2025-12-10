@@ -160,10 +160,10 @@ const LoginRegister = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#111827] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-slate-800 p-8 rounded-lg shadow-lg border border-slate-300 dark:border-slate-700">
         <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="text-center text-3xl font-extrabold text-slate-800 dark:text-gray-100">
             {isLogin ? 'Sign in to your account' : 'Create a new account'}
           </h2>
         </div>
@@ -174,7 +174,7 @@ const LoginRegister = () => {
               type="button"
               onClick={() => setStudentType('counselling')}
               className={`flex-1 py-2 px-4 rounded-md ${
-                studentType === 'counselling' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
+                studentType === 'counselling' ? 'bg-blue-600 dark:bg-sky-400 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300'
               }`}
             >
               Counselling Student
@@ -183,7 +183,7 @@ const LoginRegister = () => {
               type="button"
               onClick={() => setStudentType('studying')}
               className={`flex-1 py-2 px-4 rounded-md ${
-                studentType === 'studying' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'
+                studentType === 'studying' ? 'bg-blue-600 dark:bg-sky-400 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300'
               }`}
             >
               Studying Student
@@ -192,7 +192,7 @@ const LoginRegister = () => {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded whitespace-pre-line">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded whitespace-pre-line">
             <strong>Error:</strong>
             <div className="mt-1">{error}</div>
           </div>
@@ -202,38 +202,38 @@ const LoginRegister = () => {
           {!isLogin && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Name</label>
                 <input
                   type="text"
                   name="name"
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Email</label>
                 <input
                   type="email"
                   name="email_id"
                   required
                   value={formData.email_id}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Phone Number</label>
                 <input
                   type="tel"
                   name="phone_number"
                   required
                   value={formData.phone_number}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                 />
               </div>
             </>
@@ -241,20 +241,20 @@ const LoginRegister = () => {
 
           {isLogin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Email</label>
               <input
                 type="email"
                 name="email_id"
                 required
                 value={formData.email_id}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Password</label>
             <div className="mt-1 relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -262,12 +262,12 @@ const LoginRegister = () => {
                 required
                 value={formData.password}
                 onChange={handleInputChange}
-                className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300"
               >
                 {showPassword ? (
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -289,7 +289,7 @@ const LoginRegister = () => {
           {!isLogin && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Confirm Password</label>
                 <div className="mt-1 relative">
                   <input
                     type={showPasswordConfirm ? "text" : "password"}
@@ -297,12 +297,12 @@ const LoginRegister = () => {
                     required
                     value={formData.password_confirm}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    className="block w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300"
                   >
                     {showPasswordConfirm ? (
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -321,13 +321,13 @@ const LoginRegister = () => {
               {studentType === 'counselling' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Category</label>
                     <select
                       name="category"
                       required
                       value={formData.category}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                     >
                       <option value="">Select Category</option>
                       {categories.map(cat => (
@@ -338,14 +338,14 @@ const LoginRegister = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">KCET Rank</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">KCET Rank</label>
                     <input
                       type="number"
                       name="kcet_rank"
                       required
                       value={formData.kcet_rank}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                     />
                   </div>
                 </>
@@ -354,13 +354,13 @@ const LoginRegister = () => {
               {studentType === 'studying' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Category</label>
                     <select
                       name="category"
                       required
                       value={formData.category}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                     >
                       <option value="">Select Category</option>
                       {categories.map(cat => (
@@ -373,13 +373,13 @@ const LoginRegister = () => {
 
                   {/* College dropdown (replaces text input) */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">College</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">College</label>
                     <select
                       name="college_code"
                       required
                       value={formData.college_code}
                       onChange={handleCollegeCodeChange}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                     >
                       <option value="">Select a college</option>
                       {colleges.map((c) => (
@@ -391,14 +391,14 @@ const LoginRegister = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Branch</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Branch</label>
                     <select
                       name="unique_key"
                       required
                       value={formData.unique_key}
                       onChange={handleInputChange}
                       disabled={!formData.college_code}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
+                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 disabled:bg-slate-100 dark:disabled:bg-slate-800 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                     >
                       <option value="">Select a branch</option>
                       {branches.map(branch => (
@@ -409,7 +409,7 @@ const LoginRegister = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Year of Starting</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">Year of Starting</label>
                     <input
                       type="number"
                       name="year_of_starting"
@@ -418,7 +418,7 @@ const LoginRegister = () => {
                       onChange={handleInputChange}
                       min="2020"
                       max={new Date().getFullYear()}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
                     />
                   </div>
                 </>
@@ -430,7 +430,7 @@ const LoginRegister = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 dark:bg-sky-400 hover:bg-blue-700 dark:hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-sky-400 disabled:opacity-50"
             >
               {loading ? 'Processing...' : isLogin ? 'Sign in' : 'Register'}
             </button>
@@ -457,7 +457,7 @@ const LoginRegister = () => {
                   year_of_starting: '',
                 })
               }}
-              className="text-primary-600 hover:text-primary-500"
+              className="text-blue-600 dark:text-sky-400 hover:text-blue-500 dark:hover:text-sky-300"
             >
               {isLogin ? "Don't have an account? Register" : 'Already have an account? Sign in'}
             </button>
@@ -476,20 +476,20 @@ const PasswordStrengthIndicator = ({ password }: { password: string }) => {
   return (
     <div className="mt-2">
       <div className="flex items-center space-x-2 mb-1">
-        <div className="flex-1 bg-gray-200 rounded-full h-2">
+        <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
           <div
-            className={`h-2 rounded-full transition-all ${strengthColors[strength - 1] || 'bg-gray-400'}`}
+            className={`h-2 rounded-full transition-all ${strengthColors[strength - 1] || 'bg-slate-400 dark:bg-slate-600'}`}
             style={{ width: `${(strength / 5) * 100}%` }}
           />
         </div>
-        <span className="text-xs text-gray-600">{strengthLabels[strength - 1] || 'Very Weak'}</span>
+        <span className="text-xs text-slate-600 dark:text-gray-400">{strengthLabels[strength - 1] || 'Very Weak'}</span>
       </div>
-      <div className="text-xs text-gray-600 space-y-1">
-        <div className={checks.length ? 'text-green-600' : 'text-gray-400'}>✓ At least 8 characters</div>
-        <div className={checks.upper ? 'text-green-600' : 'text-gray-400'}>✓ One uppercase letter</div>
-        <div className={checks.lower ? 'text-green-600' : 'text-gray-400'}>✓ One lowercase letter</div>
-        <div className={checks.number ? 'text-green-600' : 'text-gray-400'}>✓ One number</div>
-        <div className={checks.special ? 'text-green-600' : 'text-gray-400'}>✓ One special character</div>
+      <div className="text-xs text-slate-600 dark:text-gray-400 space-y-1">
+        <div className={checks.length ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-gray-600'}>✓ At least 8 characters</div>
+        <div className={checks.upper ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-gray-600'}>✓ One uppercase letter</div>
+        <div className={checks.lower ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-gray-600'}>✓ One lowercase letter</div>
+        <div className={checks.number ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-gray-600'}>✓ One number</div>
+        <div className={checks.special ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-gray-600'}>✓ One special character</div>
       </div>
     </div>
   )
