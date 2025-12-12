@@ -18,6 +18,7 @@ class College(models.Model):
     college_code = models.CharField(max_length=10, unique=True)
     college_name = models.CharField(max_length=255)
     location = models.CharField(max_length=100)
+    college_link = models.URLField(max_length=500, blank=True, null=True)
 
     class Meta:
         db_table = 'college'

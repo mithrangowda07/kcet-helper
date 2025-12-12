@@ -268,7 +268,15 @@ const LandingPage = () => {
           <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
             <strong>Disclaimer:</strong> The cutoffs are taken only from the
             official KCET counselling website. For further confirmation, you may
-            visit the official KCET website.
+            visit the{" "}
+            <a
+              href="https://cetonline.karnataka.gov.in/kea/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-yellow-600 dark:text-yellow-400"
+            >
+            official KCET website.
+            </a>
           </p>
         </div>
       </div>
