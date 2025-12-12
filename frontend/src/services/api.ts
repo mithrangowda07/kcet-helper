@@ -101,6 +101,10 @@ export const authService = {
   clearTokens,
 }
 
+// // services/api.ts  (replace existing collegeService block with this)
+// import api from './apiInstance' // <-- if you export `api` as axios instance; else use your `api` variable here
+// // or if api is in same file skip the import (keep the axios instance you already have)
+
 export const collegeService = {
   list: async (): Promise<College[]> => {
     const response = await api.get('/colleges/')
@@ -117,13 +121,51 @@ export const collegeService = {
     return response.data
   },
 
-  // ✅ CHANGED: search colleges only
-  search: async (query: string): Promise<College[]> => {
-    const response = await api.get('/colleges/', {
-      params: { search: query || '' },
-    })
-    return response.data            // <-- array of colleges ONLY
+  /**
+   * search(params)
+   * - Accepts { query?, location? }
+   * - Calls your Django /search/ endpoint which returns { colleges, branches, locations }
+   * - Returns an array of colleges (frontend expects College[])
+   */
+  search: async (params: { query?: string; location?: string } = {}): Promise<College[]> => {
+    const res = await api.get('/search/', { params })
+    // backend returns { colleges, branches, locations } — prefer colleges
+    if (res?.data?.colleges && Array.isArray(res.data.colleges)) return res.data.colleges as College[]
+    // fallback: if the endpoint returns an array directly
+    if (Array.isArray(res.data)) return res.data as College[]
+    return []
   },
+
+  /**
+   * getLocations()
+   * - Calls /locations/ (lightweight) and handles either:
+   *    { locations: [...] }  OR  plain array ["City1","City2"]
+   */
+  getLocations: async (): Promise<string[]> => {
+    try {
+      const res = await api.get('/locations/')
+      if (res?.data?.locations && Array.isArray(res.data.locations)) return res.data.locations
+      if (Array.isArray(res.data)) return res.data
+      // unexpected shape -> try search fallback
+    } catch (err) {
+      // fall through to fallback below
+      console.warn('/locations/ failed, trying /search/ fallback', err)
+    }
+
+    // Fallback: call /search/ and read locations or derive from colleges
+    try {
+      const res2 = await api.get('/search/', { params: {} })
+      if (res2?.data?.locations && Array.isArray(res2.data.locations)) return res2.data.locations
+      if (Array.isArray(res2?.data?.colleges)) {
+        const dedup = Array.from(new Set(res2.data.colleges.map((c: any) => (c.location || '').trim()).filter(Boolean)))
+        return dedup.sort()
+      }
+    } catch (err) {
+      console.error('Fallback /search/ also failed when fetching locations', err)
+    }
+
+    return []
+  }
 }
 
 

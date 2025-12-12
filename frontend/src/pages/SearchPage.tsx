@@ -1,3 +1,4 @@
+// SearchPage.tsx
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collegeService } from '../services/api'
@@ -5,14 +6,18 @@ import type { College } from '../types'
 
 const SearchPage = () => {
   const [query, setQuery] = useState('')
+  const [location, setLocation] = useState('') // selected location
+  const [locations, setLocations] = useState<string[]>([]) // dropdown options
   const [colleges, setColleges] = useState<College[]>([])
   const [loading, setLoading] = useState(false)
 
-  const fetchColleges = async (searchQuery: string) => {
+  // Updated fetch function accepts an optional location
+  const fetchColleges = async (searchQuery = '', selectedLocation = '') => {
     setLoading(true)
     try {
-      const data = await collegeService.search(searchQuery) // returns College[]
-      setColleges(data)
+      // collegeService.search should accept ({ query, location }) and return College[]
+      const data = await collegeService.search({ query: searchQuery, location: selectedLocation })
+      setColleges(data || [])
     } catch (err) {
       console.error('Error searching colleges:', err)
       setColleges([])
@@ -22,13 +27,30 @@ const SearchPage = () => {
   }
 
   useEffect(() => {
-    // initial: show all colleges
-    fetchColleges('')
+    // initial: fetch locations for dropdown and show all colleges
+    const init = async () => {
+      setLoading(true)
+      try {
+        // Prefer lightweight locations endpoint for speed
+        const locationsList = await collegeService.getLocations() // returns string[]
+        setLocations(locationsList || [])
+
+        // fetch colleges (no filters) after locations loaded
+        await fetchColleges('', '')
+      } catch (err) {
+        console.error('Initial load error', err)
+        setLocations([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    init()
   }, [])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    await fetchColleges(query.trim())
+    await fetchColleges(query.trim(), location)
   }
 
   return (
@@ -36,21 +58,39 @@ const SearchPage = () => {
       <h1 className="text-3xl font-bold mb-6 text-slate-800 dark:text-gray-100">Search Colleges</h1>
 
       <form onSubmit={handleSearch} className="mb-8">
-        <div className="flex gap-4">
+        {/* responsive layout: vertical on small screens, horizontal on md+ */}
+        <div className="flex flex-col md:flex-row gap-4">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by college name, code, or location..."
+            placeholder="Search by college name or code"
             className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-500"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 dark:bg-sky-400 text-white px-6 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500 disabled:opacity-50"
+
+          {/* Location dropdown */}
+          <select
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="w-full md:w-64 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
           >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
+            <option value="">All locations</option>
+            {locations.map((loc) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex-shrink-0">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 dark:bg-sky-400 text-white px-6 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500 disabled:opacity-50"
+            >
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
         </div>
       </form>
 
@@ -73,9 +113,9 @@ const SearchPage = () => {
         </div>
       )}
 
-      {!loading && query && colleges.length === 0 && (
+      {!loading && (query || location) && colleges.length === 0 && (
         <div className="text-center py-12 text-slate-500 dark:text-gray-400">
-          No colleges found for "{query}"
+          No colleges found for "{query}"{location ? ` in ${location}` : ''}
         </div>
       )}
     </div>

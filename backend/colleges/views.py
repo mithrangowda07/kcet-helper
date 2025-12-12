@@ -1,8 +1,9 @@
-from rest_framework import viewsets, status
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.db.models import Q
+
 from .models import College, Branch, Cutoff, Category
 from .serializers import (
     CollegeSerializer, CollegeDetailSerializer,
@@ -44,14 +45,12 @@ def branch_detail(request, unique_key):
 @permission_classes([AllowAny])
 def branches_by_college_code(request, college_code):
     """
-    Return every branch for the supplied college_code. This is intended for
-    the studying-student registration flow where users pick the college
-    first (by code) and then need the corresponding branch list.
+    Return every branch for the supplied college_code.
     """
     branches = Branch.objects.select_related('college', 'cluster').filter(
         college__college_code=college_code
     ).order_by('branch_name')
-    
+
     serializer = BranchSerializer(branches, many=True)
     return Response(serializer.data)
 
@@ -63,7 +62,7 @@ def college_cutoff(request, college_id):
         college = College.objects.get(college_id=college_id)
         branches = Branch.objects.filter(college=college)
         cutoffs = Cutoff.objects.filter(unique_key__in=branches).select_related('unique_key')
-        
+
         # Structure data for charts
         cutoff_data = {}
         for cutoff in cutoffs:
@@ -73,7 +72,7 @@ def college_cutoff(request, college_id):
                     'branch': BranchSerializer(cutoff.unique_key).data,
                     'categories': {}
                 }
-            
+
             category_data = {
                 '2022': {
                     'r1': cutoff.cutoff_2022_r1,
@@ -97,7 +96,7 @@ def college_cutoff(request, college_id):
                 },
             }
             cutoff_data[branch_key]['categories'][cutoff.category] = category_data
-        
+
         return Response(cutoff_data)
     except College.DoesNotExist:
         return Response({'error': 'College not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -109,31 +108,30 @@ def branch_cutoff(request, unique_key):
     try:
         branch = Branch.objects.get(unique_key=unique_key)
         cutoffs = Cutoff.objects.filter(unique_key=branch)
-        
+
         # Get category filter from query params (optional)
         category_filter = request.GET.get('category', None)
         valid_categories = set()
-        
+
         if category_filter:
             try:
-                from .models import Category
                 cat_obj = Category.objects.get(category=category_filter)
                 # Parse fall_back: "1R,1G,GM" -> ["1R", "1G", "GM"]
-                fall_back_list = [c.strip() for c in cat_obj.fall_back.split(',')]
+                fall_back_list = [c.strip() for c in cat_obj.fall_back.split(',') if c.strip()]
                 valid_categories = set(fall_back_list)
             except Category.DoesNotExist:
                 valid_categories = {category_filter}
-        
+
         cutoff_data = {
             'branch': BranchSerializer(branch).data,
             'categories': {}
         }
-        
+
         for cutoff in cutoffs:
             # Filter by category if provided
             if category_filter and cutoff.category not in valid_categories:
                 continue
-            
+
             category_data = {
                 '2022': {
                     'r1': cutoff.cutoff_2022_r1,
@@ -157,7 +155,7 @@ def branch_cutoff(request, unique_key):
                 },
             }
             cutoff_data['categories'][cutoff.category] = category_data
-        
+
         return Response(cutoff_data)
     except Branch.DoesNotExist:
         return Response({'error': 'Branch not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -167,16 +165,19 @@ def branch_cutoff(request, unique_key):
 @permission_classes([AllowAny])
 def search(request):
     """
-    Unified search endpoint for colleges and branches. When no query is
-    provided we return the complete branch catalogue (with related college
-    and cluster info) so the UI can bootstrap its search page without
-    depending on the cutoff table.
+    Unified search endpoint for colleges and branches.
+    Returns:
+      - colleges: serialized college objects (filtered by query & location if provided)
+      - branches: serialized branch objects (filtered by query & location if provided)
+      - locations: unique sorted list of locations from College table for dropdown
     """
     query = request.GET.get('query', '').strip()
-    
+    location = request.GET.get('location', '').strip()  # NEW: location param
+
     colleges_qs = College.objects.all()
     branches_qs = Branch.objects.select_related('college', 'cluster')
-    
+
+    # filter by query (if provided)
     if query:
         college_filter = (
             Q(college_name__icontains=query) |
@@ -191,14 +192,49 @@ def search(request):
         )
         colleges_qs = colleges_qs.filter(college_filter)
         branches_qs = branches_qs.filter(branch_filter)
-    
+
+    # filter by location (if provided, exact or case-insensitive)
+    if location:
+        colleges_qs = colleges_qs.filter(location__iexact=location)
+        # also filter branches by parent college location
+        branches_qs = branches_qs.filter(college__location__iexact=location)
+
+    # get unique locations for the dropdown (sorted)
+    locations = list(
+        College.objects
+               .exclude(location__isnull=True)
+               .exclude(location__exact='')
+               .values_list('location', flat=True)
+               .distinct()
+               .order_by('location')
+    )
+
     college_serializer = CollegeSerializer(colleges_qs, many=True)
     branch_serializer = BranchSerializer(branches_qs, many=True)
-    
+
     return Response({
         'colleges': college_serializer.data,
         'branches': branch_serializer.data,
+        'locations': locations,
     })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def locations_list(request):
+    """
+    Lightweight endpoint that returns the unique list of non-empty locations.
+    Frontend should call this to populate the location dropdown.
+    """
+    locations = list(
+        College.objects
+               .exclude(location__isnull=True)
+               .exclude(location__exact='')
+               .values_list('location', flat=True)
+               .distinct()
+               .order_by('location')
+    )
+    return Response({'locations': locations})
 
 
 @api_view(['GET'])
@@ -208,4 +244,3 @@ def category_list(request):
     categories = Category.objects.all().order_by('category')
     serializer = CategorySerializer(categories, many=True)
     return Response(serializer.data)
-

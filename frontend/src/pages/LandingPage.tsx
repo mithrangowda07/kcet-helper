@@ -1,12 +1,12 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 // Images
-import logo from '../assets/logo.png';
-import enter from '../assets/enter.png';
-import explore from '../assets/explore.png';
-import connect from '../assets/connect.png';
-import build from '../assets/build.png';
+import logo from "../assets/logo.png";
+import enter from "../assets/enter.png";
+import explore from "../assets/explore.png";
+import connect from "../assets/connect.png";
+import build from "../assets/build.png";
 
 // Swiper
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -22,38 +22,37 @@ const LandingPage = () => {
 
   // autoplay play/pause logic
   useEffect(() => {
-  const btn = document.getElementById("swiperPlayPause");
-  const swiperInstance = document.querySelector(".mySwiper")?.swiper;
-  if (!swiperInstance || !btn) return;
+    const btn = document.getElementById("swiperPlayPause");
+    const swiperInstance = document.querySelector(".mySwiper")?.swiper;
+    if (!swiperInstance || !btn) return;
 
-  let isPlaying = true;
+    let isPlaying = true;
 
-  btn.addEventListener("click", () => {
-    if (isPlaying) {
-      swiperInstance.autoplay.stop();
-      btn.innerHTML = `<i class="fi fi-rr-play-circle"></i>`;  // ▶ Correct play icon
-    } else {
-      swiperInstance.autoplay.start();
-      btn.innerHTML = `<i class="fi fi-rs-pause-circle"></i>`; // ⏸ Correct pause icon
-    }
-    isPlaying = !isPlaying;
-  });
-}, []);
-
+    btn.addEventListener("click", () => {
+      if (isPlaying) {
+        swiperInstance.autoplay.stop();
+        btn.innerHTML = `<i class="fi fi-rr-play-circle"></i>`; // ▶ Correct play icon
+      } else {
+        swiperInstance.autoplay.start();
+        btn.innerHTML = `<i class="fi fi-rs-pause-circle"></i>`; // ⏸ Correct pause icon
+      }
+      isPlaying = !isPlaying;
+    });
+  }, []);
 
   return (
     <div className="min-h-screen">
-
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-[#AEE1D9] to-[#7CC6D9]
+      <div
+        className="bg-gradient-to-br from-[#AEE1D9] to-[#7CC6D9]
                       dark:from-[#0F3D3E] dark:to-[#14505B]
-                      text-[#003F41] dark:text-white">
+                      text-[#003F41] dark:text-white"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center flex flex-col items-center">
-
-            <img 
+            <img
               src={logo}
-              alt="KCET EduGuide Logo" 
+              alt="KCET EduGuide Logo"
               className="h-20 w-auto object-contain mb-4"
             />
 
@@ -65,7 +64,8 @@ const LandingPage = () => {
             </h1>
 
             <p className="text-xl mb-8 text-white">
-              Your comprehensive guide to finding the perfect college and branch based on your KCET rank
+              Your comprehensive guide to finding the perfect college and branch
+              based on your KCET rank
             </p>
 
             {!isAuthenticated && (
@@ -81,7 +81,11 @@ const LandingPage = () => {
 
             {isAuthenticated && (
               <Link
-                to={user?.type_of_student === "counselling" ? "/dashboard/counselling" : "/dashboard/studying"}
+                to={
+                  user?.type_of_student === "counselling"
+                    ? "/dashboard/counselling"
+                    : "/dashboard/studying"
+                }
                 className="backdrop-blur-md bg-white/20 text-white px-8 py-3 rounded-xl 
                            text-lg font-semibold border border-white/30 
                            hover:bg-white/30 transition"
@@ -89,14 +93,12 @@ const LandingPage = () => {
                 Go to Dashboard
               </Link>
             )}
-
           </div>
         </div>
       </div>
 
       {/* How It Works Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        
         <h2 className="text-3xl font-bold text-center mb-12 text-slate-800 dark:text-gray-100">
           How It Works
         </h2>
@@ -114,14 +116,18 @@ const LandingPage = () => {
           }}
           className="mySwiper w-full max-w-4xl mx-auto"
         >
-
           {/* Slide 1 */}
           <SwiperSlide>
-            <div className="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-lg 
-                            border border-slate-300 dark:border-slate-700 text-center">
-
+            <div
+              className="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-lg 
+                            border border-slate-300 dark:border-slate-700 text-center"
+            >
               <div className="mb-6 flex justify-center">
-                <img src={enter} alt="feature icon" className="w-16 h-16 object-contain" />
+                <img
+                  src={enter}
+                  alt="feature icon"
+                  className="w-16 h-16 object-contain"
+                />
               </div>
 
               <h3 className="text-2xl font-bold mb-3 text-slate-800 dark:text-gray-100">
@@ -129,8 +135,8 @@ const LandingPage = () => {
               </h3>
 
               <p className="text-slate-600 dark:text-gray-400 text-lg">
-                Provide your KCET rank to instantly receive personalized college & branch 
-                predictions based on verified historical cutoff data.
+                Provide your KCET rank to instantly receive personalized college
+                & branch predictions based on verified historical cutoff data.
               </p>
 
               <ul className="text-slate-600 dark:text-gray-400 mt-4 space-y-2 text-lg w-[90%] mx-auto text-left">
@@ -143,11 +149,16 @@ const LandingPage = () => {
 
           {/* Slide 2 */}
           <SwiperSlide>
-            <div className="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-lg 
-                            border border-slate-300 dark:border-slate-700 text-center">
-
+            <div
+              className="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-lg 
+                            border border-slate-300 dark:border-slate-700 text-center"
+            >
               <div className="mb-6 flex justify-center">
-                <img src={explore} alt="feature icon" className="w-16 h-16 object-contain" />
+                <img
+                  src={explore}
+                  alt="feature icon"
+                  className="w-16 h-16 object-contain"
+                />
               </div>
 
               <h3 className="text-2xl font-bold mb-3 text-slate-800 dark:text-gray-100">
@@ -155,8 +166,9 @@ const LandingPage = () => {
               </h3>
 
               <p className="text-slate-600 dark:text-gray-400 text-lg">
-                Analyze recommendations, study cutoff trends, read real student reviews, 
-                and compare colleges side-by-side to make informed decisions.
+                Analyze recommendations, study cutoff trends, read real student
+                reviews, and compare colleges side-by-side to make informed
+                decisions.
               </p>
 
               <ul className="text-slate-600 dark:text-gray-400 mt-4 space-y-2 text-lg w-[90%] mx-auto text-left">
@@ -170,11 +182,16 @@ const LandingPage = () => {
 
           {/* Slide 3 */}
           <SwiperSlide>
-            <div className="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-lg 
-                            border border-slate-300 dark:border-slate-700 text-center">
-
+            <div
+              className="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-lg 
+                            border border-slate-300 dark:border-slate-700 text-center"
+            >
               <div className="mb-6 flex justify-center">
-                <img src={connect} alt="feature icon" className="w-16 h-16 object-contain" />
+                <img
+                  src={connect}
+                  alt="feature icon"
+                  className="w-16 h-16 object-contain"
+                />
               </div>
 
               <h3 className="text-2xl font-bold mb-3 text-slate-800 dark:text-gray-100">
@@ -182,8 +199,8 @@ const LandingPage = () => {
               </h3>
 
               <p className="text-slate-600 dark:text-gray-400 text-lg">
-                Ask doubts, gather real insights, and schedule meetings with seniors for 
-                trusted guidance about branches and colleges.
+                Ask doubts, gather real insights, and schedule meetings with
+                seniors for trusted guidance about branches and colleges.
               </p>
 
               <ul className="text-slate-600 dark:text-gray-400 mt-4 space-y-2 text-lg w-[90%] mx-auto text-left">
@@ -196,11 +213,16 @@ const LandingPage = () => {
 
           {/* Slide 4 */}
           <SwiperSlide>
-            <div className="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-lg
-                            border border-slate-300 dark:border-slate-700 text-center">
-
+            <div
+              className="bg-white dark:bg-slate-800 p-10 rounded-xl shadow-lg
+                            border border-slate-300 dark:border-slate-700 text-center"
+            >
               <div className="mb-6 flex justify-center">
-                <img src={build} alt="feature icon" className="w-16 h-16 object-contain" />
+                <img
+                  src={build}
+                  alt="feature icon"
+                  className="w-16 h-16 object-contain"
+                />
               </div>
 
               <h3 className="text-2xl font-bold mb-3 text-slate-800 dark:text-gray-100">
@@ -208,8 +230,8 @@ const LandingPage = () => {
               </h3>
 
               <p className="text-slate-600 dark:text-gray-400 text-lg">
-                Save favourites, track your shortlists, and receive personalized counselling 
-                insights tailored to your preferences.
+                Save favourites, track your shortlists, and receive personalized
+                counselling insights tailored to your preferences.
               </p>
 
               <ul className="text-slate-600 dark:text-gray-400 mt-4 space-y-2 text-lg w-[90%] mx-auto text-left">
@@ -217,30 +239,26 @@ const LandingPage = () => {
                 <li>• Track your analysis & choices anytime</li>
                 <li>• Receive personalized guidance</li>
               </ul>
-
             </div>
           </SwiperSlide>
-
         </Swiper>
 
         {/* Custom Navigation + Autoplay Controls */}
         <div className="flex items-center justify-center gap-6 mt-6 text-3xl text-black-500">
-
           {/* Prev */}
           <button className="swiper-button-prev-custom">
-  <i className="fi fi-rs-arrow-small-left"></i>
-</button>
+            <i className="fi fi-rs-arrow-small-left"></i>
+          </button>
 
           {/* Play/Pause */}
           <button id="swiperPlayPause" className="text-4xl">
-  <i className="fi fi-rs-pause-circle"></i>
-</button>
+            <i className="fi fi-rs-pause-circle"></i>
+          </button>
 
           {/* Next */}
           <button className="swiper-button-next-custom">
-  <i className="fi fi-rs-arrow-small-right"></i>
-</button>
-
+            <i className="fi fi-rs-arrow-small-right"></i>
+          </button>
         </div>
       </div>
 
@@ -248,12 +266,12 @@ const LandingPage = () => {
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-200 dark:border-yellow-800 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
-            <strong>Disclaimer:</strong> The cutoffs are taken only from the official KCET counselling website. 
-            For further confirmation, you may visit the official KCET website.
+            <strong>Disclaimer:</strong> The cutoffs are taken only from the
+            official KCET counselling website. For further confirmation, you may
+            visit the official KCET website.
           </p>
         </div>
       </div>
-
     </div>
   );
 };
