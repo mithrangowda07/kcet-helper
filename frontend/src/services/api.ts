@@ -26,9 +26,23 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config
+    const originalRequest = error.config || {}
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // If there's no response at all, just bubble up (true network/CORS error)
+    if (!error.response) {
+      return Promise.reject(error)
+    }
+
+    const status = error.response.status
+    const url: string = originalRequest.url || ''
+
+    // Do NOT attempt refresh for auth endpoints themselves
+    const isAuthEndpoint =
+      url.includes('/auth/login/') ||
+      url.includes('/auth/register/') ||
+      url.includes('/auth/refresh/')
+
+    if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true
 
       try {
@@ -39,16 +53,22 @@ api.interceptors.response.use(
           })
           const newTokens = {
             access: response.data.access,
+            // keep using the same refresh token (backend rotates internally if configured)
             refresh: tokens.refresh,
           }
           setTokens(newTokens)
+          if (!originalRequest.headers) originalRequest.headers = {}
           originalRequest.headers.Authorization = `Bearer ${newTokens.access}`
           return api(originalRequest)
         }
-      } catch (refreshError) {
-        // Refresh failed, logout user
+      } catch (refreshError: any) {
+        // Refresh failed, clear auth and send user to login
         clearTokens()
         window.location.href = '/auth'
+        // Attach a clearer message so UI doesn't just show "Network Error"
+        if (!refreshError.response) {
+          refreshError.message = refreshError.message || 'Session expired. Please log in again.'
+        }
         return Promise.reject(refreshError)
       }
     }

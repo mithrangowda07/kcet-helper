@@ -139,7 +139,21 @@ const LoginRegister = () => {
         }
 
         await register(registerData)
-        navigate(studentType === 'counselling' ? '/dashboard/counselling' : '/dashboard/studying')
+        // After successful registration, switch to login view instead of auto-login
+        setIsLogin(true)
+        setError('') // clear any previous errors
+        setFormData({
+          name: '',
+          email_id: '',
+          phone_number: '',
+          password: '',
+          password_confirm: '',
+          category: '',
+          kcet_rank: '',
+          college_code: '',
+          unique_key: '',
+          year_of_starting: '',
+        })
       }
     } catch (err: any) {
       if (err.response?.data?.errors) {

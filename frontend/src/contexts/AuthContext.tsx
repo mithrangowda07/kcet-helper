@@ -66,23 +66,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const login = async (email: string, password: string) => {
-    // Your /auth/login/ response shape can vary.
-    // We always trust /auth/me/ to return the authoritative profile with `name`.
     const response = await authService.login(email, password)
     const t = response.tokens ?? { access: response.access, refresh: response.refresh }
     setAndPersistTokens(t)
-
-    const me = await authService.me()
-    setAndPersistUser(me)
+    // Prefer user data returned from login response to avoid an immediate /auth/me/ 401
+    if (response.student) {
+      setAndPersistUser(response.student)
+    } else {
+      const me = await authService.me()
+      setAndPersistUser(me)
+    }
   }
 
+  // Registration should NOT log the user in automatically.
+  // It just creates the account; user will log in explicitly afterwards.
   const register = async (data: any) => {
-    const response = await authService.register(data)
-    const t = response.tokens ?? { access: response.access, refresh: response.refresh }
-    setAndPersistTokens(t)
-
-    const me = await authService.me()
-    setAndPersistUser(me)
+    await authService.register(data)
   }
 
   const logout = () => {

@@ -3,9 +3,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 from django.utils import timezone
 from .models import Student
-from .serializers import StudentSerializer, StudentRegisterSerializer, StudentLoginSerializer
+from .serializers import (
+    StudentSerializer,
+    StudentRegisterSerializer,
+    StudentLoginSerializer,
+    StudentTokenRefreshSerializer,
+)
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
@@ -103,3 +109,12 @@ def update_profile(request):
         return Response(serializer.data)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StudentTokenRefreshView(TokenRefreshView):
+    """
+    Override to plug in StudentTokenRefreshSerializer so missing users result
+    in a clean 401 instead of a server error.
+    """
+
+    serializer_class = StudentTokenRefreshSerializer

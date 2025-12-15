@@ -1,4 +1,9 @@
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.settings import api_settings
+from django.contrib.auth import get_user_model
 import re
 from .models import Student
 from colleges.serializers import BranchSerializer
@@ -132,4 +137,49 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
 class StudentLoginSerializer(serializers.Serializer):
     email_id = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+
+class StudentTokenRefreshSerializer(TokenRefreshSerializer):
+    """
+    Custom refresh serializer that returns a clean 401/invalid token error
+    instead of a 500 when the user referenced in the refresh token no longer
+    exists (e.g. deleted after token issuance).
+    """
+
+    def validate(self, attrs):
+        refresh = self.token_class(attrs["refresh"])
+
+        user_id = refresh.payload.get(api_settings.USER_ID_CLAIM, None)
+        if user_id:
+            User = get_user_model()
+            try:
+                user = User.objects.get(**{api_settings.USER_ID_FIELD: user_id})
+            except User.DoesNotExist:
+                # Mirror SimpleJWT behaviour but avoid server error
+                raise InvalidToken("No active account found for the given token.")
+
+            if not api_settings.USER_AUTHENTICATION_RULE(user):
+                raise AuthenticationFailed(
+                    self.error_messages["no_active_account"],
+                    "no_active_account",
+                )
+
+        data = {"access": str(refresh.access_token)}
+
+        if api_settings.ROTATE_REFRESH_TOKENS:
+            if api_settings.BLACKLIST_AFTER_ROTATION:
+                try:
+                    refresh.blacklist()
+                except AttributeError:
+                    # Blacklist app not installed
+                    pass
+
+            refresh.set_jti()
+            refresh.set_exp()
+            refresh.set_iat()
+            refresh.outstand()
+
+            data["refresh"] = str(refresh)
+
+        return data
 
