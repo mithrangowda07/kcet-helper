@@ -3,20 +3,17 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils import timezone
-from datetime import timedelta
+from django.db.models import Q
+from datetime import timedelta, datetime
 from .models import StudentMeeting
-from .serializers import (
-    StudentMeetingSerializer, StudentMeetingRequestSerializer,
-    StudentMeetingStatusUpdateSerializer
-)
-from .services import create_google_meet_event
+from .serializers import StudentMeetingSerializer, MeetingRequestSerializer
+from .services import generate_jitsi_meeting_link
 from students.models import Student
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def meeting_request(request):
-    """Counselling student requests a meeting with a studying student"""
     student = request.user
     
     if student.type_of_student != 'counselling':
@@ -25,56 +22,187 @@ def meeting_request(request):
             status=status.HTTP_403_FORBIDDEN
         )
     
-    serializer = StudentMeetingRequestSerializer(data=request.data)
-    if serializer.is_valid():
-        studying_user_id = serializer.validated_data['studying_user_id']
-        scheduled_time = serializer.validated_data.get('scheduled_time')
-        
-        # Verify studying_user_id is a studying student
-        try:
-            studying_student = Student.objects.get(
-                student_user_id=studying_user_id,
-                type_of_student='studying',
-                is_active=True
-            )
-        except Student.DoesNotExist:
-            return Response(
-                {'error': 'Studying student not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Check if meeting already exists
-        existing = StudentMeeting.objects.filter(
-            counselling_user_id=student,
-            studying_user_id=studying_student,
-            status__in=['requested', 'accepted']
-        ).first()
-        
-        if existing:
-            return Response(
-                {'error': 'A meeting request already exists with this student'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        meeting = StudentMeeting.objects.create(
-            counselling_user_id=student,
-            studying_user_id=studying_student,
-            scheduled_time=scheduled_time,
-            status='requested'
+    serializer = MeetingRequestSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    studying_user_id = serializer.validated_data['studying_user_id']
+    
+    try:
+        studying_student = Student.objects.get(
+            student_user_id=studying_user_id,
+            type_of_student='studying',
+            is_active=True
         )
-        
+    except Student.DoesNotExist:
         return Response(
-            StudentMeetingSerializer(meeting).data,
-            status=status.HTTP_201_CREATED
+            {'error': 'Studying student not found'},
+            status=status.HTTP_404_NOT_FOUND
         )
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    meeting = StudentMeeting.objects.create(
+        counselling_user_id=student,
+        studying_user_id=studying_student,
+        status='requested'
+    )
+    
+    return Response(
+        StudentMeetingSerializer(meeting).data,
+        status=status.HTTP_201_CREATED
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def meeting_accept(request, id):
+    student = request.user
+    
+    try:
+        meeting = StudentMeeting.objects.get(meeting_id=id)
+    except StudentMeeting.DoesNotExist:
+        return Response(
+            {'error': 'Meeting not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    if student != meeting.studying_user_id:
+        return Response(
+            {'error': 'Only the studying student can accept meetings'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    if meeting.status != 'requested':
+        return Response(
+            {'error': 'Only requested meetings can be accepted'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    scheduled_time = request.data.get('scheduled_time')
+    if scheduled_time:
+        try:
+            if isinstance(scheduled_time, str):
+                scheduled_time = scheduled_time.replace('Z', '+00:00')
+                scheduled_time = datetime.fromisoformat(scheduled_time)
+            if timezone.is_naive(scheduled_time):
+                scheduled_time = timezone.make_aware(scheduled_time)
+        except Exception:
+            scheduled_time = timezone.now() + timedelta(days=1)
+    else:
+        scheduled_time = timezone.now() + timedelta(days=1)
+    
+    meet_link = generate_jitsi_meeting_link(
+        meeting.studying_user_id.student_user_id,
+        meeting.counselling_user_id.student_user_id
+    )
+    
+    meeting.scheduled_time = scheduled_time
+    meeting.duration_minutes = request.data.get('duration_minutes', 30)
+    meeting.meet_link = meet_link
+    meeting.status = 'accepted'
+    meeting.save()
+    
+    return Response(StudentMeetingSerializer(meeting).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def meeting_reject(request, id):
+    student = request.user
+    
+    try:
+        meeting = StudentMeeting.objects.get(meeting_id=id)
+    except StudentMeeting.DoesNotExist:
+        return Response(
+            {'error': 'Meeting not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    if student != meeting.studying_user_id:
+        return Response(
+            {'error': 'Only the studying student can reject meetings'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    meeting.status = 'rejected'
+    meeting.save()
+    
+    return Response(StudentMeetingSerializer(meeting).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def meeting_cancel(request, id):
+    student = request.user
+    
+    try:
+        meeting = StudentMeeting.objects.get(meeting_id=id)
+    except StudentMeeting.DoesNotExist:
+        return Response(
+            {'error': 'Meeting not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    if student not in [meeting.counselling_user_id, meeting.studying_user_id]:
+        return Response(
+            {'error': 'You are not authorized to cancel this meeting'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    if meeting.status not in ['requested', 'accepted']:
+        return Response(
+            {'error': 'Only requested or accepted meetings can be cancelled'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    meeting.status = 'cancelled'
+    meeting.save()
+    
+    return Response(StudentMeetingSerializer(meeting).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def meeting_complete(request, id):
+    student = request.user
+    
+    try:
+        meeting = StudentMeeting.objects.get(meeting_id=id)
+    except StudentMeeting.DoesNotExist:
+        return Response(
+            {'error': 'Meeting not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    if student not in [meeting.counselling_user_id, meeting.studying_user_id]:
+        return Response(
+            {'error': 'You are not authorized to complete this meeting'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    meeting.status = 'completed'
+    meeting.save()
+    
+    return Response(StudentMeetingSerializer(meeting).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def meetings_upcoming(request):
+    student = request.user
+    
+    meetings = StudentMeeting.objects.filter(
+        status__in=['requested', 'accepted']
+    ).filter(
+        Q(counselling_user_id=student) | Q(studying_user_id=student)
+    ).select_related('counselling_user_id', 'studying_user_id').order_by('scheduled_time', 'created_at')
+    
+    serializer = StudentMeetingSerializer(meetings, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def my_requests(request):
-    """Get all meeting requests made by counselling student"""
     student = request.user
     
     if student.type_of_student != 'counselling':
@@ -94,7 +222,6 @@ def my_requests(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def my_invitations(request):
-    """Get all meeting invitations for studying student"""
     student = request.user
     
     if student.type_of_student != 'studying':
@@ -113,29 +240,27 @@ def my_invitations(request):
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
-def meeting_status_update(request, meeting_id):
-    """Update meeting status (accept/reject/cancel/complete)"""
+def meeting_status_update(request, id):
     student = request.user
     
     try:
         meeting = StudentMeeting.objects.select_related(
             'counselling_user_id', 'studying_user_id'
-        ).get(meeting_id=meeting_id)
+        ).get(meeting_id=id)
     except StudentMeeting.DoesNotExist:
         return Response(
             {'error': 'Meeting not found'},
             status=status.HTTP_404_NOT_FOUND
         )
     
-    serializer = StudentMeetingStatusUpdateSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    new_status = request.data.get('status')
+    if not new_status:
+        return Response(
+            {'error': 'Status is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
-    new_status = serializer.validated_data['status']
-    
-    # Check permissions
     if new_status == 'accepted':
-        # Only studying student can accept
         if student != meeting.studying_user_id:
             return Response(
                 {'error': 'Only the studying student can accept meetings'},
@@ -148,36 +273,33 @@ def meeting_status_update(request, meeting_id):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Get scheduled_time from request or use default (1 day from now)
-        scheduled_time = serializer.validated_data.get('scheduled_time')
-        if not scheduled_time:
+        scheduled_time = request.data.get('scheduled_time')
+        if scheduled_time:
+            try:
+                if isinstance(scheduled_time, str):
+                    scheduled_time = scheduled_time.replace('Z', '+00:00')
+                    scheduled_time = datetime.fromisoformat(scheduled_time)
+                if timezone.is_naive(scheduled_time):
+                    scheduled_time = timezone.make_aware(scheduled_time)
+            except Exception:
+                scheduled_time = timezone.now() + timedelta(days=1)
+        else:
             scheduled_time = timezone.now() + timedelta(days=1)
         
-        # Create Google Calendar event
-        result = create_google_meet_event(
-            counselling_email=meeting.counselling_user_id.email_id,
-            studying_email=meeting.studying_user_id.email_id,
-            scheduled_time=scheduled_time,
-            duration_minutes=meeting.duration_minutes
+        meet_link = generate_jitsi_meeting_link(
+            meeting.studying_user_id.student_user_id,
+            meeting.counselling_user_id.student_user_id
         )
         
-        if result:
-            meeting.scheduled_time = result['scheduled_time']
-            meeting.meet_link = result['meet_link']
-            meeting.status = 'accepted'
-            meeting.save()
-            
-            # TODO: Send email notifications to both students
-            
-            return Response(StudentMeetingSerializer(meeting).data)
-        else:
-            return Response(
-                {'error': 'Failed to create Google Calendar event. Please check server configuration.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        meeting.scheduled_time = scheduled_time
+        meeting.duration_minutes = request.data.get('duration_minutes', 30)
+        meeting.meet_link = meet_link
+        meeting.status = 'accepted'
+        meeting.save()
+        
+        return Response(StudentMeetingSerializer(meeting).data)
     
     elif new_status == 'rejected':
-        # Only studying student can reject
         if student != meeting.studying_user_id:
             return Response(
                 {'error': 'Only the studying student can reject meetings'},
@@ -189,11 +311,16 @@ def meeting_status_update(request, meeting_id):
         return Response(StudentMeetingSerializer(meeting).data)
     
     elif new_status in ['completed', 'cancelled']:
-        # Either party can mark as completed or cancelled
         if student not in [meeting.counselling_user_id, meeting.studying_user_id]:
             return Response(
                 {'error': 'You are not authorized to update this meeting'},
                 status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if new_status == 'cancelled' and meeting.status not in ['requested', 'accepted']:
+            return Response(
+                {'error': 'Only requested or accepted meetings can be cancelled'},
+                status=status.HTTP_400_BAD_REQUEST
             )
         
         meeting.status = new_status
@@ -209,7 +336,6 @@ def meeting_status_update(request, meeting_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def branch_students(request, unique_key):
-    """Get list of studying students for a branch (for counselling students to request meetings)"""
     from colleges.models import Branch
     
     try:
@@ -220,7 +346,6 @@ def branch_students(request, unique_key):
             status=status.HTTP_404_NOT_FOUND
         )
     
-    # Get studying students from this branch who have created reviews
     from reviews.models import CollegeReview
     
     students_with_reviews = Student.objects.filter(
@@ -231,7 +356,6 @@ def branch_students(request, unique_key):
         college_reviews__unique_key=branch
     ).distinct()
     
-    # Return basic info (no sensitive data)
     students_data = []
     for student in students_with_reviews:
         students_data.append({
@@ -249,4 +373,3 @@ def branch_students(request, unique_key):
         'students': students_data,
         'count': len(students_data),
     })
-

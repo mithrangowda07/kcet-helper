@@ -100,10 +100,13 @@ export interface Meeting {
   meeting_id: number
   counselling_user_id: string
   studying_user_id: string
+  counselling_user_id_data?: Student
+  studying_user_id_data?: Student
   scheduled_time?: string
   duration_minutes: number
   meet_link?: string
   status: 'requested' | 'accepted' | 'rejected' | 'completed' | 'cancelled'
-  feedback?: string
+  created_at?: string
+  updated_at?: string
 }
 

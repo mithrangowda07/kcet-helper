@@ -301,7 +301,7 @@ const StudyingDashboard = () => {
                   className="p-3 bg-slate-50 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600"
                 >
                   <p className="text-sm text-slate-800 dark:text-gray-200">
-                    Request from: {meeting.counselling_user_id}
+                    Request from: {meeting.counselling_user_id_data?.name || meeting.counselling_user_id_data?.email_id || meeting.counselling_user_id}
                   </p>
                   <div className="mt-2 flex gap-2">
                     <button

@@ -73,7 +73,9 @@ const MeetingPage = () => {
                 <div key={meeting.meeting_id} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold text-slate-800 dark:text-gray-100">Meeting with: {meeting.studying_user_id}</p>
+                      <p className="font-semibold text-slate-800 dark:text-gray-100">
+                        Meeting with: {meeting.studying_user_id_data?.name || meeting.studying_user_id_data?.email_id || meeting.studying_user_id}
+                      </p>
                       <p className="text-sm text-slate-600 dark:text-gray-400">
                         Status: <span className={`px-2 py-1 rounded ${getStatusColor(meeting.status)}`}>
                           {meeting.status}
@@ -91,7 +93,7 @@ const MeetingPage = () => {
                           rel="noopener noreferrer"
                           className="text-blue-600 dark:text-sky-400 hover:underline text-sm mt-2 inline-block"
                         >
-                          Join Google Meet
+                          Join Jitsi Meet
                         </a>
                       )}
                     </div>
@@ -136,7 +138,9 @@ const MeetingPage = () => {
                 <div key={meeting.meeting_id} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold text-slate-800 dark:text-gray-100">Request from: {meeting.counselling_user_id}</p>
+                      <p className="font-semibold text-slate-800 dark:text-gray-100">
+                        Request from: {meeting.counselling_user_id_data?.name || meeting.counselling_user_id_data?.email_id || meeting.counselling_user_id}
+                      </p>
                       <p className="text-sm text-slate-600 dark:text-gray-400">
                         Status: <span className={`px-2 py-1 rounded ${getStatusColor(meeting.status)}`}>
                           {meeting.status}
@@ -154,7 +158,7 @@ const MeetingPage = () => {
                           rel="noopener noreferrer"
                           className="text-blue-600 dark:text-sky-400 hover:underline text-sm mt-2 inline-block"
                         >
-                          Join Google Meet
+                          Join Jitsi Meet
                         </a>
                       )}
                     </div>

@@ -13,18 +13,11 @@ class StudentMeetingSerializer(serializers.ModelSerializer):
             'meeting_id', 'counselling_user_id', 'counselling_user_id_data',
             'studying_user_id', 'studying_user_id_data',
             'scheduled_time', 'duration_minutes', 'meet_link',
-            'status', 'feedback', 'created_at', 'updated_at',
+            'status', 'created_at', 'updated_at',
         ]
         read_only_fields = ['meeting_id', 'created_at', 'updated_at']
 
 
-class StudentMeetingRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StudentMeeting
-        fields = ['studying_user_id', 'scheduled_time']
-
-
-class StudentMeetingStatusUpdateSerializer(serializers.Serializer):
-    status = serializers.ChoiceField(choices=['accepted', 'rejected', 'completed', 'cancelled'])
-    scheduled_time = serializers.DateTimeField(required=False)
-
+class MeetingRequestSerializer(serializers.Serializer):
+    studying_user_id = serializers.CharField(required=True)
+    counselling_user_id = serializers.CharField(required=False)

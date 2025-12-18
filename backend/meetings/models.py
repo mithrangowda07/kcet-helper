@@ -26,15 +26,13 @@ class StudentMeeting(models.Model):
     )
     scheduled_time = models.DateTimeField(null=True, blank=True)
     duration_minutes = models.IntegerField(default=30)
-    meet_link = models.CharField(max_length=255, blank=True)
+    meet_link = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='requested')
-    feedback = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'student_meetings'
-        unique_together = [['counselling_user_id', 'studying_user_id', 'scheduled_time']]
         managed = True
 
     def __str__(self):
