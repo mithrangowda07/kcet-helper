@@ -2,7 +2,7 @@ from colleges.models import Branch, Cutoff, Category
 from django.db.models import Q
 
 
-def get_recommendations(kcet_rank, category=None, year='2025', opening_rank=None, closing_rank=None):
+def get_recommendations(kcet_rank, category=None, year='2025', opening_rank=None, closing_rank=None, cluster=None):
     """
     Get recommended branches based on KCET rank with opening and closing rank filters.
     
@@ -12,6 +12,7 @@ def get_recommendations(kcet_rank, category=None, year='2025', opening_rank=None
         year: Year to check (default '2025')
         opening_rank: Minimum opening rank (Round 1 cutoff) - filters branches where cutoff_round1 >= opening_rank
         closing_rank: Maximum closing rank (Round 3 cutoff) - filters branches where cutoff_round3 <= closing_rank
+        cluster: Cluster code to filter by (optional)
     
     Returns:
         List of recommended branches with cutoff information
@@ -21,6 +22,10 @@ def get_recommendations(kcet_rank, category=None, year='2025', opening_rank=None
     
     # Get all cutoffs for the specified year
     cutoffs = Cutoff.objects.select_related('unique_key__college', 'unique_key__cluster').all()
+    
+    # Filter by cluster if provided
+    if cluster:
+        cutoffs = cutoffs.filter(unique_key__cluster__cluster_code=cluster)
     
     # If category is provided, get fall_back categories
     valid_categories = set()

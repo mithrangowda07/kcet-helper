@@ -17,6 +17,11 @@ export interface Category {
   fall_back: string
 }
 
+export interface Cluster {
+  cluster_code: string
+  cluster_name: string
+}
+
 export interface College {
   college_id: string
   college_code: string

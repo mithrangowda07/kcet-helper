@@ -127,7 +127,7 @@ const CounsellingDashboard = () => {
         category || undefined,
         year,
         openingRank,
-        closingRank
+        closingRank,
       )
       setRecommendations(data.recommendations)
       setShowRecommendations(true)
@@ -389,18 +389,19 @@ const CounsellingDashboard = () => {
               <option value="">All Categories</option>
               {categories.map(cat => (
                 <option key={cat.category} value={cat.category}>
-                  {cat.category} ({cat.fall_back})
+                  {cat.category}
                 </option>
               ))}
             </select>
-            <select
-              value={year}
-              onChange={e => setYear(e.target.value)}
-              className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
-            >
+             <select
+               value={year}
+               onChange={e => setYear(e.target.value)}
+               className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
+             >
               <option value="2025">2025</option>
               <option value="2024">2024</option>
               <option value="2023">2023</option>
+              <option value="2022">2022</option>
             </select>
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-slate-700 dark:text-gray-300">Opening Rank:</label>
@@ -458,8 +459,8 @@ const CounsellingDashboard = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-                  {recommendations.map(rec => (
+                 <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                   {recommendations.map(rec => (
                     <tr key={rec.unique_key} className="hover:bg-slate-50 dark:hover:bg-slate-700">
                       <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
                         <Link

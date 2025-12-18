@@ -74,6 +74,7 @@ def recommendations(request):
     year = request.data.get('year', '2025')
     opening_rank = request.data.get('opening_rank')
     closing_rank = request.data.get('closing_rank')
+    cluster = request.data.get('cluster')  # currently unused
     
     # Convert to integers if provided
     if opening_rank is not None:
@@ -87,12 +88,13 @@ def recommendations(request):
         except (ValueError, TypeError):
             closing_rank = None
     
-    recommendations_list = get_recommendations(kcet_rank, category, year, opening_rank, closing_rank)
+    recommendations_list = get_recommendations(kcet_rank, category, year, opening_rank, closing_rank, cluster)
     
     return Response({
         'kcet_rank': kcet_rank,
         'category': category,
         'year': year,
+        'cluster': cluster,
         'opening_rank': opening_rank,
         'closing_rank': closing_rank,
         'recommendations': recommendations_list,

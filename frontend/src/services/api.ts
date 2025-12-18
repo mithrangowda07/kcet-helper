@@ -208,7 +208,7 @@ export const branchService = {
 }
 
 export const counsellingService = {
-  recommendations: async (kcetRank: number, category?: string, year?: string, openingRank?: number, closingRank?: number): Promise<{
+  recommendations: async (kcetRank: number, category?: string, year?: string, openingRank?: number, closingRank?: number, cluster?: string): Promise<{
     recommendations: Recommendation[]
     count: number
   }> => {
@@ -218,6 +218,7 @@ export const counsellingService = {
       year: year || '2025',
       opening_rank: openingRank,
       closing_rank: closingRank,
+      cluster,
     })
     return response.data
   },

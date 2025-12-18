@@ -86,9 +86,12 @@ const SearchPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 dark:bg-sky-400 text-white px-6 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500 disabled:opacity-50"
+              className="bg-blue-600 dark:bg-sky-400 text-white px-6 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500 disabled:opacity-50 flex items-center justify-center gap-2 transition-transform duration-150 ease-out active:scale-95"
             >
-              {loading ? 'Searching...' : 'Search'}
+              {loading && (
+                <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              )}
+              <span>{loading ? 'Searching...' : 'Search'}</span>
             </button>
           </div>
         </div>

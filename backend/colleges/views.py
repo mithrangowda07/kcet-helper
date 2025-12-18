@@ -4,10 +4,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.db.models import Q
 
-from .models import College, Branch, Cutoff, Category
+from .models import College, Branch, Cutoff, Category, Cluster
 from .serializers import (
     CollegeSerializer, CollegeDetailSerializer,
-    BranchSerializer, CutoffSerializer, CategorySerializer
+    BranchSerializer, CutoffSerializer, CategorySerializer, ClusterSerializer
 )
 
 
@@ -243,4 +243,13 @@ def category_list(request):
     """Get all categories"""
     categories = Category.objects.all().order_by('category')
     serializer = CategorySerializer(categories, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def cluster_list(request):
+    """Get all clusters"""
+    clusters = Cluster.objects.all().order_by('cluster_code')
+    serializer = ClusterSerializer(clusters, many=True)
     return Response(serializer.data)
