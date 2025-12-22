@@ -15,11 +15,7 @@ class CounsellingChoiceSerializer(serializers.ModelSerializer):
         read_only_fields = ['choice_id', 'student_user_id', 'created_at', 'updated_at']
 
 
-class CounsellingChoiceCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CounsellingChoice
-        fields = ['unique_key', 'order_of_list']
-        extra_kwargs = {
-            'order_of_list': {'required': False}
-        }
+class CounsellingChoiceCreateSerializer(serializers.Serializer):
+    public_id = serializers.UUIDField()
+    order_of_list = serializers.IntegerField(required=False)
 

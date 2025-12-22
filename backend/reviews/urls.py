@@ -5,7 +5,7 @@ urlpatterns = [
     path('', review_create, name='review-create'),
     path('my-review/<str:unique_key>/', my_review, name='my-review'),
     path('my-review/<str:unique_key>/delete/', delete_my_review, name='delete-my-review'),
-    path('branches/<str:unique_key>/', branch_reviews, name='branch-reviews'),
-    path('colleges/<str:college_id>/', college_reviews, name='college-reviews'),
+    path('branches/<uuid:public_id>/', branch_reviews, name='branch-reviews'),
+    path('colleges/<uuid:public_id>/', college_reviews, name='college-reviews'),
 ]
 

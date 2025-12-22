@@ -51,7 +51,7 @@ const FALLBACK_ORDER: Record<string, string[]> = {
 }
 
 const BranchDetailPage = () => {
-  const { uniqueKey } = useParams<{ uniqueKey: string }>()
+  const { publicId } = useParams<{ publicId: string }>()
   const { user } = useAuth()
   const [branch, setBranch] = useState<Branch | null>(null)
   const [cutoff, setCutoff] = useState<BranchCutoffResponse | null>(null)
@@ -88,15 +88,15 @@ const BranchDetailPage = () => {
     const load = async () => {
       setLoading(true)
       try {
-        if (!uniqueKey) return
+        if (!publicId) return
 
-        const branchData = await branchService.detail(uniqueKey)
+        const branchData = await branchService.detail(publicId)
         setBranch(branchData)
 
-        const cutoffData = await branchService.cutoff(uniqueKey)
+        const cutoffData = await branchService.cutoff(publicId)
         setCutoff(cutoffData)
 
-        const reviewData = await reviewService.branchReviews(uniqueKey)
+        const reviewData = await reviewService.branchReviews(publicId)
         setReviews(reviewData)
 
         // Set default category to user's category if logged in
@@ -111,7 +111,7 @@ const BranchDetailPage = () => {
     }
 
     load()
-  }, [uniqueKey, user?.category])
+  }, [publicId, user?.category])
 
   const requestMeeting = async (studyingUserId?: string) => {
     if (!studyingUserId) {
@@ -181,13 +181,16 @@ const BranchDetailPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      <Link to={`/colleges/${branch.college.college_id}`} className="text-blue-600 dark:text-sky-400 hover:underline">
+      <Link to={`/colleges/${branch.college.public_id}`} className="text-blue-600 dark:text-sky-400 hover:underline">
         ← Back to {branch.college.college_name}
       </Link>
 
-      <h1 className="text-3xl font-bold mt-4 text-slate-800 dark:text-gray-100">{branch.branch_name}</h1>
-      <p className="text-slate-600 dark:text-gray-400 mb-6">
-        College: <strong>{branch.college.college_name}</strong> • Cluster: {branch.cluster.cluster_name}
+      <h1 className="text-3xl font-bold mt-4 text-slate-800 dark:text-gray-100 mb-2">{branch.branch_name}</h1>
+      <p className="text-slate-600 dark:text-gray-400 mb-1">
+        <strong>College:</strong> {branch.college.college_name}
+      </p>
+      <p className="text-slate-600 dark:text-gray-400 mb-4">
+        <strong>Cluster:</strong> {branch.cluster.cluster_name}
       </p>
 
       {/* Cutoff */}

@@ -153,10 +153,10 @@ def delete_my_review(request, unique_key):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def branch_reviews(request, unique_key):
+def branch_reviews(request, public_id):
     """Get all reviews for a specific branch"""
     try:
-        branch = Branch.objects.get(unique_key=unique_key)
+        branch = Branch.objects.get(public_id=public_id)
     except Branch.DoesNotExist:
         return Response(
             {'error': 'Branch not found'},
@@ -192,12 +192,12 @@ def branch_reviews(request, unique_key):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def college_reviews(request, college_id):
+def college_reviews(request, public_id):
     """Get aggregated reviews for all branches in a college"""
     from colleges.models import College
     
     try:
-        college = College.objects.get(college_id=college_id)
+        college = College.objects.get(public_id=public_id)
     except College.DoesNotExist:
         return Response(
             {'error': 'College not found'},
@@ -247,7 +247,7 @@ def college_reviews(request, college_id):
     )
     
     return Response({
-        'college_id': college_id,
+        'college_id': str(college.public_id),
         'college_name': college.college_name,
         'branch_reviews': branch_reviews,
         'overall_average_ratings': overall_avg,

@@ -23,14 +23,14 @@ export interface Cluster {
 }
 
 export interface College {
-  college_id: string
+  public_id: string
   college_code: string
   college_name: string
   location: string
 }
 
 export interface Branch {
-  unique_key: string
+  public_id: string
   college: College
   cluster: {
     cluster_code: string
@@ -42,6 +42,7 @@ export interface Branch {
 
 export interface Recommendation {
   unique_key: string
+  public_id: string
   college: College
   branch: {
     branch_id: string

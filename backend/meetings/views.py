@@ -335,11 +335,11 @@ def meeting_status_update(request, id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def branch_students(request, unique_key):
+def branch_students(request, public_id):
     from colleges.models import Branch
     
     try:
-        branch = Branch.objects.get(unique_key=unique_key)
+        branch = Branch.objects.get(public_id=public_id)
     except Branch.DoesNotExist:
         return Response(
             {'error': 'Branch not found'},
@@ -366,7 +366,7 @@ def branch_students(request, unique_key):
     
     return Response({
         'branch': {
-            'unique_key': branch.unique_key,
+            'public_id': str(branch.public_id),
             'branch_name': branch.branch_name,
             'college_name': branch.college.college_name,
         },

@@ -186,7 +186,16 @@ def choices_create(request):
     
     serializer = CounsellingChoiceCreateSerializer(data=request.data)
     if serializer.is_valid():
-        unique_key = serializer.validated_data['unique_key']
+        # Convert public_id to unique_key
+        public_id = serializer.validated_data['public_id']
+        try:
+            branch = Branch.objects.get(public_id=public_id)
+            unique_key = branch
+        except Branch.DoesNotExist:
+            return Response(
+                {'error': 'Branch not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         # avoid duplicates
         if CounsellingChoice.objects.filter(student_user_id=student, unique_key=unique_key).exists():

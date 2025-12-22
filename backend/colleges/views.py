@@ -21,9 +21,9 @@ def college_list(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def college_detail(request, college_id):
+def college_detail(request, public_id):
     try:
-        college = College.objects.prefetch_related('branch_set').get(college_id=college_id)
+        college = College.objects.prefetch_related('branch_set').get(public_id=public_id)
         serializer = CollegeDetailSerializer(college)
         return Response(serializer.data)
     except College.DoesNotExist:
@@ -32,9 +32,9 @@ def college_detail(request, college_id):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def branch_detail(request, unique_key):
+def branch_detail(request, public_id):
     try:
-        branch = Branch.objects.select_related('college', 'cluster').get(unique_key=unique_key)
+        branch = Branch.objects.select_related('college', 'cluster').get(public_id=public_id)
         serializer = BranchSerializer(branch)
         return Response(serializer.data)
     except Branch.DoesNotExist:
@@ -57,9 +57,9 @@ def branches_by_college_code(request, college_code):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def college_cutoff(request, college_id):
+def college_cutoff(request, public_id):
     try:
-        college = College.objects.get(college_id=college_id)
+        college = College.objects.get(public_id=public_id)
         branches = Branch.objects.filter(college=college)
         cutoffs = Cutoff.objects.filter(unique_key__in=branches).select_related('unique_key')
 
@@ -104,9 +104,9 @@ def college_cutoff(request, college_id):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def branch_cutoff(request, unique_key):
+def branch_cutoff(request, public_id):
     try:
-        branch = Branch.objects.get(unique_key=unique_key)
+        branch = Branch.objects.get(public_id=public_id)
         cutoffs = Cutoff.objects.filter(unique_key=branch)
 
         # Get category filter from query params (optional)

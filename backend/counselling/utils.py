@@ -71,8 +71,9 @@ def get_recommendations(kcet_rank, category=None, year='2025', opening_rank=None
             branch = cutoff.unique_key
             recommendations.append({
                 'unique_key': branch.unique_key,
+                'public_id': str(branch.public_id),
                 'college': {
-                    'college_id': branch.college.college_id,
+                    'public_id': str(branch.college.public_id),
                     'college_code': branch.college.college_code,
                     'college_name': branch.college.college_name,
                     'location': branch.college.location,

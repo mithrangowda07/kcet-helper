@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 
 
 class Cluster(models.Model):
@@ -15,6 +16,7 @@ class Cluster(models.Model):
 
 class College(models.Model):
     college_id = models.CharField(max_length=3, primary_key=True)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     college_code = models.CharField(max_length=10, unique=True)
     college_name = models.CharField(max_length=255)
     location = models.CharField(max_length=100)
@@ -30,6 +32,7 @@ class College(models.Model):
 
 class Branch(models.Model):
     unique_key = models.CharField(max_length=6, primary_key=True)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     college = models.ForeignKey(College, on_delete=models.CASCADE, db_column='college_id')
     cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE, db_column='cluster_id')
     branch_id = models.CharField(max_length=2)

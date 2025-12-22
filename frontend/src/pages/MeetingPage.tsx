@@ -86,7 +86,7 @@ const MeetingPage = () => {
                           Scheduled: {new Date(meeting.scheduled_time).toLocaleString()}
                         </p>
                       )}
-                      {meeting.meet_link && (
+                      {meeting.meet_link && meeting.status !== 'completed' && (
                         <a
                           href={meeting.meet_link}
                           target="_blank"
@@ -108,7 +108,7 @@ const MeetingPage = () => {
                       )}
                       {['requested', 'accepted'].includes(meeting.status) && (
                         <button
-                          onClick={() => handleStatusUpdate(meeting.meeting_id, 'cancelled')}
+                          onClick={() => handleStatusUpdate(meeting.meeting_id, 'Cancelled')}
                           className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
                         >
                           Cancel
@@ -151,7 +151,7 @@ const MeetingPage = () => {
                           Scheduled: {new Date(meeting.scheduled_time).toLocaleString()}
                         </p>
                       )}
-                      {meeting.meet_link && (
+                      {meeting.meet_link && meeting.status !== 'completed' && (
                         <a
                           href={meeting.meet_link}
                           target="_blank"

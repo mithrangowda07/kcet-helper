@@ -15,5 +15,5 @@ urlpatterns = [
     path('<int:id>/complete/', meeting_complete, name='meeting-complete'),
     path('<int:id>/status/', meeting_status_update, name='meeting-status-update'),
     path('upcoming/', meetings_upcoming, name='meetings-upcoming'),
-    path('branches/<str:unique_key>/students/', branch_students, name='branch-students'),
+    path('branches/<uuid:public_id>/students/', branch_students, name='branch-students'),
 ]

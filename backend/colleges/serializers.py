@@ -11,7 +11,7 @@ class ClusterSerializer(serializers.ModelSerializer):
 class CollegeSerializer(serializers.ModelSerializer):
     class Meta:
         model = College
-        fields = ['college_id', 'college_code', 'college_name', 'location','college_link']
+        fields = ['public_id', 'college_code', 'college_name', 'location','college_link']
 
 
 class BranchSerializer(serializers.ModelSerializer):
@@ -20,7 +20,7 @@ class BranchSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Branch
-        fields = ['unique_key', 'college', 'cluster', 'branch_id', 'branch_name']
+        fields = ['public_id', 'college', 'cluster', 'branch_id', 'branch_name']
 
 
 class CutoffSerializer(serializers.ModelSerializer):
@@ -42,7 +42,7 @@ class CollegeDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = College
-        fields = ['college_id', 'college_code', 'college_name', 'location', 'branches','college_link']
+        fields = ['public_id', 'college_code', 'college_name', 'location', 'branches','college_link']
 
 
 class CategorySerializer(serializers.ModelSerializer):

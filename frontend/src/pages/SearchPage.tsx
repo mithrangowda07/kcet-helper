@@ -103,8 +103,8 @@ const SearchPage = () => {
           <div className="grid md:grid-cols-2 gap-4">
             {colleges.map((college) => (
               <Link
-                key={college.college_id}
-                to={`/colleges/${college.college_id}`}
+                key={college.public_id}
+                to={`/colleges/${college.public_id}`}
                 className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md hover:shadow-lg transition border border-slate-300 dark:border-slate-700"
               >
                 <h3 className="font-semibold text-lg text-slate-800 dark:text-gray-100">{college.college_name}</h3>

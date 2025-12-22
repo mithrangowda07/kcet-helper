@@ -5,23 +5,23 @@ import { useAuth } from "../contexts/AuthContext";
 import type { Branch } from "../types";
 
 const CollegeDetailPage = () => {
-  const { collegeId } = useParams<{ collegeId: string }>();
+  const { publicId } = useParams<{ publicId: string }>();
   const { user } = useAuth();
   const [college, setCollege] = useState<any>(null);
   const [choiceKeys, setChoiceKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (collegeId) {
+    if (publicId) {
       loadCollege();
     }
     if (user?.type_of_student === "counselling") {
       loadChoices();
     }
-  }, [collegeId]);
+  }, [publicId]);
 
   const loadCollege = async () => {
     try {
-      const data = await collegeService.detail(collegeId!);
+      const data = await collegeService.detail(publicId!);
       setCollege(data);
     } catch (err) {
       console.error("Error loading college:", err);
@@ -31,17 +31,17 @@ const CollegeDetailPage = () => {
   const loadChoices = async () => {
     try {
       const list = await counsellingService.choices.list();
-      setChoiceKeys(new Set(list.map((item) => item.unique_key)));
+      setChoiceKeys(new Set(list.map((item) => item.unique_key_data?.public_id || '').filter(Boolean)));
     } catch (err) {
       console.error("Error loading choices:", err);
       setChoiceKeys(new Set());
     }
   };
 
-  const addToChoices = async (uniqueKey: string) => {
+  const addToChoices = async (publicId: string) => {
     try {
-      await counsellingService.choices.create(uniqueKey);
-      setChoiceKeys((prev) => new Set(prev).add(uniqueKey));
+      await counsellingService.choices.create(publicId);
+      setChoiceKeys((prev) => new Set(prev).add(publicId));
       alert("Added to your choices!");
     } catch (err: any) {
       alert(err.response?.data?.error || "Error adding choice");
@@ -102,12 +102,12 @@ const CollegeDetailPage = () => {
             <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
               {college.branches?.map((branch: Branch) => (
                 <tr
-                  key={branch.unique_key}
+                  key={branch.public_id}
                   className="hover:bg-slate-50 dark:hover:bg-slate-700"
                 >
                   <td className="px-4 py-3 text-slate-900 dark:text-gray-100">
                     <Link
-                      to={`/branches/${branch.unique_key}`}
+                      to={`/branches/${branch.public_id}`}
                       className="text-blue-600 dark:text-sky-400 hover:underline"
                     >
                       {branch.branch_name}
@@ -118,20 +118,20 @@ const CollegeDetailPage = () => {
                   </td>
                   <td className="px-4 py-3">
                     {user?.type_of_student === "counselling" &&
-                      (choiceKeys.has(branch.unique_key) ? (
+                      (choiceKeys.has(branch.public_id) ? (
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                           Added
                         </span>
                       ) : (
                         <button
-                          onClick={() => addToChoices(branch.unique_key)}
+                          onClick={() => addToChoices(branch.public_id)}
                           className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 text-sm"
                         >
                           Add to Choices
                         </button>
                       ))}
                     <Link
-                      to={`/branches/${branch.unique_key}`}
+                      to={`/branches/${branch.public_id}`}
                       className="ml-4 text-sm text-slate-700 dark:text-gray-300 hover:underline"
                     >
                       View Details

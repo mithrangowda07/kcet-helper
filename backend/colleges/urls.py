@@ -10,14 +10,14 @@ urlpatterns = [
     path('clusters/', cluster_list, name='cluster-list'),
     path('search/', search, name='search'),
     path('locations/',locations_list,name='location-list'),
-    path('<str:college_id>/cutoff/', college_cutoff, name='college-cutoff'),
-    path('<str:college_id>/', college_detail, name='college-detail'),
+    path('<uuid:public_id>/cutoff/', college_cutoff, name='college-cutoff'),
+    path('<uuid:public_id>/', college_detail, name='college-detail'),
 ]
 
 # Branch URLs for separate routing
 branch_urlpatterns = [
     path('by-code/<str:college_code>/', branches_by_college_code, name='branches-by-code'),
-    path('<str:unique_key>/', branch_detail, name='branch-detail'),
-    path('<str:unique_key>/cutoff/', branch_cutoff, name='branch-cutoff'),
+    path('<uuid:public_id>/', branch_detail, name='branch-detail'),
+    path('<uuid:public_id>/cutoff/', branch_cutoff, name='branch-cutoff'),
 ]
 

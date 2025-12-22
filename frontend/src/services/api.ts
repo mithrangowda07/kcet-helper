@@ -131,13 +131,13 @@ export const collegeService = {
     return response.data
   },
 
-  detail: async (collegeId: string): Promise<College & { branches: Branch[] }> => {
-    const response = await api.get(`/colleges/${collegeId}/`)
+  detail: async (publicId: string): Promise<College & { branches: Branch[] }> => {
+    const response = await api.get(`/colleges/${publicId}/`)
     return response.data
   },
 
-  cutoff: async (collegeId: string) => {
-    const response = await api.get(`/colleges/${collegeId}/cutoff/`)
+  cutoff: async (publicId: string) => {
+    const response = await api.get(`/colleges/${publicId}/cutoff/`)
     return response.data
   },
 
@@ -190,8 +190,8 @@ export const collegeService = {
 
 
 export const branchService = {
-  detail: async (uniqueKey: string): Promise<Branch> => {
-    const response = await api.get(`/branches/${uniqueKey}/`)
+  detail: async (publicId: string): Promise<Branch> => {
+    const response = await api.get(`/branches/${publicId}/`)
     return response.data
   },
 
@@ -200,9 +200,9 @@ export const branchService = {
     return response.data
   },
 
-  cutoff: async (uniqueKey: string, category?: string) => {
+  cutoff: async (publicId: string, category?: string) => {
     const params = category ? { category } : {}
-    const response = await api.get(`/branches/${uniqueKey}/cutoff/`, { params })
+    const response = await api.get(`/branches/${publicId}/cutoff/`, { params })
     return response.data
   },
 }
@@ -229,8 +229,8 @@ export const counsellingService = {
       return response.data
     },
 
-    create: async (uniqueKey: string, orderOfList?: number): Promise<CounsellingChoice> => {
-      const payload: Record<string, any> = { unique_key: uniqueKey }
+    create: async (publicId: string, orderOfList?: number): Promise<CounsellingChoice> => {
+      const payload: Record<string, any> = { public_id: publicId }
       if (orderOfList !== undefined) {
         payload.order_of_list = orderOfList
       }
@@ -278,17 +278,17 @@ export const reviewService = {
     await api.delete(`/reviews/my-review/${uniqueKey}/delete/`)
   },
 
-  branchReviews: async (uniqueKey: string): Promise<{
+  branchReviews: async (publicId: string): Promise<{
     reviews: Review[]
     average_ratings: Record<string, number>
     total_reviews: number
   }> => {
-    const response = await api.get(`/reviews/branches/${uniqueKey}/`)
+    const response = await api.get(`/reviews/branches/${publicId}/`)
     return response.data
   },
 
-  collegeReviews: async (collegeId: string) => {
-    const response = await api.get(`/reviews/colleges/${collegeId}/`)
+  collegeReviews: async (publicId: string) => {
+    const response = await api.get(`/reviews/colleges/${publicId}/`)
     return response.data
   },
 }
@@ -320,8 +320,8 @@ export const meetingService = {
     return response.data
   },
 
-  branchStudents: async (uniqueKey: string) => {
-    const response = await api.get(`/meetings/branches/${uniqueKey}/students/`)
+  branchStudents: async (publicId: string) => {
+    const response = await api.get(`/meetings/branches/${publicId}/students/`)
     return response.data
   },
 }

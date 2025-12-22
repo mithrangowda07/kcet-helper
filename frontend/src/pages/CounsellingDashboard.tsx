@@ -139,13 +139,13 @@ const CounsellingDashboard = () => {
   }
 
   // Check if a branch is already in choices
-  const isInChoices = (uniqueKey: string): boolean => {
-    return choices.some(choice => choice.unique_key === uniqueKey)
+  const isInChoices = (publicId: string): boolean => {
+    return choices.some(choice => choice.unique_key_data?.public_id === publicId)
   }
 
-  const addToChoices = async (uniqueKey: string) => {
+  const addToChoices = async (publicId: string) => {
     try {
-      await counsellingService.choices.create(uniqueKey)
+      await counsellingService.choices.create(publicId)
       await loadChoices()
       alert('Added to your choices!')
     } catch (err: any) {
@@ -337,7 +337,7 @@ const CounsellingDashboard = () => {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-gray-100">
                         <Link
-                          to={`/colleges/${choice.unique_key_data?.college.college_id || ''}`}
+                          to={`/colleges/${choice.unique_key_data?.college.public_id || ''}`}
                           className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -346,7 +346,7 @@ const CounsellingDashboard = () => {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-gray-100">
                         <Link
-                          to={`/branches/${choice.unique_key || ''}`}
+                          to={`/branches/${choice.unique_key_data?.public_id || ''}`}
                           className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -461,10 +461,10 @@ const CounsellingDashboard = () => {
                 </thead>
                  <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                    {recommendations.map(rec => (
-                    <tr key={rec.unique_key} className="hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <tr key={rec.public_id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
                       <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
                         <Link
-                          to={`/colleges/${rec.college.college_id}`}
+                          to={`/colleges/${rec.college.public_id}`}
                           className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
                         >
                           {rec.college.college_name}
@@ -472,7 +472,7 @@ const CounsellingDashboard = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
                         <Link
-                          to={`/branches/${rec.unique_key}`}
+                          to={`/branches/${rec.public_id}`}
                           className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
                         >
                           {rec.branch.branch_name}
@@ -484,13 +484,13 @@ const CounsellingDashboard = () => {
                         {rec.distance_from_rank}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
-                        {isInChoices(rec.unique_key) ? (
+                        {isInChoices(rec.public_id) ? (
                           <span className="px-2 py-1 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-gray-300 rounded text-sm cursor-not-allowed">
                             Added
                           </span>
                         ) : (
                           <button
-                            onClick={() => addToChoices(rec.unique_key)}
+                            onClick={() => addToChoices(rec.public_id)}
                             className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300"
                           >
                             Add to Choices

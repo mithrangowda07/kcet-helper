@@ -41,9 +41,9 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/branches/:uniqueKey" element={<BranchDetailPage />} />
+            <Route path="/branches/:publicId" element={<BranchDetailPage />} />
 
-            <Route path="/colleges/:collegeId" element={<CollegeDetailPage />} />
+            <Route path="/colleges/:publicId" element={<CollegeDetailPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route
               path="/meetings"

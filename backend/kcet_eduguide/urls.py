@@ -3,9 +3,9 @@ URL configuration for kcet_eduguide project.
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import HttpResponseRedirect, JsonResponse
 from colleges.urls import branch_urlpatterns
 from colleges.views import search
-from django.http import HttpResponseRedirect
 
 def api_root(request):
     return JsonResponse({
