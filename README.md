@@ -71,9 +71,6 @@ kcet-helper/
    DB_PASSWORD=your-mysql-password
    DB_HOST=localhost
    DB_PORT=3306
-
-   GOOGLE_CALENDAR_CREDENTIALS_PATH=path/to/service-account-credentials.json
-   GOOGLE_CALENDAR_EMAIL=your-calendar-email@example.com
    ```
 
 5. **Create MySQL database:**
@@ -140,14 +137,7 @@ kcet-helper/
    - Fill in details and create
    - Download JSON key file
 
-4. **Grant Calendar Access:**
-   - Open the service account JSON file
-   - Copy the `client_email` value
-   - Go to Google Calendar
-   - Share your calendar with that email address
-   - Give "Make changes to events" permission
-
-5. **Update `.env` file:**
+4. **Update `.env` file:**
    ```env
    GOOGLE_CALENDAR_CREDENTIALS_PATH=/path/to/service-account-credentials.json
    GOOGLE_CALENDAR_EMAIL=your-calendar-email@example.com
@@ -166,45 +156,6 @@ The project uses the following main tables:
 - `college_reviews` - Reviews submitted by studying students
 - `counselling_choices` - Saved choices by counselling students
 - `student_meetings` - Meeting requests and scheduled meetings
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register/` - Register new student (with category selection for counselling students)
-- `POST /api/auth/login/` - Login
-- `POST /api/auth/refresh/` - Refresh access token
-- `GET /api/auth/me/` - Get current user
-- `PATCH /api/auth/profile/` - Update user profile (including category)
-
-### Colleges & Branches
-- `GET /api/colleges/` - List all colleges
-- `GET /api/colleges/{college_id}/` - College details with branches
-- `GET /api/colleges/{college_id}/cutoff/` - Cutoff data for college
-- `GET /api/branches/{unique_key}/` - Branch details
-- `GET /api/branches/{unique_key}/cutoff/` - Cutoff trends for branch (supports category filter)
-- `GET /api/colleges/categories/` - List all available categories
-- `GET /api/search/?query=...` - Search colleges and branches
-
-### Counselling
-- `POST /api/counselling/recommendations/` - Get rank-based recommendations
-- `GET /api/counselling/choices/` - List saved choices with cutoff information
-- `POST /api/counselling/choices/create/` - Add choice
-- `PATCH /api/counselling/choices/{id}/update/` - Update choice order
-- `POST /api/counselling/choices/bulk-update/` - Bulk update choice orders
-- `DELETE /api/counselling/choices/{id}/delete/` - Remove choice
-
-### Reviews
-- `POST /api/reviews/` - Submit or update review (studying students only, one per branch)
-- `GET /api/reviews/my-review/{unique_key}/` - Get current user's review for a branch
-- `GET /api/reviews/branches/{unique_key}/` - Get reviews for branch
-- `GET /api/reviews/colleges/{college_id}/` - Get aggregated reviews for college
-
-### Meetings
-- `POST /api/meetings/request/` - Request meeting (counselling students)
-- `GET /api/meetings/my-requests/` - Get my requests (counselling)
-- `GET /api/meetings/my-invitations/` - Get invitations (studying)
-- `PATCH /api/meetings/{id}/status/` - Update meeting status
-- `GET /api/meetings/branches/{unique_key}/students/` - Get students from branch
 
 ## User Roles
 
@@ -259,7 +210,7 @@ The project uses the following main tables:
 
 - Student ID generation follows specific patterns:
   - Counselling: `YYYYNNNNNN` (e.g., 2025000001)
-  - Studying: `<college_code>NNNNNN` (e.g., RVU000001)
+  - Studying: `<college_code>NNNNNN` (e.g., E001000001)
 - Cutoff data is admin-only (entered via Django admin)
 - Google Calendar integration requires service account with calendar access
 - JWT tokens are stored in localStorage (consider httpOnly cookies for production)
@@ -271,4 +222,3 @@ The project uses the following main tables:
 ## License
 
 This project is created for educational purposes.
-
