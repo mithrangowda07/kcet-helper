@@ -854,7 +854,10 @@ border border-teal-200 dark:border-slate-700 text-white font-semibold py-2.5 sha
                   {value?.toFixed?.(1) || "N/A"}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-gray-400">
-                  {key.replace("avg_", "").replace("_", " ")}
+                  {key
+                    .replace("avg_", "")
+                    .replace("_", " ")
+                    .replace(/\b\w/g, (char) => char.toUpperCase())}
                 </div>
               </div>
             ))}
