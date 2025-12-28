@@ -8,6 +8,7 @@ export interface Student {
   kcet_rank?: number
   college_code?: string
   unique_key?: string
+  unique_key_data?: Branch
   year_of_starting?: number
   profile_completed: boolean
 }

@@ -68,10 +68,9 @@ const StudyingDashboard = () => {
     // load branch display name
     const loadBranch = async () => {
       try {
-        if (user?.unique_key) {
-          const data = await branchService.detail(user.unique_key);
-          setBranchName(data.branch_name || "");
-          setCollegeName(data.college.college_name || "");
+        if (user?.unique_key_data) {
+          setBranchName(user.unique_key_data.branch_name || "");
+          setCollegeName(user.unique_key_data.college.college_name || "");
         } else {
           setBranchName("");
           setCollegeName("");
@@ -141,12 +140,12 @@ const StudyingDashboard = () => {
     loadInvitations();
     loadExistingReview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.unique_key]);
+  }, [user?.unique_key_data]);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingReview) return; // Prevent multiple submissions
-    if (!user?.unique_key) {
+    if (!user?.unique_key_data) {
       alert(
         "Please set your branch in your profile before submitting a review."
       );

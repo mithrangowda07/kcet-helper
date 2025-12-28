@@ -36,6 +36,13 @@ const LoginRegister = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
+  const isValidEmail = (email: string) => {
+    const emailRegex =
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -43,6 +50,13 @@ const LoginRegister = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError("");
+    if (name === 'email_id') {
+      if (value && !isValidEmail(value)) {
+        setEmailError("Please enter a valid email address.");
+      } else {
+        setEmailError("");
+      }
+    }
   };
 
   // College change handler (for <select>)
@@ -125,6 +139,12 @@ const LoginRegister = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (emailError) {
+      setError("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isLogin) {
@@ -272,8 +292,13 @@ const LoginRegister = () => {
                   required
                   value={formData.email_id}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
+                  className={`mt-1 block w-full px-3 py-2 border ${emailError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200`}
                 />
+                {emailError && (
+                  <div className="mt-1 text-red-600 dark:text-red-400 text-sm">
+                    {emailError}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -303,8 +328,13 @@ const LoginRegister = () => {
                 required
                 value={formData.email_id}
                 onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
+                className={`mt-1 block w-full px-3 py-2 border ${emailError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200`}
               />
+              {emailError && (
+                <div className="mt-1 text-red-600 dark:text-red-400 text-sm">
+                  {emailError}
+                </div>
+              )}
             </div>
           )}
 
@@ -569,6 +599,7 @@ const LoginRegister = () => {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setError("");
+                setEmailError("");
                 setBranches([]);
                 setColleges([]);
                 setFormData({
