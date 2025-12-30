@@ -24,6 +24,9 @@ const Navbar = () => {
     if (path === '/dashboard/counselling' || path === '/dashboard/studying') {
       return location.pathname === '/dashboard/counselling' || location.pathname === '/dashboard/studying'
     }
+    if (path === '/recommendations') {
+      return location.pathname === '/recommendations'
+    }
     return location.pathname === path
   }
 
@@ -95,6 +98,14 @@ const Navbar = () => {
                   className={getLinkClasses('/dashboard/counselling')}
                 >
                   Dashboard
+                </Link>
+              )}
+              {isAuthenticated && user?.type_of_student === 'counselling' && (
+                <Link
+                  to="/recommendations"
+                  className={getLinkClasses('/recommendations')}
+                >
+                  Recommendations
                 </Link>
               )}
               {isAuthenticated && (
@@ -198,6 +209,15 @@ const Navbar = () => {
             >
               Search Colleges
             </Link>
+            {isAuthenticated && user?.type_of_student === 'counselling' && (
+              <Link
+                to="/recommendations"
+                className={getMobileLinkClasses('/recommendations')}
+                onClick={closeMobileMenu}
+              >
+                Recommendations
+              </Link>
+            )}
             {isAuthenticated && (
               <Link
                 to={user?.type_of_student === 'counselling' ? '/dashboard/counselling' : '/dashboard/studying'}

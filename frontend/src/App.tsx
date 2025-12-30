@@ -10,6 +10,7 @@ import CollegeDetailPage from './pages/CollegeDetailPage'
 import SearchPage from './pages/SearchPage'
 import MeetingPage from './pages/MeetingPage'
 import ProfilePage from './pages/ProfilePage'
+import Recommendations from './pages/Recommendations'
 import ProtectedRoute from './components/ProtectedRoute'
 // + add this import
 import BranchDetailPage from './pages/BranchDetailPage'
@@ -45,6 +46,14 @@ function App() {
 
             <Route path="/colleges/:publicId" element={<CollegeDetailPage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route
+              path="/recommendations"
+              element={
+                <ProtectedRoute requiredType="counselling">
+                  <Recommendations />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/meetings"
               element={

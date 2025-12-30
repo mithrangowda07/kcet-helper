@@ -1,20 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { counsellingService, categoryService } from '../services/api'
-import type { Recommendation, CounsellingChoice, Category } from '../types'
+import { counsellingService } from '../services/api'
+import type { CounsellingChoice } from '../types'
 
 const CounsellingDashboard = () => {
   const { user } = useAuth()
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [choices, setChoices] = useState<CounsellingChoice[]>([])
-  const [loading, setLoading] = useState(false)
-  const [showRecommendations, setShowRecommendations] = useState(false)
-  const [category, setCategory] = useState('')
-  const [categories, setCategories] = useState<Category[]>([])
-  const [year, setYear] = useState('2025')
-  const [openingRank, setOpeningRank] = useState<number>(0)
-  const [closingRank, setClosingRank] = useState<number>(0)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -39,14 +31,7 @@ const CounsellingDashboard = () => {
 
   useEffect(() => {
     loadChoices()
-    loadCategories()
-    if (user?.category) setCategory(user.category)
-    // Initialize opening and closing ranks based on user's rank
-    if (user?.kcet_rank) {
-      setOpeningRank(Math.floor(user.kcet_rank * 0.5))
-      setClosingRank(Math.floor(user.kcet_rank * 1.75))
-    }
-  }, [user])
+  }, [])
 
   const loadChoices = async () => {
     try {
@@ -55,22 +40,6 @@ const CounsellingDashboard = () => {
       setHasUnsavedChanges(false)
     } catch (err) {
       console.error('Error loading choices:', err)
-    }
-  }
-
-  const loadCategories = async () => {
-    try {
-      const data = await categoryService.list()
-      setCategories(data)
-    } catch (err) {
-      console.error('Error loading categories, using fallback:', err)
-      // Fallback to hardcoded categories
-      try {
-        const { HARDCODED_CATEGORIES } = await import('../data/categories')
-        setCategories(HARDCODED_CATEGORIES)
-      } catch {
-        setCategories([])
-      }
     }
   }
 
@@ -111,45 +80,6 @@ const CounsellingDashboard = () => {
       alert(err.response?.data?.error || 'Error saving order')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const loadRecommendations = async () => {
-    if (!user?.kcet_rank) {
-      alert('Please set your KCET rank first')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const data = await counsellingService.recommendations(
-        user.kcet_rank,
-        category || undefined,
-        year,
-        openingRank,
-        closingRank,
-      )
-      setRecommendations(data.recommendations)
-      setShowRecommendations(true)
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Error loading recommendations')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Check if a branch is already in choices
-  const isInChoices = (publicId: string): boolean => {
-    return choices.some(choice => choice.unique_key_data?.public_id === publicId)
-  }
-
-  const addToChoices = async (publicId: string) => {
-    try {
-      await counsellingService.choices.create(publicId)
-      await loadChoices()
-      alert('Added to your choices!')
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Error adding choice')
     }
   }
 
@@ -240,17 +170,16 @@ const CounsellingDashboard = () => {
       </div>
 
       <div className="grid md:grid-cols-4 gap-6 mb-8">
-        {/* Reduced Quick Actions size */}
+        {/* Quick Actions */}
         <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
           <h2 className="text-lg font-semibold mb-3 text-slate-800 dark:text-gray-100">Quick Actions</h2>
           <div className="space-y-2">
-            <button
-              onClick={loadRecommendations}
-              disabled={loading}
-              className="w-full bg-blue-600 dark:bg-sky-400 text-white px-3 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500 disabled:opacity-50 text-sm"
+            <Link
+              to="/recommendations"
+              className="block w-full bg-blue-600 dark:bg-sky-400 text-white px-3 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500 text-center text-sm"
             >
-              {loading ? 'Loading...' : 'View Recommendations'}
-            </button>
+              View Recommendations
+            </Link>
             <Link
               to="/search"
               className="block w-full bg-slate-600 dark:bg-slate-500 text-white px-3 py-2 rounded-md hover:bg-slate-700 dark:hover:bg-slate-600 text-center text-sm"
@@ -376,136 +305,6 @@ const CounsellingDashboard = () => {
           )}
         </div>
       </div>
-
-      {showRecommendations && (
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md border border-slate-300 dark:border-slate-700">
-          <div className="mb-4 flex flex-wrap gap-4 items-center">
-            <h2 className="text-xl font-semibold text-slate-800 dark:text-gray-100">Recommendations</h2>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
-            >
-              <option value="">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat.category} value={cat.category}>
-                  {cat.category}
-                </option>
-              ))}
-            </select>
-             <select
-               value={year}
-               onChange={e => setYear(e.target.value)}
-               className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
-             >
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-            </select>
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-gray-300">Opening Rank:</label>
-              <input
-                type="number"
-                value={openingRank}
-                onChange={e => setOpeningRank(Number(e.target.value))}
-                className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 w-24 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
-                min="0"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-gray-300">Closing Rank:</label>
-              <input
-                type="number"
-                value={closingRank}
-                onChange={e => setClosingRank(Number(e.target.value))}
-                className="border border-slate-300 dark:border-slate-600 rounded px-3 py-1 w-24 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
-                min="0"
-              />
-            </div>
-            <button
-              onClick={loadRecommendations}
-              className="bg-blue-600 dark:bg-sky-400 text-white px-4 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-sky-500"
-            >
-              Refresh
-            </button>
-          </div>
-
-          {recommendations.length === 0 ? (
-            <p className="text-slate-500 dark:text-gray-400">No recommendations found</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <div className="max-h-[40em] overflow-y-auto">
-              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead className="bg-slate-50 dark:bg-slate-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
-                      College
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
-                      Branch
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
-                      Round 1 Cutoff
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
-                      Round 3 Cutoff
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
-                      Distance
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                 <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-                   {recommendations.map(rec => (
-                    <tr key={rec.public_id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
-                        <Link
-                          to={`/colleges/${rec.college.public_id}`}
-                          className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
-                        >
-                          {rec.college.college_name}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
-                        <Link
-                          to={`/branches/${rec.public_id}`}
-                          className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300 hover:underline cursor-pointer"
-                        >
-                          {rec.branch.branch_name}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">{rec.opening_rank}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">{rec.closing_rank}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
-                        {rec.distance_from_rank}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-gray-100">
-                        {isInChoices(rec.public_id) ? (
-                          <span className="px-2 py-1 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-gray-300 rounded text-sm cursor-not-allowed">
-                            Added
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => addToChoices(rec.public_id)}
-                            className="text-blue-600 dark:text-sky-400 hover:text-blue-800 dark:hover:text-sky-300"
-                          >
-                            Add to Choices
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }

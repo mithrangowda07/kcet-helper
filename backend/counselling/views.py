@@ -48,8 +48,10 @@ def _get_cutoff_rank(student, branch, year='2025', round_name='r1'):
 @permission_classes([IsAuthenticated])
 def recommendations(request):
     """
-    Get rank-based recommendations for counselling students.
-    Body: { kcet_rank, category?, year?, opening_rank?, closing_rank? }
+    Get rank-based recommendations for counselling students using advanced algorithm.
+    Body: { kcet_rank, category?, year?, round?, cluster? }
+    
+    Note: opening_rank and closing_rank are now calculated dynamically based on user rank.
     """
     student = request.user
     
@@ -70,13 +72,29 @@ def recommendations(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    category = request.data.get('category')
+    try:
+        kcet_rank = int(kcet_rank)
+    except (ValueError, TypeError):
+        return Response(
+            {'error': 'kcet_rank must be a valid integer'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Get parameters
+    category = request.data.get('category') or student.category
     year = request.data.get('year', '2025')
+    round_name = request.data.get('round', 'R1')  # R1, R2, or R3
+    cluster = request.data.get('cluster')  # Optional cluster filter
     opening_rank = request.data.get('opening_rank')
     closing_rank = request.data.get('closing_rank')
-    cluster = request.data.get('cluster')  # currently unused
     
-    # Convert to integers if provided
+    # Validate round
+    if round_name.upper() not in ['R1', 'R2', 'R3']:
+        round_name = 'R1'
+    else:
+        round_name = round_name.upper()
+    
+    # Convert opening_rank and closing_rank to integers if provided
     if opening_rank is not None:
         try:
             opening_rank = int(opening_rank)
@@ -88,15 +106,31 @@ def recommendations(request):
         except (ValueError, TypeError):
             closing_rank = None
     
-    recommendations_list = get_recommendations(kcet_rank, category, year, opening_rank, closing_rank, cluster)
+    # Calculate dynamic opening and closing ranks (for response info if not provided)
+    from .utils import calculate_rank_window
+    calculated_opening, calculated_closing = calculate_rank_window(kcet_rank)
+    response_opening = opening_rank if opening_rank is not None else calculated_opening
+    response_closing = closing_rank if closing_rank is not None else calculated_closing
+    
+    # Get recommendations using new algorithm
+    recommendations_list = get_recommendations(
+        kcet_rank=kcet_rank,
+        category=category,
+        year=year,
+        round_name=round_name,
+        cluster=cluster,
+        opening_rank=opening_rank,
+        closing_rank=closing_rank
+    )
     
     return Response({
         'kcet_rank': kcet_rank,
         'category': category,
         'year': year,
+        'round': round_name,
         'cluster': cluster,
-        'opening_rank': opening_rank,
-        'closing_rank': closing_rank,
+        'opening_rank': response_opening,  # User-provided or calculated
+        'closing_rank': response_closing,  # User-provided or calculated
         'recommendations': recommendations_list,
         'count': len(recommendations_list),
     })

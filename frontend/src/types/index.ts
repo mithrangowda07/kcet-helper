@@ -54,8 +54,7 @@ export interface Recommendation {
     cluster_name: string
   }
   category: string
-  opening_rank: number
-  closing_rank: number
+  cutoff: number  // Selected round cutoff (after fallback resolution)
   distance_from_rank: number
   eligibility_flag: boolean
 }

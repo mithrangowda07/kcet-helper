@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Student, Recommendation, CounsellingChoice, Review, Meeting, College, Branch, Category } from '../types'
+import type { Student, Recommendation, CounsellingChoice, Review, Meeting, College, Branch, Category, Cluster } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
@@ -208,17 +208,28 @@ export const branchService = {
 }
 
 export const counsellingService = {
-  recommendations: async (kcetRank: number, category?: string, year?: string, openingRank?: number, closingRank?: number, cluster?: string): Promise<{
+  recommendations: async (
+    kcetRank: number,
+    category?: string,
+    year?: string,
+    round?: string,
+    cluster?: string,
+    openingRank?: number,
+    closingRank?: number
+  ): Promise<{
     recommendations: Recommendation[]
     count: number
+    opening_rank?: number
+    closing_rank?: number
   }> => {
     const response = await api.post('/counselling/recommendations/', {
       kcet_rank: kcetRank,
       category,
       year: year || '2025',
+      round: round || 'R1',
+      cluster,
       opening_rank: openingRank,
       closing_rank: closingRank,
-      cluster,
     })
     return response.data
   },
@@ -336,6 +347,18 @@ export const categoryService = {
       console.warn('Failed to load categories from API, using fallback list')
       const { HARDCODED_CATEGORIES } = await import('../data/categories')
       return HARDCODED_CATEGORIES
+    }
+  },
+}
+
+export const clusterService = {
+  list: async (): Promise<Cluster[]> => {
+    try {
+      const response = await api.get('/colleges/clusters/')
+      return response.data
+    } catch (error) {
+      console.warn('Failed to load clusters from API')
+      return []
     }
   },
 }
