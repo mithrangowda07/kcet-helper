@@ -5,7 +5,7 @@ import StarRating from "../components/StarRating";
 import type { Meeting, Review } from "../types";
 
 const StudyingDashboard = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [invitations, setInvitations] = useState<Meeting[]>([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -86,9 +86,14 @@ const StudyingDashboard = () => {
     const loadInvitations = async () => {
       try {
         const data = await meetingService.myInvitations();
-        setInvitations(data.filter((m) => m.status === "requested"));
+        if (Array.isArray(data)) {
+          setInvitations(data.filter((m) => m.status === "requested"));
+        } else {
+          setInvitations([]);
+        }
       } catch (err) {
         console.error("Error loading invitations:", err);
+        setInvitations([]);
       }
     };
 
@@ -97,8 +102,9 @@ const StudyingDashboard = () => {
       try {
         if (user?.unique_key) {
           const review = await reviewService.myReview(user.unique_key);
-          setExistingReview(review);
-          if (review) {
+          if (review && review.review_id) {
+            // Only set as existing review if it has a review_id
+            setExistingReview(review);
             // Pre-fill form with existing review data
             setReviewFormData({
               unique_key: user.unique_key,
@@ -126,6 +132,7 @@ const StudyingDashboard = () => {
               preferred_time: review.preferred_time || "",
             });
           } else {
+            setExistingReview(null);
             setReviewFormData(reviewFormInit);
           }
         } else {
@@ -133,14 +140,20 @@ const StudyingDashboard = () => {
         }
       } catch (err) {
         console.error("Error loading existing review:", err);
+        setExistingReview(null);
       }
     };
 
-    loadBranch();
-    loadInvitations();
-    loadExistingReview();
+    // Only load data if user is authenticated and not loading
+    // Also check if we have tokens in localStorage
+    const hasTokens = typeof window !== 'undefined' && localStorage.getItem('tokens');
+    if (!authLoading && user && hasTokens) {
+      loadBranch();
+      loadInvitations();
+      loadExistingReview();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.unique_key_data]);
+  }, [user?.unique_key_data, authLoading, user]);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

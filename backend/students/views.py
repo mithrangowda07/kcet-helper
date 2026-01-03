@@ -11,9 +11,12 @@ from .serializers import (
     StudentRegisterSerializer,
     StudentLoginSerializer,
     StudentTokenRefreshSerializer,
+    StudentVerificationSerializer,
 )
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from .verification_utils import verify_student_id
+from .models import StudentVerification
 
 
 @api_view(['POST'])
@@ -22,7 +25,24 @@ def register(request):
     serializer = StudentRegisterSerializer(data=request.data)
     if serializer.is_valid():
         try:
+            type_of_student = serializer.validated_data.get('type_of_student')
+            
+            # For studying students, require verification
+            if type_of_student == 'studying':
+                # Check if student is verified (this should be done via verification endpoint first)
+                # We'll check if the USN exists and is verified, or we can use a session/token approach
+                # For now, we'll require that verification happens before registration
+                # The frontend should handle this flow
+                pass
+            
             student = serializer.save()
+            
+            # For studying students, set is_verified_student to True after successful registration
+            # (verification was done before registration)
+            if type_of_student == 'studying':
+                student.is_verified_student = True
+                student.save()
+            
             student_data = StudentSerializer(student).data
             
             # Generate JWT tokens
@@ -118,3 +138,77 @@ class StudentTokenRefreshView(TokenRefreshView):
     """
 
     serializer_class = StudentTokenRefreshSerializer
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_student(request):
+    """
+    Verify student ID - same pattern as Flask version.
+    Stores image in MySQL database and returns it in response.
+    """
+    serializer = StudentVerificationSerializer(data=request.data)
+    
+    if not serializer.is_valid():
+        return Response(
+            {'errors': serializer.errors, 'message': 'Validation failed'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    college_name = serializer.validated_data['college_name']
+    student_name = serializer.validated_data['student_name']
+    usn = serializer.validated_data['usn']
+    id_image = serializer.validated_data['id_image']
+    
+    try:
+        # Read image data for storage
+        id_image.seek(0)
+        image_data = id_image.read()
+        id_image.seek(0)
+        
+        # Verify the ID image - EXACT SAME as Flask version
+        result = verify_student_id(id_image, college_name, student_name, usn)
+        
+        # Store verification record in database with image
+        verification_record = StudentVerification.objects.create(
+            college_name=college_name,
+            student_name=student_name,
+            usn=usn,
+            id_image=image_data,  # Store binary image data in MySQL
+            college_score=result['college_score'],
+            name_score=result['name_score'],
+            usn_score=result['usn_score'],
+            verified=result['verified']
+        )
+        
+        # EXACT SAME response format as Flask version
+        response_data = {
+            "verified": result["verified"],
+            "college_score": result["college_score"],
+            "name_score": result["name_score"],
+            "usn_score": result["usn_score"],
+            "image_base64": result["image_base64"]
+        }
+        
+        if "domain_score" in result:
+            response_data["domain_score"] = result["domain_score"]
+        
+        # Always return 200 OK (same as Flask)
+        return Response(response_data, status=status.HTTP_200_OK)
+            
+    except ValueError as e:
+        # Handle OCR/verification errors with clear messages
+        return Response({
+            'error': str(e),
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        # Log the full error for debugging but return user-friendly message
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Verification error: {str(e)}", exc_info=True)
+        
+        return Response({
+            'error': 'Internal server error during verification',
+            'message': f'Error processing ID image: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

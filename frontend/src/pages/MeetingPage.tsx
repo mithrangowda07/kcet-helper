@@ -4,27 +4,39 @@ import { meetingService } from '../services/api'
 import type { Meeting } from '../types'
 
 const MeetingPage = () => {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [requests, setRequests] = useState<Meeting[]>([])
   const [invitations, setInvitations] = useState<Meeting[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    loadMeetings()
-  }, [])
+    // Only load meetings if user is authenticated and not loading
+    // Also check if we have tokens in localStorage
+    const hasTokens = typeof window !== 'undefined' && localStorage.getItem('tokens');
+    if (!authLoading && user && hasTokens) {
+      loadMeetings()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user])
 
   const loadMeetings = async () => {
     setLoading(true)
     try {
       if (user?.type_of_student === 'counselling') {
         const data = await meetingService.myRequests()
-        setRequests(data)
+        setRequests(Array.isArray(data) ? data : [])
       } else {
         const data = await meetingService.myInvitations()
-        setInvitations(data)
+        setInvitations(Array.isArray(data) ? data : [])
       }
     } catch (err) {
       console.error('Error loading meetings:', err)
+      // Set empty arrays on error to prevent UI issues
+      if (user?.type_of_student === 'counselling') {
+        setRequests([])
+      } else {
+        setInvitations([])
+      }
     } finally {
       setLoading(false)
     }

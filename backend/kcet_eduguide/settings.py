@@ -6,11 +6,16 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
+import pytesseract
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+if os.path.exists(TESSERACT_PATH):
+    pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
 
 # Quick-start development settings - unsuitable for production
@@ -22,7 +27,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 # ,'10.117.193.26','192.168.0.108'
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost','10.117.193.26']
 
 
 # Application definition

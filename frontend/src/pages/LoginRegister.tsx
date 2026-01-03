@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
   branchService,
@@ -9,12 +9,24 @@ import {
 import type { Branch, College, Category } from "../types";
 
 const LoginRegister = () => {
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [studentType, setStudentType] = useState<"counselling" | "studying">(
     "counselling"
   );
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
+  
+  // Check URL params for verification status
+  useEffect(() => {
+    const typeParam = searchParams.get("type");
+    const verifiedParam = searchParams.get("verified");
+    
+    if (typeParam === "studying" && verifiedParam === "true") {
+      setIsLogin(false);
+      setStudentType("studying");
+    }
+  }, [searchParams]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -27,6 +39,7 @@ const LoginRegister = () => {
     college_code: "",
     unique_key: "",
     year_of_starting: "",
+    usn: "",
   });
 
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -96,10 +109,54 @@ const LoginRegister = () => {
     if (!isLogin && studentType === "studying") {
       collegeService
         .list()
-        .then(setColleges)
+        .then((collegeList) => {
+          setColleges(collegeList);
+          
+          // Load verified student data from sessionStorage
+          const verifiedData = sessionStorage.getItem("verified_student");
+          if (verifiedData) {
+            try {
+              const data = JSON.parse(verifiedData);
+              if (data.verified && data.usn) {
+                // Find college by name to get college_code
+                const verifiedCollege = collegeList.find(
+                  (c) => c.college_name === data.college_name
+                );
+                
+                setFormData((prev) => ({
+                  ...prev,
+                  usn: data.usn,
+                  name: data.student_name || prev.name,
+                  college_code: verifiedCollege?.college_code || prev.college_code,
+                }));
+                
+                // Load branches if college is found
+                if (verifiedCollege?.college_code) {
+                  branchService
+                    .byCollegeCode(verifiedCollege.college_code)
+                    .then(setBranches)
+                    .catch(() => setBranches([]));
+                }
+              }
+            } catch (e) {
+              console.error("Error parsing verified student data:", e);
+            }
+          }
+        })
         .catch(() => setColleges([]));
     }
   }, [isLogin, studentType]);
+  
+  // Check verification before allowing registration for studying students
+  useEffect(() => {
+    if (!isLogin && studentType === "studying") {
+      const verifiedData = sessionStorage.getItem("verified_student");
+      if (!verifiedData) {
+        // Redirect to verification if not verified
+        navigate("/verify-student");
+      }
+    }
+  }, [isLogin, studentType, navigate]);
 
   // Load categories when registration view is open (for both student types)
   useEffect(() => {
@@ -170,15 +227,66 @@ const LoginRegister = () => {
             : null;
           registerData.category = formData.category || null;
         } else {
+          // Check verification before registration
+          const verifiedData = sessionStorage.getItem("verified_student");
+          if (!verifiedData) {
+            setError("Please verify your student ID first");
+            setLoading(false);
+            navigate("/verify-student");
+            return;
+          }
+          
+          try {
+            const verified = JSON.parse(verifiedData);
+            if (!verified.verified) {
+              setError("Student verification required. Please verify your ID first.");
+              setLoading(false);
+              navigate("/verify-student");
+              return;
+            }
+            
+            // Validate that name, usn, and college_name match verification
+            if (verified.usn !== formData.usn) {
+              setError("USN must match the verified USN. Please verify again.");
+              setLoading(false);
+              navigate("/verify-student");
+              return;
+            }
+            
+            if (verified.student_name !== formData.name) {
+              setError("Name must match the verified name. Please verify again.");
+              setLoading(false);
+              navigate("/verify-student");
+              return;
+            }
+            
+            // Check if college matches
+            const selectedCollege = colleges.find(c => c.college_code === formData.college_code);
+            if (selectedCollege && selectedCollege.college_name !== verified.college_name) {
+              setError("College must match the verified college. Please verify again.");
+              setLoading(false);
+              navigate("/verify-student");
+              return;
+            }
+          } catch (e) {
+            setError("Student verification required. Please verify your ID first.");
+            setLoading(false);
+            navigate("/verify-student");
+            return;
+          }
+          
           registerData.college_code = formData.college_code;
           registerData.unique_key = formData.unique_key || null;
           registerData.year_of_starting = formData.year_of_starting
             ? parseInt(formData.year_of_starting)
             : null;
           registerData.category = formData.category || null;
+          registerData.usn = formData.usn;
         }
 
         await register(registerData);
+        // Clear verification data after successful registration
+        sessionStorage.removeItem("verified_student");
         // After successful registration, switch to login view instead of auto-login
         setIsLogin(true);
         setError(""); // clear any previous errors
@@ -193,6 +301,7 @@ const LoginRegister = () => {
           college_code: "",
           unique_key: "",
           year_of_starting: "",
+          usn: "",
         });
       }
     } catch (err: any) {
@@ -246,7 +355,14 @@ const LoginRegister = () => {
             </button>
             <button
               type="button"
-              onClick={() => setStudentType("studying")}
+              onClick={() => {
+                setStudentType("studying");
+                // Check if verified, if not redirect to verification
+                const verifiedData = sessionStorage.getItem("verified_student");
+                if (!verifiedData) {
+                  navigate("/verify-student");
+                }
+              }}
               className={`flex-1 py-2 px-4 rounded-md ${
                 studentType === "studying"
                   ? "bg-blue-600 dark:bg-sky-400 text-white"
@@ -271,6 +387,11 @@ const LoginRegister = () => {
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">
                   Name
+                  {studentType === "studying" && (
+                    <span className="ml-2 text-xs text-slate-500 dark:text-gray-400">
+                      (Verified - Cannot be changed)
+                    </span>
+                  )}
                 </label>
                 <input
                   type="text"
@@ -278,7 +399,12 @@ const LoginRegister = () => {
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
+                  disabled={studentType === "studying"}
+                  className={`mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 text-slate-800 dark:text-gray-200 ${
+                    studentType === "studying"
+                      ? "bg-slate-100 dark:bg-slate-900 cursor-not-allowed opacity-75"
+                      : "bg-white dark:bg-slate-700"
+                  }`}
                 />
               </div>
 
@@ -497,6 +623,28 @@ const LoginRegister = () => {
               {studentType === "studying" && (
                 <>
                   <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">
+                      USN / Student ID
+                      <span className="ml-2 text-xs text-slate-500 dark:text-gray-400">
+                        (Verified - Cannot be changed)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      name="usn"
+                      required
+                      value={formData.usn}
+                      onChange={handleInputChange}
+                      disabled={true}
+                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-gray-200 cursor-not-allowed opacity-75"
+                      placeholder="Enter your USN/Student ID"
+                    />
+                    <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
+                      Pre-filled from verification - cannot be changed
+                    </p>
+                  </div>
+                  
+                  <div>
                     {" "}
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">
                       Category
@@ -523,21 +671,28 @@ const LoginRegister = () => {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300">
                       College
+                      <span className="ml-2 text-xs text-slate-500 dark:text-gray-400">
+                        (Verified - Cannot be changed)
+                      </span>
                     </label>
                     <select
                       name="college_code"
                       required
                       value={formData.college_code}
                       onChange={handleCollegeCodeChange}
-                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
+                      disabled={true}
+                      className="mt-1 block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-sky-400 focus:border-blue-500 dark:focus:border-sky-400 bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-gray-200 cursor-not-allowed opacity-75"
                     >
                       <option value="">Select a college</option>
                       {colleges.map((c) => (
-                        <option key={c.college_id} value={c.college_code}>
+                        <option key={c.public_id || c.college_code} value={c.college_code}>
                           {c.college_name} ({c.college_code})
                         </option>
                       ))}
                     </select>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
+                      Pre-filled from verification - cannot be changed
+                    </p>
                   </div>
 
                   <div>
@@ -613,6 +768,7 @@ const LoginRegister = () => {
                   college_code: "",
                   unique_key: "",
                   year_of_starting: "",
+                  usn: "",
                 });
               }}
               className="text-blue-600 dark:text-sky-400 hover:text-blue-500 dark:hover:text-sky-300"

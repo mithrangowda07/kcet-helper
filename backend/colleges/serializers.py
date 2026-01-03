@@ -20,7 +20,7 @@ class BranchSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Branch
-        fields = ['public_id', 'college', 'cluster', 'branch_id', 'branch_name']
+        fields = ['unique_key', 'public_id', 'college', 'cluster', 'branch_id', 'branch_name']
 
 
 class CutoffSerializer(serializers.ModelSerializer):

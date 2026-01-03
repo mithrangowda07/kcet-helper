@@ -16,6 +16,8 @@ api.interceptors.request.use(
     const tokens = getTokens()
     if (tokens?.access) {
       config.headers.Authorization = `Bearer ${tokens.access}`
+    } else {
+      console.warn('No access token found for request:', config.url)
     }
     return config
   },
@@ -53,18 +55,27 @@ api.interceptors.response.use(
           })
           const newTokens = {
             access: response.data.access,
-            // keep using the same refresh token (backend rotates internally if configured)
-            refresh: tokens.refresh,
+            // Use new refresh token if provided, otherwise keep the old one
+            refresh: response.data.refresh || tokens.refresh,
           }
           setTokens(newTokens)
           if (!originalRequest.headers) originalRequest.headers = {}
           originalRequest.headers.Authorization = `Bearer ${newTokens.access}`
           return api(originalRequest)
+        } else {
+          console.warn('No refresh token available, redirecting to login')
+          clearTokens()
+          window.location.href = '/auth'
+          return Promise.reject(new Error('No refresh token available'))
         }
       } catch (refreshError: any) {
         // Refresh failed, clear auth and send user to login
+        console.error('Token refresh failed:', refreshError)
         clearTokens()
-        window.location.href = '/auth'
+        // Only redirect if we're not already on the auth page
+        if (!window.location.pathname.includes('/auth')) {
+          window.location.href = '/auth'
+        }
         // Attach a clearer message so UI doesn't just show "Network Error"
         if (!refreshError.response) {
           refreshError.message = refreshError.message || 'Session expired. Please log in again.'
@@ -119,6 +130,28 @@ export const authService = {
 
   setTokens,
   clearTokens,
+}
+
+export const studentVerificationService = {
+  verify: async (
+    collegeName: string,
+    studentName: string,
+    usn: string,
+    idImage: File
+  ) => {
+    const formData = new FormData()
+    formData.append('college_name', collegeName)
+    formData.append('student_name', studentName)
+    formData.append('usn', usn)
+    formData.append('id_image', idImage)
+
+    const response = await api.post('/auth/student/verify/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
 }
 
 // // services/api.ts  (replace existing collegeService block with this)
@@ -276,13 +309,27 @@ export const reviewService = {
   },
 
   myReview: async (uniqueKey: string): Promise<Review | null> => {
-    const response = await api.get(`/reviews/my-review/${uniqueKey}/`)
-    const data = response.data
-    if (data === null) return null
-    if (typeof data === 'object' && 'review' in data) {
-      return data.review || null
+    try {
+      const response = await api.get(`/reviews/my-review/${uniqueKey}/`)
+      const data = response.data
+      // Backend returns {'review': None} when no review exists, or the review object directly when it exists
+      if (data === null) return null
+      if (typeof data === 'object' && 'review' in data) {
+        return data.review || null
+      }
+      // If data has review_id, it's a review object
+      if (data && typeof data === 'object' && 'review_id' in data) {
+        return data as Review
+      }
+      return null
+    } catch (error: any) {
+      // If 401 or other auth errors, return null instead of throwing
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        console.error('Authentication error loading review:', error)
+        return null
+      }
+      throw error
     }
-    return data as Review
   },
 
   delete: async (uniqueKey: string): Promise<void> => {
@@ -319,8 +366,17 @@ export const meetingService = {
   },
 
   myInvitations: async (): Promise<Meeting[]> => {
-    const response = await api.get('/meetings/my-invitations/')
-    return response.data
+    try {
+      const response = await api.get('/meetings/my-invitations/')
+      return response.data || []
+    } catch (error: any) {
+      // If 401 or other auth errors, return empty array instead of throwing
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        console.error('Authentication error loading invitations:', error)
+        return []
+      }
+      throw error
+    }
   },
 
   updateStatus: async (meetingId: number, status: string, scheduledTime?: string): Promise<Meeting> => {

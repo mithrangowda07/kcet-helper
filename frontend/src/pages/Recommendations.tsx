@@ -23,14 +23,6 @@ const Recommendations = () => {
   const [openingRank, setOpeningRank] = useState(0)
   const [closingRank, setClosingRank] = useState(0)
 
-  const controlClass =
-  "w-full rounded-md px-3 py-2 text-sm transition " +
-  "bg-white text-slate-800 border border-slate-300 " +
-  "focus:outline-none focus:ring-2 focus:ring-blue-500 " +
-  "dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600 " +
-  "hover:bg-slate-50 dark:hover:bg-slate-700/60 "+
-  "dark:focus:ring-sky-400";
-
   /* ---------------- Display Name ---------------- */
   const displayName = useMemo(() => {
     const full = user?.name?.trim()
@@ -160,10 +152,13 @@ const Recommendations = () => {
       {/* ---------------- Header ---------------- */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-800 dark:text-gray-100">
-          College Recommendations
+          College Recommendation
         </h1>
         <p className="text-slate-600 dark:text-gray-400">
-          Welcome, <strong>{displayName}</strong> · KCET Rank:{' '}
+          Welcome, <strong>{displayName}</strong>
+        </p>
+        <p className="text-slate-600 dark:text-gray-400">
+          KCET Rank:{' '}
           <strong>{user?.kcet_rank ?? 'Not set'}</strong>
         </p>
       </div>
@@ -177,7 +172,7 @@ const Recommendations = () => {
                         rounded-lg px-4 py-3">
 
           <Filter label="Category">
-            <select value={category} onChange={e => setCategory(e.target.value)} className=" pr-12 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200">
+            <select value={category} onChange={e => setCategory(e.target.value)} className=" pr-8 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200">
                 
               <option value="">All</option>
               {categories.map(c => (
@@ -187,7 +182,7 @@ const Recommendations = () => {
           </Filter>
 
           <Filter label="Year">
-            <select value={year} onChange={e => setYear(e.target.value)} className=" pr-10 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200">
+            <select value={year} onChange={e => setYear(e.target.value)} className=" pr-8 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200">
               {['2025', '2024', '2023', '2022'].map(y => (
                 <option key={y}>{y}</option>
               ))}
@@ -195,7 +190,7 @@ const Recommendations = () => {
           </Filter>
 
           <Filter label="Round">
-            <select value={round} onChange={e => setRound(e.target.value)} className=" pr-10 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200">
+            <select value={round} onChange={e => setRound(e.target.value)} className=" pr-8 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200">
               <option value="R1">Round 1</option>
               <option value="R2">Round 2</option>
               <option value="R3">Round 3</option>
@@ -206,7 +201,7 @@ const Recommendations = () => {
             <select
               value={selectedCluster}
               onChange={e => setSelectedCluster(e.target.value)}
-              className=" pr-12 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
+              className=" pr-8 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
             >
               <option value="">All</option>
               {clusters.map(c => (
@@ -216,13 +211,13 @@ const Recommendations = () => {
               ))}
             </select>
           </Filter>
-
+              
           <Filter label="Opening Rank">
             <input
               type="number"
               value={openingRank}
               onChange={e => setOpeningRank(+e.target.value)}
-              className={`${controlClass} w-24`}
+              className="pr-2 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
             />
           </Filter>
 
@@ -231,7 +226,7 @@ const Recommendations = () => {
               type="number"
               value={closingRank}
               onChange={e => setClosingRank(+e.target.value)}
-              className={`${controlClass} w-24`}
+              className="pr-2 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200"
             />
           </Filter>
 
@@ -255,10 +250,10 @@ const Recommendations = () => {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 text-sm">
               <thead className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                  <th className="px-6 py-3 text-left">College</th>
-                  <th className="px-6 py-3 text-left">Branch</th>
-                  <th className="px-6 py-3 text-left">{round} Cutoff</th>
-                  <th className="px-6 py-3 text-left">Action</th>
+                  <th className="px-6 py-3 text-left text-slate-600 dark:text-gray-400">College</th>
+                  <th className="px-6 py-3 text-left text-slate-600 dark:text-gray-400">Branch</th>
+                  <th className="px-6 py-3 text-left text-slate-600 dark:text-gray-400">{round} Cutoff</th>
+                  <th className="px-6 py-3 text-left text-slate-600 dark:text-gray-400">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700

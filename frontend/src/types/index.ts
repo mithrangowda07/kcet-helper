@@ -31,6 +31,7 @@ export interface College {
 }
 
 export interface Branch {
+  unique_key: string
   public_id: string
   college: College
   cluster: {

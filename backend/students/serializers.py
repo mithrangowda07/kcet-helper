@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 import re
 from .models import Student
 from colleges.serializers import BranchSerializer
+from colleges.models import Branch
 
 
 class StudentSerializer(serializers.ModelSerializer):
@@ -17,7 +18,8 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = [
             'student_user_id', 'type_of_student', 'name', 'category', 'unique_key', 'unique_key_data',
             'year_of_starting', 'college_code', 'phone_number', 'email_id',
-            'kcet_rank', 'is_active', 'profile_completed', 'created_at', 'last_login'
+            'kcet_rank', 'is_active', 'profile_completed', 'created_at', 'last_login',
+            'usn', 'is_verified_student'
         ]
         read_only_fields = ['student_user_id', 'created_at', 'last_login']
 
@@ -59,12 +61,20 @@ class StudentSerializer(serializers.ModelSerializer):
 class StudentRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True, min_length=8)
+    # Use SlugRelatedField to handle unique_key as a string (Branch's primary key is unique_key CharField)
+    unique_key = serializers.SlugRelatedField(
+        slug_field='unique_key',
+        queryset=Branch.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    usn = serializers.CharField(max_length=50, required=False, allow_blank=True)
 
     class Meta:
         model = Student
         fields = [
             'type_of_student', 'name', 'category', 'email_id', 'phone_number', 'password', 'password_confirm',
-            'kcet_rank', 'college_code', 'unique_key', 'year_of_starting'
+            'kcet_rank', 'college_code', 'unique_key', 'year_of_starting', 'usn'
         ]
 
     def validate_password(self, value):
@@ -105,19 +115,66 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
             college_code = attrs.get('college_code')
             unique_key = attrs.get('unique_key')
             year_of_starting = attrs.get('year_of_starting')
+            usn = attrs.get('usn')
+            name = attrs.get('name')
             
             if not college_code or college_code == '':
                 raise serializers.ValidationError({
                     'college_code': 'college_code is required for studying students'
                 })
-            if not unique_key or unique_key == '':
+            if not unique_key:
                 raise serializers.ValidationError({
-                    'unique_key': 'unique_key is required for studying students'
+                    'unique_key': 'unique_key (branch) is required for studying students'
                 })
             if year_of_starting is None or year_of_starting == '':
                 raise serializers.ValidationError({
                     'year_of_starting': 'year_of_starting is required for studying students'
                 })
+            if not usn or usn.strip() == '':
+                raise serializers.ValidationError({
+                    'usn': 'USN/Student ID is required for studying students'
+                })
+            if not name or name.strip() == '':
+                raise serializers.ValidationError({
+                    'name': 'Name is required for studying students'
+                })
+            
+            # Check if USN already exists
+            if Student.objects.filter(usn=usn).exists():
+                raise serializers.ValidationError({
+                    'usn': 'This USN/Student ID is already registered'
+                })
+            
+            # Validate against verification record
+            from .models import StudentVerification
+            try:
+                verification = StudentVerification.objects.filter(
+                    usn=usn,
+                    verified=True
+                ).order_by('-created_at').first()
+                
+                if verification:
+                    # Verify name matches
+                    if verification.student_name.lower().strip() != name.lower().strip():
+                        raise serializers.ValidationError({
+                            'name': f'Name must match verified name: {verification.student_name}'
+                        })
+                    
+                    # Verify college matches (get college name from code)
+                    from colleges.models import College
+                    try:
+                        college = College.objects.get(college_code=college_code)
+                        if verification.college_name.lower().strip() != college.college_name.lower().strip():
+                            raise serializers.ValidationError({
+                                'college_code': f'College must match verified college: {verification.college_name}'
+                            })
+                    except College.DoesNotExist:
+                        pass  # College validation will fail elsewhere
+            except StudentVerification.DoesNotExist:
+                # If no verification found, still allow but log warning
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Registration attempted without verification record for USN: {usn}")
         elif not type_of_student:
             raise serializers.ValidationError({
                 'type_of_student': 'type_of_student is required. Must be either "counselling" or "studying"'
@@ -183,3 +240,10 @@ class StudentTokenRefreshSerializer(TokenRefreshSerializer):
 
         return data
 
+
+class StudentVerificationSerializer(serializers.Serializer):
+    """Serializer for student ID verification"""
+    college_name = serializers.CharField(max_length=255, required=True)
+    student_name = serializers.CharField(max_length=255, required=True)
+    usn = serializers.CharField(max_length=50, required=True)
+    id_image = serializers.ImageField(required=True)

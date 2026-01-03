@@ -90,7 +90,7 @@ const Navbar = () => {
                 to="/search"
                 className={getLinkClasses('/search')}
               >
-                Search Colleges
+                Search College
               </Link>
               {isAuthenticated && (
                 <Link
@@ -105,7 +105,7 @@ const Navbar = () => {
                   to="/recommendations"
                   className={getLinkClasses('/recommendations')}
                 >
-                  Recommendations
+                  Recommendation
                 </Link>
               )}
               {isAuthenticated && (

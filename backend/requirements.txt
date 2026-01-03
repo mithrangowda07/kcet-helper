@@ -21,5 +21,14 @@ google-auth-oauthlib==1.2.0
 # Image Processing
 Pillow==10.1.0
 
+# OCR for Student Verification
+pytesseract==0.3.10
+opencv-python==4.8.1.78
+rapidfuzz==3.5.2
+# Note: Tesseract OCR engine must be installed separately on the system
+# Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
+# Linux: sudo apt-get install tesseract-ocr
+# macOS: brew install tesseract
+
 # Note: UUID support is built into Python's standard library (uuid module)
 # No additional package required for public_id UUIDField functionality

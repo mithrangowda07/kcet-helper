@@ -41,6 +41,8 @@ class Student(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     profile_completed = models.BooleanField(default=False)
+    usn = models.CharField(max_length=50, null=True, blank=True, unique=True)
+    is_verified_student = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email_id'
     REQUIRED_FIELDS = ['phone_number', 'type_of_student']
@@ -92,3 +94,20 @@ class Student(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f"{self.student_user_id} - {self.email_id}"
 
+
+class StudentVerification(models.Model):
+    """Model to store student verification data including the ID image"""
+    verification_id = models.AutoField(primary_key=True)
+    college_name = models.CharField(max_length=255)
+    student_name = models.CharField(max_length=255)
+    usn = models.CharField(max_length=50)
+    id_image = models.BinaryField()  # Store image as binary data in MySQL
+    college_score = models.FloatField()
+    name_score = models.FloatField()
+    usn_score = models.FloatField()
+    verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'student_verification'
+        managed = True

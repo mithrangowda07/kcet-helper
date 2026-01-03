@@ -106,7 +106,7 @@ def my_review(request, unique_key):
             unique_key=branch
         )
         serializer = CollegeReviewSerializer(review)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     except CollegeReview.DoesNotExist:
         return Response({'review': None}, status=status.HTTP_200_OK)
 
