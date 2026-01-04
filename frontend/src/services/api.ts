@@ -349,6 +349,31 @@ export const reviewService = {
     const response = await api.get(`/reviews/colleges/${publicId}/`)
     return response.data
   },
+
+  // AI Detection endpoints
+  checkText: async (field: string, text: string): Promise<{
+    field: string
+    label: 'HUMAN-WRITTEN' | 'AI-GENERATED'
+    ai_probability: number
+  }> => {
+    const response = await api.post('/reviews/check-text/', { field, text })
+    // Map response to frontend format (normalize to lowercase for compatibility)
+    const data = response.data
+    return {
+      field: data.field,
+      label: data.label === 'AI-GENERATED' ? 'AI-GENERATED' : 'HUMAN-WRITTEN',
+      ai_probability: data.ai_probability || 0
+    }
+  },
+
+  validateAll: async (reviews: Record<string, string>): Promise<{
+    results: Record<string, 'HUMAN-WRITTEN' | 'AI-GENERATED'>
+    can_submit: boolean
+    ai_fields: string[]
+  }> => {
+    const response = await api.post('/reviews/validate-all/', { reviews })
+    return response.data
+  },
 }
 
 export const meetingService = {

@@ -71,6 +71,15 @@ class Student(AbstractBaseUser, PermissionsMixin):
         if not self.student_user_id:
             self.student_user_id = self._generate_student_id()
         
+        # Handle password field mapping: Django's AbstractBaseUser uses 'password'
+        # but our model uses 'hashed_password' as the database field
+        if 'update_fields' in kwargs and 'password' in kwargs['update_fields']:
+            # Replace 'password' with 'hashed_password' in update_fields
+            update_fields = list(kwargs['update_fields'])
+            update_fields.remove('password')
+            update_fields.append('hashed_password')
+            kwargs['update_fields'] = update_fields
+        
         super().save(*args, **kwargs)
 
     def _generate_student_id(self):

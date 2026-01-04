@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.utils import timezone
+from django.conf import settings
+from django.db import IntegrityError
 from .models import Student
 from .serializers import (
     StudentSerializer,
@@ -24,23 +26,32 @@ from .models import StudentVerification
 def register(request):
     serializer = StudentRegisterSerializer(data=request.data)
     if serializer.is_valid():
+        # ✅ EARLY EXIT - Check if email exists BEFORE attempting to create
+        # This prevents IntegrityError and duplicate insert attempts in most cases
+        # Email is already normalized to lowercase in serializer.validate_email_id()
+        email_id = serializer.validated_data.get('email_id', '').strip().lower()
+        
+        # Check if email already exists (email is normalized, so direct comparison is safe)
+        if Student.objects.filter(email_id__iexact=email_id).exists():
+            return Response({
+                'error': 'Email already registered',
+                'message': 'An account with this email already exists. Please use a different email or try logging in.',
+                'field': 'email_id'
+            }, status=status.HTTP_409_CONFLICT)
+        
+        # Note: USN duplicate check is already handled in serializer.validate()
+        # No need to check again here
+        
+        # ✅ CREATE WITH INTEGRITY ERROR HANDLING - Protects against race conditions
         try:
             type_of_student = serializer.validated_data.get('type_of_student')
-            
-            # For studying students, require verification
-            if type_of_student == 'studying':
-                # Check if student is verified (this should be done via verification endpoint first)
-                # We'll check if the USN exists and is verified, or we can use a session/token approach
-                # For now, we'll require that verification happens before registration
-                # The frontend should handle this flow
-                pass
-            
             student = serializer.save()
             
-            # For studying students, set is_verified_student to True after successful registration
+            # For studying students, set is_verified_student after creation
             # (verification was done before registration)
             if type_of_student == 'studying':
                 student.is_verified_student = True
+                # Use regular save() without update_fields to avoid issues with newly created objects
                 student.save()
             
             student_data = StudentSerializer(student).data
@@ -55,10 +66,66 @@ def register(request):
                     'access': str(refresh.access_token),
                 }
             }, status=status.HTTP_201_CREATED)
-        except Exception as e:
+        except IntegrityError as e:
+            # Handle database integrity errors (duplicate email, USN, etc.)
+            # MySQL error format: (1062, "Duplicate entry 'value' for key 'table.field'")
+            error_message = str(e.args[0]) if e.args else str(e)
+            error_message_lower = error_message.lower()
+            
+            # Check if it's a duplicate email error - check for email_id key in error
+            if 'email_id' in error_message_lower or '.email_id' in error_message_lower:
+                # Verify email exists now (might have been inserted by concurrent request)
+                # Email is normalized, so direct comparison is safe
+                if Student.objects.filter(email_id__iexact=email_id).exists():
+                    return Response({
+                        'error': 'Email already registered',
+                        'message': 'An account with this email already exists. Please use a different email or try logging in.',
+                        'field': 'email_id'
+                    }, status=status.HTTP_409_CONFLICT)
+                else:
+                    # Edge case: integrity error but email doesn't exist (shouldn't happen)
+                    return Response({
+                        'error': 'Registration conflict',
+                        'message': 'A registration conflict occurred. Please try again.',
+                    }, status=status.HTTP_409_CONFLICT)
+            
+            # Check if it's a duplicate USN error - check for usn key in error
+            if 'usn' in error_message_lower and '.usn' in error_message_lower:
+                return Response({
+                    'error': 'USN already registered',
+                    'message': 'This USN/Student ID is already registered. Please use a different USN.',
+                    'field': 'usn'
+                }, status=status.HTTP_409_CONFLICT)
+            
+            # Generic integrity error (shouldn't happen with proper validation)
+            # Check if email exists as fallback (race condition protection)
+            # Email is normalized, so direct comparison is safe
+            if Student.objects.filter(email_id__iexact=email_id).exists():
+                return Response({
+                    'error': 'Email already registered',
+                    'message': 'An account with this email already exists. Please use a different email or try logging in.',
+                    'field': 'email_id'
+                }, status=status.HTTP_409_CONFLICT)
+            
+            # Log unexpected integrity error for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"IntegrityError during registration: {error_message}", exc_info=False)
+            
             return Response({
-                'error': str(e),
-                'detail': 'Error creating student account'
+                'error': 'Registration conflict',
+                'message': 'A conflict occurred during registration. Please check your information and try again.',
+            }, status=status.HTTP_409_CONFLICT)
+        except Exception as e:
+            # Handle all other unexpected errors
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Unexpected registration error: {str(e)}", exc_info=True)
+            
+            return Response({
+                'error': 'Error creating student account',
+                'message': 'An unexpected error occurred. Please try again.',
+                'detail': str(e) if settings.DEBUG else None
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Return detailed validation errors

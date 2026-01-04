@@ -77,6 +77,12 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
             'kcet_rank', 'college_code', 'unique_key', 'year_of_starting', 'usn'
         ]
 
+    def validate_email_id(self, value):
+        """Normalize email to lowercase for consistency"""
+        if value:
+            return value.strip().lower()
+        return value
+
     def validate_password(self, value):
         """Validate password strength"""
         if len(value) < 8:
@@ -147,30 +153,29 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
             
             # Validate against verification record
             from .models import StudentVerification
-            try:
-                verification = StudentVerification.objects.filter(
-                    usn=usn,
-                    verified=True
-                ).order_by('-created_at').first()
+            verification = StudentVerification.objects.filter(
+                usn=usn,
+                verified=True
+            ).order_by('-created_at').first()
+            
+            if verification:
+                # Verify name matches
+                if verification.student_name.lower().strip() != name.lower().strip():
+                    raise serializers.ValidationError({
+                        'name': f'Name must match verified name: {verification.student_name}'
+                    })
                 
-                if verification:
-                    # Verify name matches
-                    if verification.student_name.lower().strip() != name.lower().strip():
+                # Verify college matches (get college name from code)
+                from colleges.models import College
+                try:
+                    college = College.objects.get(college_code=college_code)
+                    if verification.college_name.lower().strip() != college.college_name.lower().strip():
                         raise serializers.ValidationError({
-                            'name': f'Name must match verified name: {verification.student_name}'
+                            'college_code': f'College must match verified college: {verification.college_name}'
                         })
-                    
-                    # Verify college matches (get college name from code)
-                    from colleges.models import College
-                    try:
-                        college = College.objects.get(college_code=college_code)
-                        if verification.college_name.lower().strip() != college.college_name.lower().strip():
-                            raise serializers.ValidationError({
-                                'college_code': f'College must match verified college: {verification.college_name}'
-                            })
-                    except College.DoesNotExist:
-                        pass  # College validation will fail elsewhere
-            except StudentVerification.DoesNotExist:
+                except College.DoesNotExist:
+                    pass  # College validation will fail elsewhere
+            else:
                 # If no verification found, still allow but log warning
                 import logging
                 logger = logging.getLogger(__name__)
@@ -185,6 +190,9 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
+        # Normalize email to lowercase before saving to ensure consistency
+        if 'email_id' in validated_data:
+            validated_data['email_id'] = validated_data['email_id'].strip().lower()
         student = Student(**validated_data)
         student.set_password(password)
         student.save()

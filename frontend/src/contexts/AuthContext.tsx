@@ -5,7 +5,7 @@ import { Student } from '../types'
 interface AuthContextType {
   user: Student | null
   tokens: { access: string; refresh: string } | null
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<Student>
   register: (data: any) => Promise<void>
   logout: () => void
   isAuthenticated: boolean
@@ -19,19 +19,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [tokens, setTokens] = useState<{ access: string; refresh: string } | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Helper to persist user and tokens consistently
+  /* =========================
+     Helpers
+  ========================= */
+
   const setAndPersistTokens = (t: { access: string; refresh: string }) => {
     setTokens(t)
     localStorage.setItem('tokens', JSON.stringify(t))
     authService.setTokens(t)
   }
+
   const setAndPersistUser = (u: Student) => {
     setUser(u)
     localStorage.setItem('user', JSON.stringify(u))
   }
 
+  const clearAuthCompletely = () => {
+    setUser(null)
+    setTokens(null)
+    localStorage.removeItem('tokens')
+    localStorage.removeItem('user')
+    authService.clearTokens()
+  }
+
+  /* =========================
+     Init on App Load
+  ========================= */
+
   useEffect(() => {
-    // Hydrate from localStorage, then (if tokens exist) fetch fresh /auth/me
     const init = async () => {
       try {
         const storedTokens = localStorage.getItem('tokens')
@@ -41,55 +56,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const parsedTokens = JSON.parse(storedTokens)
           setAndPersistTokens(parsedTokens)
         }
+
         if (storedUser) {
           setUser(JSON.parse(storedUser))
         }
 
-        // If we have tokens, prefer a fresh user from /auth/me (ensures name is present)
+        // Prefer fresh user data if tokens exist
         if (storedTokens) {
           const me = await authService.me()
           setAndPersistUser(me)
         }
-      } catch (e) {
-        console.error('Error during auth init:', e)
-        localStorage.removeItem('tokens')
-        localStorage.removeItem('user')
-        setUser(null)
-        setTokens(null)
-        authService.clearTokens()
+      } catch (error) {
+        console.error('Auth init failed:', error)
+        clearAuthCompletely()
       } finally {
         setLoading(false)
       }
     }
+
     init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const login = async (email: string, password: string) => {
+  /* =========================
+     Login
+  ========================= */
+
+  const login = async (email: string, password: string): Promise<Student> => {
     const response = await authService.login(email, password)
-    const t = response.tokens ?? { access: response.access, refresh: response.refresh }
-    setAndPersistTokens(t)
-    // Prefer user data returned from login response to avoid an immediate /auth/me/ 401
-    if (response.student) {
-      setAndPersistUser(response.student)
-    } else {
-      const me = await authService.me()
-      setAndPersistUser(me)
+
+    const t = response.tokens ?? {
+      access: response.access,
+      refresh: response.refresh,
     }
+
+    setAndPersistTokens(t)
+
+    let loggedInUser: Student
+
+    if (response.student) {
+      loggedInUser = response.student
+      setAndPersistUser(loggedInUser)
+    } else {
+      loggedInUser = await authService.me()
+      setAndPersistUser(loggedInUser)
+    }
+
+    return loggedInUser
   }
 
-  // Registration should NOT log the user in automatically.
-  // It just creates the account; user will log in explicitly afterwards.
+  /* =========================
+     Register (FIXED)
+     ⚠ MUST be unauthenticated
+  ========================= */
+
   const register = async (data: any) => {
+    // 🚨 CRITICAL FIX:
+    // Ensure NO auth token is sent during registration
+    authService.clearTokens()
+
     await authService.register(data)
   }
 
+  /* =========================
+     Logout
+  ========================= */
+
   const logout = () => {
-    setUser(null)
-    setTokens(null)
-    localStorage.removeItem('tokens')
-    localStorage.removeItem('user')
-    authService.clearTokens()
+    clearAuthCompletely()
   }
 
   return (
@@ -109,9 +143,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   )
 }
 
+/* =========================
+   Hook
+========================= */
+
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context

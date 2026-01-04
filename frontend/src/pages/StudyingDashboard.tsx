@@ -13,6 +13,10 @@ const StudyingDashboard = () => {
   const [collegeName, setCollegeName] = useState("");
   const [existingReview, setExistingReview] = useState<Review | null>(null);
   const [submittingReview, setSubmittingReview] = useState(false);
+  
+  // AI Detection state: only used during submission
+  const [validationSummary, setValidationSummary] = useState<Record<string, 'HUMAN-WRITTEN' | 'AI-GENERATED'> | null>(null);
+  const [showValidationSummary, setShowValidationSummary] = useState(false);
 
   const daysOfWeek = [
     "Monday",
@@ -155,6 +159,7 @@ const StudyingDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.unique_key_data, authLoading, user]);
 
+
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingReview) return; // Prevent multiple submissions
@@ -165,8 +170,62 @@ const StudyingDashboard = () => {
       return;
     }
 
+    // CRITICAL: Validate all fields before submission (only on submit)
     setSubmittingReview(true);
+    setShowValidationSummary(false);
+    setValidationSummary(null);
+    
     try {
+      // Build reviews object with all text fields
+      const reviews: Record<string, string> = {};
+      ratingFields.forEach(field => {
+        const fieldName = `${field.key}_review`;
+        reviews[fieldName] = (reviewFormData[fieldName as keyof typeof reviewFormData] as string) || '';
+      });
+      
+      const result = await reviewService.validateAll(reviews);
+      
+      // Store summary for display
+      setValidationSummary(result.results);
+      setShowValidationSummary(true);
+      
+      if (!result.can_submit) {
+        // Build error message from validation summary
+        const aiFields = Object.entries(result.results)
+          .filter(([_, label]) => label === 'AI-GENERATED')
+          .map(([fieldName, _]) => {
+            const fieldKey = fieldName.replace('_review', '');
+            const field = ratingFields.find(f => f.key === fieldKey);
+            return field ? field.label : fieldName;
+          });
+        
+        const humanFields = Object.entries(result.results)
+          .filter(([fieldName, label]) => {
+            const text = reviewFormData[fieldName as keyof typeof reviewFormData] as string;
+            return label === 'HUMAN-WRITTEN' && text && text.trim();
+          })
+          .map(([fieldName, _]) => {
+            const fieldKey = fieldName.replace('_review', '');
+            const field = ratingFields.find(f => f.key === fieldKey);
+            return field ? field.label : fieldName;
+          });
+        
+        // Show detailed summary
+        let message = `Review Validation Results:\n\n`;
+        if (humanFields.length > 0) {
+          message += `✅ HUMAN-WRITTEN:\n${humanFields.join(', ')}\n\n`;
+        }
+        if (aiFields.length > 0) {
+          message += `❌ AI-GENERATED:\n${aiFields.join(', ')}\n\n`;
+        }
+        message += `Submission blocked. Please rewrite the AI-generated fields in your own words.`;
+        
+        alert(message);
+        setSubmittingReview(false);
+        return;
+      }
+
+      // All validations passed, proceed with submission
       await reviewService.create(reviewFormData);
       alert(
         existingReview
@@ -178,9 +237,22 @@ const StudyingDashboard = () => {
         const review = await reviewService.myReview(user.unique_key);
         setExistingReview(review);
       }
+      // Reset validation summary
+      setShowValidationSummary(false);
+      setValidationSummary(null);
       setShowReviewForm(false); // collapse the form after submit
     } catch (err: any) {
-      alert(err.response?.data?.error || "Error submitting review");
+      // Handle backend validation errors
+      if (err.response?.data?.error && err.response.data.error.includes('AI-generated')) {
+        const aiFields = err.response.data.field_display_names || [];
+        alert(
+          `Review submission rejected!\n\n` +
+          `The following fields contain AI-generated text:\n${aiFields.join(', ')}\n\n` +
+          `Please rewrite these sections in your own words.`
+        );
+      } else {
+        alert(err.response?.data?.error || err.response?.data?.message || "Error submitting review");
+      }
     } finally {
       setSubmittingReview(false);
     }
@@ -230,6 +302,7 @@ const StudyingDashboard = () => {
     { key: "safety", label: "Safety & Security" },
     { key: "placement", label: "Placement Support" },
   ] as const;
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -366,22 +439,25 @@ const StudyingDashboard = () => {
                     }))
                   }
                 />
-                <textarea
-                  placeholder={`${field.label} review...`}
-                  value={
-                    reviewFormData[
-                      `${field.key}_review` as keyof typeof reviewFormData
-                    ] as string
-                  }
-                  onChange={(e) =>
-                    setReviewFormData((prev) => ({
-                      ...prev,
-                      [`${field.key}_review`]: e.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-500"
-                  rows={2}
-                />
+                <div className="mt-2">
+                  <textarea
+                    placeholder={`${field.label} review...`}
+                    value={
+                      reviewFormData[
+                        `${field.key}_review` as keyof typeof reviewFormData
+                      ] as string
+                    }
+                    onChange={(e) => {
+                      const fieldName = `${field.key}_review`;
+                      setReviewFormData((prev) => ({
+                        ...prev,
+                        [fieldName]: e.target.value,
+                      }));
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-500"
+                    rows={2}
+                  />
+                </div>
               </div>
             ))}
 
@@ -498,6 +574,44 @@ const StudyingDashboard = () => {
               </div>
             </div>
 
+            {/* Validation Summary - shown after submit attempt */}
+            {showValidationSummary && validationSummary && (
+              <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600">
+                <h3 className="text-sm font-semibold mb-3 text-slate-800 dark:text-gray-200">
+                  Review Validation Results
+                </h3>
+                <div className="space-y-2 text-sm">
+                  {ratingFields.map(field => {
+                    const fieldName = `${field.key}_review`;
+                    const text = reviewFormData[fieldName as keyof typeof reviewFormData] as string;
+                    const label = validationSummary[fieldName];
+                    
+                    if (!text || !text.trim()) return null;
+                    
+                    return (
+                      <div key={field.key} className="flex items-center justify-between py-1">
+                        <span className="text-slate-700 dark:text-gray-300">{field.label}:</span>
+                        <span className={
+                          label === 'HUMAN-WRITTEN' 
+                            ? "text-green-600 dark:text-green-400 font-medium" 
+                            : label === 'AI-GENERATED'
+                            ? "text-red-600 dark:text-red-400 font-medium"
+                            : "text-slate-500 dark:text-gray-400"
+                        }>
+                          {label === 'HUMAN-WRITTEN' ? '✅ HUMAN-WRITTEN' : label === 'AI-GENERATED' ? '❌ AI-GENERATED' : '⏳ Unchecked'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {Object.values(validationSummary).some(label => label === 'AI-GENERATED') && (
+                  <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 rounded text-sm text-red-800 dark:text-red-200">
+                    ⚠️ <strong>Submission blocked:</strong> Some fields contain AI-generated content. Please rewrite them in your own words.
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex items-center gap-3">
               <button
                 type="submit"
@@ -505,7 +619,7 @@ const StudyingDashboard = () => {
                 className="bg-blue-600 hover:bg-blue-700 dark:bg-sky-400 dark:hover:bg-sky-500 text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submittingReview
-                  ? "Saving..."
+                  ? "Validating & Saving..."
                   : existingReview
                   ? "Save Changes"
                   : "Submit Review"}

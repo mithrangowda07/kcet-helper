@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -14,7 +14,7 @@ const LoginRegister = () => {
   const [studentType, setStudentType] = useState<"counselling" | "studying">(
     "counselling"
   );
-  const { user, login, register } = useAuth();
+  const {login, register } = useAuth();
   const navigate = useNavigate();
   
   // Check URL params for verification status
@@ -50,6 +50,7 @@ const LoginRegister = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const submitRef = useRef(false);
 
   const isValidEmail = (email: string) => {
     const emailRegex =
@@ -62,12 +63,13 @@ const LoginRegister = () => {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error when any field changes
     setError("");
     if (name === 'email_id') {
+      // Clear email-specific errors when email changes
+      setEmailError("");
       if (value && !isValidEmail(value)) {
         setEmailError("Please enter a valid email address.");
-      } else {
-        setEmailError("");
       }
     }
   };
@@ -194,20 +196,30 @@ const LoginRegister = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // ✅ PART 1: HARD GUARD - Prevent duplicate submissions
+    if (loading) return;
+    
+    // ✅ PART 6: Idempotency guard
+    if (submitRef.current) return;
+    submitRef.current = true;
+    
     setError("");
     setLoading(true);
 
     if (emailError) {
       setError("Please enter a valid email address.");
       setLoading(false);
+      submitRef.current = false; // Reset on error
       return;
     }
 
     try {
       if (isLogin) {
-        await login(formData.email_id, formData.password);
+        // ✅ PART 2: Fix login flow - use returned user data
+        const loggedInUser = await login(formData.email_id, formData.password);
         navigate(
-          user?.type_of_student === "counselling"
+          loggedInUser.type_of_student === "counselling"
             ? "/dashboard/counselling"
             : "/dashboard/studying"
         );
@@ -232,6 +244,7 @@ const LoginRegister = () => {
           if (!verifiedData) {
             setError("Please verify your student ID first");
             setLoading(false);
+            submitRef.current = false; // Reset on error
             navigate("/verify-student");
             return;
           }
@@ -241,6 +254,7 @@ const LoginRegister = () => {
             if (!verified.verified) {
               setError("Student verification required. Please verify your ID first.");
               setLoading(false);
+              submitRef.current = false; // Reset on error
               navigate("/verify-student");
               return;
             }
@@ -249,6 +263,7 @@ const LoginRegister = () => {
             if (verified.usn !== formData.usn) {
               setError("USN must match the verified USN. Please verify again.");
               setLoading(false);
+              submitRef.current = false; // Reset on error
               navigate("/verify-student");
               return;
             }
@@ -256,6 +271,7 @@ const LoginRegister = () => {
             if (verified.student_name !== formData.name) {
               setError("Name must match the verified name. Please verify again.");
               setLoading(false);
+              submitRef.current = false; // Reset on error
               navigate("/verify-student");
               return;
             }
@@ -265,12 +281,14 @@ const LoginRegister = () => {
             if (selectedCollege && selectedCollege.college_name !== verified.college_name) {
               setError("College must match the verified college. Please verify again.");
               setLoading(false);
+              submitRef.current = false; // Reset on error
               navigate("/verify-student");
               return;
             }
           } catch (e) {
             setError("Student verification required. Please verify your ID first.");
             setLoading(false);
+            submitRef.current = false; // Reset on error
             navigate("/verify-student");
             return;
           }
@@ -285,26 +303,35 @@ const LoginRegister = () => {
         }
 
         await register(registerData);
-        // Clear verification data after successful registration
-        sessionStorage.removeItem("verified_student");
-        // After successful registration, switch to login view instead of auto-login
-        setIsLogin(true);
-        setError(""); // clear any previous errors
-        setFormData({
-          name: "",
-          email_id: "",
-          phone_number: "",
-          password: "",
-          password_confirm: "",
-          category: "",
-          kcet_rank: "",
-          college_code: "",
-          unique_key: "",
-          year_of_starting: "",
-          usn: "",
-        });
+
+// ✅ RESET idempotency guard on success
+submitRef.current = false;
+
+sessionStorage.removeItem("verified_student");
+
+alert("Registration successful! Please login with your credentials.");
+
+setFormData({
+  name: "",
+  email_id: "",
+  phone_number: "",
+  password: "",
+  password_confirm: "",
+  category: "",
+  kcet_rank: "",
+  college_code: "",
+  unique_key: "",
+  year_of_starting: "",
+  usn: "",
+});
+
+// ✅ Switch to login view
+setIsLogin(true);
       }
     } catch (err: any) {
+      // Reset idempotency guard on error
+      submitRef.current = false;
+      // Handle validation errors (400 Bad Request with errors object)
       if (err.response?.data?.errors) {
         const errors = err.response.data.errors;
         const errorMessages = Object.entries(errors)
@@ -319,15 +346,19 @@ const LoginRegister = () => {
           errorMessages || err.response.data.message || "Validation failed"
         );
       } else {
-        setError(
+        // Handle other errors (409 Conflict, 500, etc.)
+        // Prioritize 'message' field as it's more descriptive, then 'error' field
+        const errorMessage = 
+          err.response?.data?.message ||
           err.response?.data?.error ||
-            err.response?.data?.message ||
-            err.message ||
-            "An error occurred"
-        );
+          err.message ||
+          "An error occurred";
+        setError(errorMessage);
       }
     } finally {
       setLoading(false);
+      // Only reset submitRef if there was an error (already reset in catch block)
+      // On success, we navigate away so it doesn't matter
     }
   };
 
