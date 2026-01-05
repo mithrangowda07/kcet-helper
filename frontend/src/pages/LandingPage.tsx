@@ -70,7 +70,7 @@ const LandingPage = () => {
 
             {!isAuthenticated && (
               <Link
-                to="/auth"
+                to="/register"
                 className="backdrop-blur-md bg-white/20 text-white px-8 py-3 rounded-xl 
                            text-lg font-semibold border border-white/30 
                            hover:bg-white/30 transition"

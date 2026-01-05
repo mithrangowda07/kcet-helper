@@ -10,7 +10,6 @@ build/
 develop-eggs/
 dist/
 downloads/
-/migrations
 eggs/
 .eggs/
 lib/
@@ -74,6 +73,11 @@ service-account*.json
 /dist
 /staticfiles
 /static
+
+# Django Migrations (keep structure, ignore migration files)
+backend/**/migrations/*.py
+!backend/**/migrations/__init__.py
+backend/**/migrations/__pycache__/
 
 # Coverage
 htmlcov/

@@ -113,6 +113,20 @@ export const authService = {
     return response.data
   },
 
+  registerCounselling: async (data: any) => {
+    const response = await api.post('/auth/register/counselling/', data)
+    return response.data
+  },
+
+  registerStudying: async (formData: FormData) => {
+    const response = await api.post('/auth/register/studying/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
   me: async (): Promise<Student> => {
     const response = await api.get('/auth/me/')
     return response.data

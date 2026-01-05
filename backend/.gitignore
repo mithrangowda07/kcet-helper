@@ -30,10 +30,14 @@ db.sqlite3
 db.sqlite3-journal
 /media
 /staticfiles
-/migrations
 /static
 *.pot
 *.pyc
+
+# Django Migrations (keep structure, ignore migration files)
+**/migrations/*.py
+!**/migrations/__init__.py
+**/migrations/__pycache__/
 
 # Virtual Environment
 venv/

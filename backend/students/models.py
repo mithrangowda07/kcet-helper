@@ -43,6 +43,7 @@ class Student(AbstractBaseUser, PermissionsMixin):
     profile_completed = models.BooleanField(default=False)
     usn = models.CharField(max_length=50, null=True, blank=True, unique=True)
     is_verified_student = models.BooleanField(default=False)
+    id_card_image = models.BinaryField(null=True, blank=True)  # Store image as binary data in MySQL LONGBLOB
 
     USERNAME_FIELD = 'email_id'
     REQUIRED_FIELDS = ['phone_number', 'type_of_student']

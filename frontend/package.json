@@ -1,7 +1,9 @@
 {
   "name": "kcet-eduguide-frontend",
   "version": "1.0.0",
+  "description": "KCET EduGuide - Rank-based college and branch recommendation platform",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.1.1",

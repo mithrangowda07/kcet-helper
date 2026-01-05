@@ -4,7 +4,9 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import Navbar from './components/Navbar'
 import LandingPage from './pages/LandingPage'
 import LoginRegister from './pages/LoginRegister'
-import StudentVerification from './pages/StudentVerification'
+import RegisterRoleSelection from './pages/RegisterRoleSelection'
+import RegisterCounselling from './pages/RegisterCounselling'
+import RegisterStudying from './pages/RegisterStudying'
 import CounsellingDashboard from './pages/CounsellingDashboard'
 import StudyingDashboard from './pages/StudyingDashboard'
 import CollegeDetailPage from './pages/CollegeDetailPage'
@@ -27,7 +29,9 @@ function App() {
             <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<LoginRegister />} />
-            <Route path="/verify-student" element={<StudentVerification />} />
+            <Route path="/register" element={<RegisterRoleSelection />} />
+            <Route path="/register/counselling" element={<RegisterCounselling />} />
+            <Route path="/register/studying" element={<RegisterStudying />} />
             <Route
               path="/dashboard/counselling"
               element={

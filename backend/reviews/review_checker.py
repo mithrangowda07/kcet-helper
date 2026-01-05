@@ -8,6 +8,7 @@ import joblib
 import re
 import os
 import logging
+from sklearn.utils.validation import check_is_fitted
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +57,31 @@ def load_model():
         logger.info(f"Loading vectorizer from: {vectorizer_path}")
         _vectorizer = joblib.load(vectorizer_path)
         
+        # Verify vectorizer is properly fitted
+        try:
+            check_is_fitted(_vectorizer, attributes=["idf_"], msg="idf vector is not fitted")
+            logger.info("Vectorizer verified as properly fitted")
+        except Exception as e:
+            logger.error(f"Vectorizer is not properly fitted: {str(e)}")
+            logger.error("This may be due to version mismatch. Please ensure scikit-learn version matches the training version.")
+            _vectorizer = None
+            _model = None
+            _model_loaded = False
+            return False
+        
         logger.info(f"Loading model from: {model_path}")
         _model = joblib.load(model_path)
+        
+        # Verify model is properly fitted
+        try:
+            check_is_fitted(_model)
+            logger.info("Model verified as properly fitted")
+        except Exception as e:
+            logger.error(f"Model is not properly fitted: {str(e)}")
+            _vectorizer = None
+            _model = None
+            _model_loaded = False
+            return False
         
         _model_loaded = True
         logger.info("ML model and vectorizer loaded successfully")
@@ -116,6 +140,13 @@ def check_review(review_text):
     
     # Use EXACT cleaning logic
     review_text = clean_text(review_text)
+    
+    # Verify vectorizer is still fitted before use (safety check)
+    try:
+        check_is_fitted(_vectorizer, attributes=["idf_"], msg="idf vector is not fitted")
+    except Exception as e:
+        logger.error(f"Vectorizer not properly fitted during use: {str(e)}")
+        raise RuntimeError("ML model vectorizer is not properly fitted. Please restart the server.")
     
     # Transform and predict
     vector = _vectorizer.transform([review_text])

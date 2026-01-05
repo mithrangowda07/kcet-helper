@@ -114,8 +114,9 @@ const LoginRegister = () => {
         .then((collegeList) => {
           setColleges(collegeList);
           
-          // Load verified student data from sessionStorage
-          const verifiedData = sessionStorage.getItem("verified_student");
+          // Old verification flow removed - redirect to new registration
+          navigate("/register/studying");
+          return;
           if (verifiedData) {
             try {
               const data = JSON.parse(verifiedData);
@@ -149,16 +150,7 @@ const LoginRegister = () => {
     }
   }, [isLogin, studentType]);
   
-  // Check verification before allowing registration for studying students
-  useEffect(() => {
-    if (!isLogin && studentType === "studying") {
-      const verifiedData = sessionStorage.getItem("verified_student");
-      if (!verifiedData) {
-        // Redirect to verification if not verified
-        navigate("/verify-student");
-      }
-    }
-  }, [isLogin, studentType, navigate]);
+  // Old verification flow removed - registration now handled by dedicated pages
 
   // Load categories when registration view is open (for both student types)
   useEffect(() => {
@@ -239,75 +231,27 @@ const LoginRegister = () => {
             : null;
           registerData.category = formData.category || null;
         } else {
-          // Check verification before registration
-          const verifiedData = sessionStorage.getItem("verified_student");
-          if (!verifiedData) {
-            setError("Please verify your student ID first");
-            setLoading(false);
-            submitRef.current = false; // Reset on error
-            navigate("/verify-student");
-            return;
-          }
-          
-          try {
-            const verified = JSON.parse(verifiedData);
-            if (!verified.verified) {
-              setError("Student verification required. Please verify your ID first.");
-              setLoading(false);
-              submitRef.current = false; // Reset on error
-              navigate("/verify-student");
-              return;
-            }
-            
-            // Validate that name, usn, and college_name match verification
-            if (verified.usn !== formData.usn) {
-              setError("USN must match the verified USN. Please verify again.");
-              setLoading(false);
-              submitRef.current = false; // Reset on error
-              navigate("/verify-student");
-              return;
-            }
-            
-            if (verified.student_name !== formData.name) {
-              setError("Name must match the verified name. Please verify again.");
-              setLoading(false);
-              submitRef.current = false; // Reset on error
-              navigate("/verify-student");
-              return;
-            }
-            
-            // Check if college matches
-            const selectedCollege = colleges.find(c => c.college_code === formData.college_code);
-            if (selectedCollege && selectedCollege.college_name !== verified.college_name) {
-              setError("College must match the verified college. Please verify again.");
-              setLoading(false);
-              submitRef.current = false; // Reset on error
-              navigate("/verify-student");
-              return;
-            }
-          } catch (e) {
-            setError("Student verification required. Please verify your ID first.");
-            setLoading(false);
-            submitRef.current = false; // Reset on error
-            navigate("/verify-student");
-            return;
-          }
-          
-          registerData.college_code = formData.college_code;
-          registerData.unique_key = formData.unique_key || null;
-          registerData.year_of_starting = formData.year_of_starting
-            ? parseInt(formData.year_of_starting)
-            : null;
-          registerData.category = formData.category || null;
-          registerData.usn = formData.usn;
+          // Redirect to new registration flow for studying students
+          setError("Please use the new registration flow");
+          setLoading(false);
+          submitRef.current = false; // Reset on error
+          navigate("/register/studying");
+          return;
+        }
+
+        // For counselling students, also redirect to new flow
+        if (studentType === "counselling") {
+          setError("Please use the new registration flow");
+          setLoading(false);
+          submitRef.current = false;
+          navigate("/register/counselling");
+          return;
         }
 
         await register(registerData);
 
 // ✅ RESET idempotency guard on success
 submitRef.current = false;
-
-sessionStorage.removeItem("verified_student");
 
 alert("Registration successful! Please login with your credentials.");
 
@@ -387,12 +331,8 @@ setIsLogin(true);
             <button
               type="button"
               onClick={() => {
-                setStudentType("studying");
-                // Check if verified, if not redirect to verification
-                const verifiedData = sessionStorage.getItem("verified_student");
-                if (!verifiedData) {
-                  navigate("/verify-student");
-                }
+                // Redirect to new registration flow
+                navigate("/register/studying");
               }}
               className={`flex-1 py-2 px-4 rounded-md ${
                 studentType === "studying"

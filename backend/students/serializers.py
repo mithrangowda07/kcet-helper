@@ -255,3 +255,179 @@ class StudentVerificationSerializer(serializers.Serializer):
     student_name = serializers.CharField(max_length=255, required=True)
     usn = serializers.CharField(max_length=50, required=True)
     id_image = serializers.ImageField(required=True)
+
+
+class CounsellingStudentRegisterSerializer(serializers.ModelSerializer):
+    """Serializer for counselling student registration - simple flow"""
+    password = serializers.CharField(write_only=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True, min_length=8)
+
+    class Meta:
+        model = Student
+        fields = [
+            'name', 'email_id', 'phone_number', 'password', 'password_confirm',
+            'kcet_rank', 'category'
+        ]
+
+    def validate_email_id(self, value):
+        """Normalize email to lowercase for consistency"""
+        if value:
+            return value.strip().lower()
+        return value
+
+    def validate_password(self, value):
+        """Validate password strength"""
+        if len(value) < 8:
+            raise serializers.ValidationError('Password must be at least 8 characters long')
+        
+        if not re.search(r'[A-Z]', value):
+            raise serializers.ValidationError('Password must contain at least one uppercase letter')
+        
+        if not re.search(r'[a-z]', value):
+            raise serializers.ValidationError('Password must contain at least one lowercase letter')
+        
+        if not re.search(r'[0-9]', value):
+            raise serializers.ValidationError('Password must contain at least one number')
+        
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+            raise serializers.ValidationError('Password must contain at least one special character')
+        
+        return value
+
+    def validate(self, attrs):
+        if 'password' in attrs and 'password_confirm' in attrs:
+            if attrs['password'] != attrs['password_confirm']:
+                raise serializers.ValidationError({
+                    'password': 'Passwords do not match'
+                })
+        
+        kcet_rank = attrs.get('kcet_rank')
+        if kcet_rank is None or kcet_rank == '':
+            raise serializers.ValidationError({
+                'kcet_rank': 'KCET rank is required for counselling students'
+            })
+        
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        password = validated_data.pop('password')
+        # Normalize email to lowercase before saving
+        if 'email_id' in validated_data:
+            validated_data['email_id'] = validated_data['email_id'].strip().lower()
+        
+        # Set type_of_student and verified status
+        validated_data['type_of_student'] = 'counselling'
+        
+        student = Student(**validated_data)
+        student.set_password(password)
+        student.is_verified_student = True  # Counselling students are auto-verified
+        student.save()
+        return student
+
+
+class StudyingStudentRegisterSerializer(serializers.ModelSerializer):
+    """Serializer for studying student registration with verification"""
+    password = serializers.CharField(write_only=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True, min_length=8)
+    unique_key = serializers.SlugRelatedField(
+        slug_field='unique_key',
+        queryset=Branch.objects.all(),
+        required=True
+    )
+    id_card_image = serializers.ImageField(required=True, write_only=True)
+
+    class Meta:
+        model = Student
+        fields = [
+            'name', 'email_id', 'phone_number', 'password', 'password_confirm',
+            'college_code', 'unique_key', 'year_of_starting', 'usn', 'category',
+            'id_card_image'
+        ]
+
+    def validate_email_id(self, value):
+        """Normalize email to lowercase for consistency"""
+        if value:
+            return value.strip().lower()
+        return value
+
+    def validate_password(self, value):
+        """Validate password strength"""
+        if len(value) < 8:
+            raise serializers.ValidationError('Password must be at least 8 characters long')
+        
+        if not re.search(r'[A-Z]', value):
+            raise serializers.ValidationError('Password must contain at least one uppercase letter')
+        
+        if not re.search(r'[a-z]', value):
+            raise serializers.ValidationError('Password must contain at least one lowercase letter')
+        
+        if not re.search(r'[0-9]', value):
+            raise serializers.ValidationError('Password must contain at least one number')
+        
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+            raise serializers.ValidationError('Password must contain at least one special character')
+        
+        return value
+
+    def validate_id_card_image(self, value):
+        """Validate image file"""
+        # Check file size (max 10MB)
+        if value.size > 10 * 1024 * 1024:
+            raise serializers.ValidationError('Image file too large. Maximum size is 10MB.')
+        
+        # Check MIME type
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+        if value.content_type not in allowed_types:
+            raise serializers.ValidationError(
+                f'Invalid image type. Allowed types: {", ".join(allowed_types)}'
+            )
+        
+        return value
+
+    def validate(self, attrs):
+        if 'password' in attrs and 'password_confirm' in attrs:
+            if attrs['password'] != attrs['password_confirm']:
+                raise serializers.ValidationError({
+                    'password': 'Passwords do not match'
+                })
+        
+        college_code = attrs.get('college_code')
+        unique_key = attrs.get('unique_key')
+        year_of_starting = attrs.get('year_of_starting')
+        usn = attrs.get('usn')
+        name = attrs.get('name')
+        
+        if not college_code or college_code == '':
+            raise serializers.ValidationError({
+                'college_code': 'College code is required for studying students'
+            })
+        if not unique_key:
+            raise serializers.ValidationError({
+                'unique_key': 'Branch is required for studying students'
+            })
+        if year_of_starting is None or year_of_starting == '':
+            raise serializers.ValidationError({
+                'year_of_starting': 'Year of starting is required for studying students'
+            })
+        if not usn or usn.strip() == '':
+            raise serializers.ValidationError({
+                'usn': 'USN/Student ID is required for studying students'
+            })
+        if not name or name.strip() == '':
+            raise serializers.ValidationError({
+                'name': 'Name is required for studying students'
+            })
+        
+        # Check if USN already exists
+        if Student.objects.filter(usn=usn).exists():
+            raise serializers.ValidationError({
+                'usn': 'This USN/Student ID is already registered'
+            })
+        
+        return attrs
+
+    def create(self, validated_data):
+        # This method should not be called directly - use the view's atomic transaction
+        # But we need it for serializer validation
+        raise NotImplementedError("Use register_studying_student view instead")

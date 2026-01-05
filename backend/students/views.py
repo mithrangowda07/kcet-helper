@@ -14,11 +14,15 @@ from .serializers import (
     StudentLoginSerializer,
     StudentTokenRefreshSerializer,
     StudentVerificationSerializer,
+    CounsellingStudentRegisterSerializer,
+    StudyingStudentRegisterSerializer,
 )
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from .verification_utils import verify_student_id
 from .models import StudentVerification
+from django.db import transaction
+from colleges.models import College
 
 
 @api_view(['POST'])
@@ -278,4 +282,233 @@ def verify_student(request):
         return Response({
             'error': 'Internal server error during verification',
             'message': f'Error processing ID image: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_counselling_student(request):
+    """
+    Register a counselling student - simple flow without verification.
+    """
+    serializer = CounsellingStudentRegisterSerializer(data=request.data)
+    
+    if not serializer.is_valid():
+        return Response({
+            'errors': serializer.errors,
+            'message': 'Validation failed. Please check the errors below.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    email_id = serializer.validated_data.get('email_id', '').strip().lower()
+    
+    # Check if email already exists
+    if Student.objects.filter(email_id__iexact=email_id).exists():
+        return Response({
+            'error': 'Email already registered',
+            'message': 'An account with this email already exists. Please use a different email or try logging in.',
+            'field': 'email_id'
+        }, status=status.HTTP_409_CONFLICT)
+    
+    try:
+        student = serializer.save()
+        student_data = StudentSerializer(student).data
+        
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(student)
+        
+        return Response({
+            'student': student_data,
+            'tokens': {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            },
+            'message': 'Registration successful'
+        }, status=status.HTTP_201_CREATED)
+    except IntegrityError as e:
+        error_message = str(e.args[0]) if e.args else str(e)
+        error_message_lower = error_message.lower()
+        
+        if 'email_id' in error_message_lower or '.email_id' in error_message_lower:
+            if Student.objects.filter(email_id__iexact=email_id).exists():
+                return Response({
+                    'error': 'Email already registered',
+                    'message': 'An account with this email already exists. Please use a different email or try logging in.',
+                    'field': 'email_id'
+                }, status=status.HTTP_409_CONFLICT)
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"IntegrityError during counselling registration: {error_message}", exc_info=False)
+        
+        return Response({
+            'error': 'Registration conflict',
+            'message': 'A conflict occurred during registration. Please check your information and try again.',
+        }, status=status.HTTP_409_CONFLICT)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected registration error: {str(e)}", exc_info=True)
+        
+        return Response({
+            'error': 'Error creating student account',
+            'message': 'An unexpected error occurred. Please try again.',
+            'detail': str(e) if settings.DEBUG else None
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@transaction.atomic
+def register_studying_student(request):
+    """
+    Register a studying student with verification.
+    Verification and registration happen atomically in a single transaction.
+    """
+    serializer = StudyingStudentRegisterSerializer(data=request.data)
+    
+    if not serializer.is_valid():
+        return Response({
+            'errors': serializer.errors,
+            'message': 'Validation failed. Please check the errors below.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    email_id = serializer.validated_data.get('email_id', '').strip().lower()
+    student_name = serializer.validated_data.get('name', '')
+    usn = serializer.validated_data.get('usn', '')
+    id_card_image = serializer.validated_data.get('id_card_image')
+    college_code = serializer.validated_data.get('college_code')
+    
+    # Check if email already exists
+    if Student.objects.filter(email_id__iexact=email_id).exists():
+        return Response({
+            'error': 'Email already registered',
+            'message': 'An account with this email already exists. Please use a different email or try logging in.',
+            'field': 'email_id'
+        }, status=status.HTTP_409_CONFLICT)
+    
+    # Get college name from college_code
+    try:
+        college = College.objects.get(college_code=college_code)
+        college_name = college.college_name
+    except College.DoesNotExist:
+        return Response({
+            'error': 'Invalid college code',
+            'message': 'The provided college code is not valid.',
+            'field': 'college_code'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # STEP 1: Perform verification FIRST
+        id_card_image.seek(0)
+        verification_result = verify_student_id(
+            id_card_image, 
+            college_name, 
+            student_name, 
+            usn, 
+            email=email_id
+        )
+        
+        # STEP 2: If verification FAILS, do NOT create student record
+        if not verification_result['verified']:
+            return Response({
+                'error': 'Verification failed',
+                'message': 'Student ID verification failed. Please ensure all information matches your ID card.',
+                'verification_scores': {
+                    'college_score': verification_result['college_score'],
+                    'name_score': verification_result['name_score'],
+                    'usn_score': verification_result['usn_score'],
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # STEP 3: Verification PASSED - Create student record with image
+        # Read image data for storage
+        id_card_image.seek(0)
+        image_data = id_card_image.read()
+        
+        # Create student with all data
+        validated_data = serializer.validated_data.copy()
+        validated_data.pop('password_confirm')
+        validated_data.pop('id_card_image')  # Remove from validated_data, we'll set it separately
+        password = validated_data.pop('password')
+        
+        # Normalize email
+        validated_data['email_id'] = validated_data['email_id'].strip().lower()
+        validated_data['type_of_student'] = 'studying'
+        
+        student = Student(**validated_data)
+        student.set_password(password)
+        student.is_verified_student = True
+        student.id_card_image = image_data  # Store binary image data
+        student.save()
+        
+        # Create verification record for audit trail
+        StudentVerification.objects.create(
+            college_name=college_name,
+            student_name=student_name,
+            usn=usn,
+            id_image=image_data,
+            college_score=verification_result['college_score'],
+            name_score=verification_result['name_score'],
+            usn_score=verification_result['usn_score'],
+            verified=True
+        )
+        
+        student_data = StudentSerializer(student).data
+        
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(student)
+        
+        return Response({
+            'student': student_data,
+            'tokens': {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            },
+            'message': 'Registration and verification successful'
+        }, status=status.HTTP_201_CREATED)
+        
+    except ValueError as e:
+        # Handle OCR/verification errors
+        return Response({
+            'error': 'Verification error',
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except IntegrityError as e:
+        # Rollback is automatic with @transaction.atomic
+        error_message = str(e.args[0]) if e.args else str(e)
+        error_message_lower = error_message.lower()
+        
+        if 'email_id' in error_message_lower or '.email_id' in error_message_lower:
+            if Student.objects.filter(email_id__iexact=email_id).exists():
+                return Response({
+                    'error': 'Email already registered',
+                    'message': 'An account with this email already exists. Please use a different email or try logging in.',
+                    'field': 'email_id'
+                }, status=status.HTTP_409_CONFLICT)
+        
+        if 'usn' in error_message_lower and '.usn' in error_message_lower:
+            return Response({
+                'error': 'USN already registered',
+                'message': 'This USN/Student ID is already registered. Please use a different USN.',
+                'field': 'usn'
+            }, status=status.HTTP_409_CONFLICT)
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"IntegrityError during studying registration: {error_message}", exc_info=False)
+        
+        return Response({
+            'error': 'Registration conflict',
+            'message': 'A conflict occurred during registration. Please check your information and try again.',
+        }, status=status.HTTP_409_CONFLICT)
+    except Exception as e:
+        # Rollback is automatic with @transaction.atomic
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected registration error: {str(e)}", exc_info=True)
+        
+        return Response({
+            'error': 'Error creating student account',
+            'message': 'An unexpected error occurred. Please try again.',
+            'detail': str(e) if settings.DEBUG else None
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
