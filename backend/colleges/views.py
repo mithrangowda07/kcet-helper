@@ -6,9 +6,14 @@ from django.db.models import Q
 
 from .models import College, Branch, Cutoff, Category, Cluster
 from .serializers import (
-    CollegeSerializer, CollegeDetailSerializer,
-    BranchSerializer, CutoffSerializer, CategorySerializer, ClusterSerializer
+    CollegeSerializer,
+    CollegeDetailSerializer,
+    BranchSerializer,
+    CutoffSerializer,
+    CategorySerializer,
+    ClusterSerializer,
 )
+from .branch_insights_service import get_branch_insights
 
 
 @api_view(['GET'])
@@ -253,3 +258,48 @@ def cluster_list(request):
     clusters = Cluster.objects.all().order_by('cluster_code')
     serializer = ClusterSerializer(clusters, many=True)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def branch_insights(request):
+    """
+    Return AI-generated, web-searched insights for a specific college + branch.
+
+    Expected JSON body:
+    {
+        "college_name": "R. V. College of Engineering",
+        "branch_name": "Computer Science and Engineering"
+    }
+    """
+    data = request.data or {}
+    college_name = (data.get('college_name') or '').strip()
+    branch_name = (data.get('branch_name') or '').strip()
+
+    if not college_name or not branch_name:
+        return Response(
+            {
+                'error': 'college_name and branch_name are required.',
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        insights = get_branch_insights(college_name=college_name, branch_name=branch_name)
+    except RuntimeError as exc:
+        return Response(
+            {
+                'error': str(exc),
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    except Exception:
+        # Avoid leaking internal errors to clients
+        return Response(
+            {
+                'error': 'Unable to fetch branch insights at the moment. Please try again later.',
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(insights, status=status.HTTP_200_OK)

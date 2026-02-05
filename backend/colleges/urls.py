@@ -1,7 +1,16 @@
 from django.urls import path
 from .views import (
-    college_list, college_detail, branch_detail,
-    college_cutoff, branch_cutoff, search, branches_by_college_code, category_list, locations_list, cluster_list
+    college_list,
+    college_detail,
+    branch_detail,
+    college_cutoff,
+    branch_cutoff,
+    search,
+    branches_by_college_code,
+    category_list,
+    locations_list,
+    cluster_list,
+    branch_insights,
 )
 
 urlpatterns = [
@@ -9,7 +18,8 @@ urlpatterns = [
     path('categories/', category_list, name='category-list'),
     path('clusters/', cluster_list, name='cluster-list'),
     path('search/', search, name='search'),
-    path('locations/',locations_list,name='location-list'),
+    path('locations/', locations_list, name='location-list'),
+    path('branch-insights/', branch_insights, name='branch-insights'),
     path('<uuid:public_id>/cutoff/', college_cutoff, name='college-cutoff'),
     path('<uuid:public_id>/', college_detail, name='college-detail'),
 ]

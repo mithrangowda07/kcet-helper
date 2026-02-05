@@ -74,23 +74,23 @@ const Recommendations = () => {
       let close = 0
 
       if (rank <= 1000) {
-        open = Math.floor(rank * 0.35)
-        close = Math.floor(rank * 3.5)
+        open = Math.floor(rank * 0.35023)
+        close = Math.floor(rank * 3.5782)
       } else if (rank <= 5000) {
-        open = Math.floor(rank * 0.4)
-        close = Math.floor(rank * 3)
+        open = Math.floor(rank * 0.40124)
+        close = Math.floor(rank * 3.012568)
       } else if (rank <= 20000) {
-        open = Math.floor(rank * 0.45)
-        close = Math.floor(rank * 2)
+        open = Math.floor(rank * 0.45123)
+        close = Math.floor(rank * 2.058123)
       } else if (rank <= 35000) {
-        open = Math.floor(rank * 0.55)
-        close = Math.floor(rank * 1.8)
+        open = Math.floor(rank * 0.55125)
+        close = Math.floor(rank * 1.816358)
       } else if (rank <= 50000) {
-        open = Math.floor(rank * 0.6)
-        close = Math.floor(rank * 1.6)
+        open = Math.floor(rank * 0.601236)
+        close = Math.floor(rank * 1.6136524)
       } else {
-        open = Math.floor(rank * 0.7)
-        close = Math.floor(rank * 1.4)
+        open = Math.floor(rank * 0.70265)
+        close = Math.floor(rank * 1.412486)
       }
 
       setOpeningRank(open)

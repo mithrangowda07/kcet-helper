@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { branchService, reviewService, meetingService } from "../services/api";
 import StarRating from "../components/StarRating";
 import CustomTooltip from "../components/charts/CustomTooltip";
-import type { Branch, Review } from "../types";
+import type { Branch, Review, BranchInsightsResponse } from "../types";
 import {
   LineChart,
   Line,
@@ -15,6 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import BranchInsightsModal from "../components/BranchInsightsModal";
 
 type BranchCutoffResponse = {
   categories?: Record<
@@ -229,7 +230,7 @@ const buildDecisionFromData = (
   const { stat, cat } = bestStat as { stat: RoundStat; cat: string };
   const roundKey: RoundKey = stat.round;
   const baselineRank = stat.latest || stat.avg;
-  const confidenceBase = 60 + stat.coverage * 8 + (stat.trend > 0 ? 6 : 0);
+  const confidenceBase = 50 + stat.coverage * 10 + (stat.trend > 0 ? 8 : 0);
   const probability = Math.min(
     1,
     0.65 * ROUND_WEIGHTS[roundKey] + (stat.trend > 0 ? 0.08 : -0.04)
@@ -274,6 +275,12 @@ const BranchDetailPage = () => {
   const [insightBullets, setInsightBullets] = useState<string[]>([]);
   const [llmBusy, setLlmBusy] = useState(false);
   const [llmError, setLlmError] = useState<string | null>(null);
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+  const [insightsData, setInsightsData] = useState<BranchInsightsResponse | null>(
+    null
+  );
 
   const prepareChartData = (
     categoryData?: Record<string, { r1?: any; r2?: any; r3?: any }>
@@ -345,6 +352,34 @@ const BranchDetailPage = () => {
       setUserCategoryInput(user.category);
     }
   }, [user?.category, userCategoryInput]);
+
+  const handleOpenInsights = useCallback(async () => {
+    if (!branch) return;
+
+    setInsightsOpen(true);
+    setInsightsError(null);
+
+    // If we already have data for this branch + college, avoid refetching
+    if (insightsData) return;
+
+    try {
+      setInsightsLoading(true);
+      const data = await branchService.insights(
+        branch.college.college_name,
+        branch.branch_name
+      );
+      setInsightsData(data);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        (err as any)?.response?.data?.error ||
+        (err as Error)?.message ||
+        "Unable to fetch branch insights right now.";
+      setInsightsError(message);
+    } finally {
+      setInsightsLoading(false);
+    }
+  }, [branch, insightsData]);
 
   const formatCutoffForLLM = useCallback(() => {
     if (!cutoff?.categories) return "{}";
@@ -557,22 +592,39 @@ Highlight competition trend, volatility, safest round, and a forward-looking tip
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Link
-        to={`/colleges/${branch.college.public_id}`}
-        className="text-blue-600 dark:text-sky-400 hover:underline"
-      >
-        ← Back to {branch.college.college_name}
-      </Link>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <Link
+            to={`/colleges/${branch.college.public_id}`}
+            className="text-blue-600 dark:text-sky-400 hover:underline"
+          >
+            ← Back to {branch.college.college_name}
+          </Link>
 
-      <h1 className="text-3xl font-bold mt-4 text-slate-800 dark:text-gray-100 mb-2">
-        {branch.branch_name}
-      </h1>
-      <p className="text-slate-600 dark:text-gray-400 mb-1">
-        <strong>College:</strong> {branch.college.college_name}
-      </p>
-      <p className="text-slate-600 dark:text-gray-400 mb-4">
-        <strong>Cluster:</strong> {branch.cluster.cluster_name}
-      </p>
+          <h1 className="text-3xl font-bold mt-4 text-slate-800 dark:text-gray-100 mb-2">
+            {branch.branch_name}
+          </h1>
+          <p className="text-slate-600 dark:text-gray-400 mb-1">
+            <strong>College:</strong> {branch.college.college_name}
+          </p>
+          <p className="text-slate-600 dark:text-gray-400 mb-2">
+            <strong>Cluster:</strong> {branch.cluster.cluster_name}
+          </p>
+        </div>
+
+        <div className="mt-1 flex items-start justify-end">
+          <button
+            type="button"
+            onClick={handleOpenInsights}
+            className="inline-flex items-center gap-2 rounded-full border border-sky-200 dark:border-sky-800 bg-sky-50/80 dark:bg-sky-900/30 px-4 py-2 text-sm font-medium text-sky-800 dark:text-sky-100 shadow-sm hover:bg-sky-100 dark:hover:bg-sky-900/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 focus-visible:ring-offset-slate-900"
+          >
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-800 text-sky-700 dark:text-sky-200 text-xs">
+              ℹ
+            </span>
+            Branch Insights
+          </button>
+        </div>
+      </div>
 
       {/* Cutoff */}
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 mb-8 border border-slate-300 dark:border-slate-700">
@@ -965,6 +1017,16 @@ border border-teal-200 dark:border-slate-700 text-white font-semibold py-2.5 sha
           </p>
         )}
       </div>
+
+      <BranchInsightsModal
+        isOpen={insightsOpen}
+        onClose={() => setInsightsOpen(false)}
+        loading={insightsLoading}
+        error={insightsError}
+        data={insightsData}
+        collegeName={branch.college.college_name}
+        branchName={branch.branch_name}
+      />
     </div>
   );
 };

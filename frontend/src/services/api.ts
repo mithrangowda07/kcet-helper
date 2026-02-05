@@ -1,5 +1,16 @@
 import axios from 'axios'
-import type { Student, Recommendation, CounsellingChoice, Review, Meeting, College, Branch, Category, Cluster } from '../types'
+import type {
+  Student,
+  Recommendation,
+  CounsellingChoice,
+  Review,
+  Meeting,
+  College,
+  Branch,
+  Category,
+  Cluster,
+  BranchInsightsResponse,
+} from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
@@ -251,6 +262,14 @@ export const branchService = {
     const params = category ? { category } : {}
     const response = await api.get(`/branches/${publicId}/cutoff/`, { params })
     return response.data
+  },
+
+  insights: async (collegeName: string, branchName: string): Promise<BranchInsightsResponse> => {
+    const response = await api.post('/colleges/branch-insights/', {
+      college_name: collegeName,
+      branch_name: branchName,
+    })
+    return response.data as BranchInsightsResponse
   },
 }
 

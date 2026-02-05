@@ -1,0 +1,483 @@
+[
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Computer Science and Engineering",
+    "about": "Computer Science and Engineering (CSE) at RVCE is one of the most sought-after branches in Karnataka. The program focuses on strong fundamentals in programming, data structures, algorithms, operating systems, databases, AI/ML, and software engineering. It is known for its competitive academic environment, industry exposure, and strong peer learning culture.",
+    "admission_cutoffs": "KCET cutoff for General Merit category is usually very high, typically in the range of 1k–3k ranks (approximate values based on recent years). COMEDK cutoffs are also competitive and usually fall within the top few hundred ranks. Exact cutoffs vary every year depending on demand and seat availability.",
+    "placements": "Average package for CSE is approximately 10–12 LPA (based on recent placement reports). The highest package has gone above 60 LPA in recent years (off-campus and international offers included). Top recruiters include Microsoft, Google, Amazon, Adobe, Goldman Sachs, Cisco, and other product-based and core tech companies. Placement consistency has been strong over the last 3–4 batches, with a high percentage of eligible students placed.",
+    "pros_cons": {
+      "pros": [
+        "Excellent placement record with top product-based companies.",
+        "Strong coding culture with active participation in hackathons and competitive programming.",
+        "Good exposure to internships, research, and industry projects.",
+        "Prime location advantage in Bengaluru with strong industry connections."
+      ],
+      "cons": [
+        "Very high competition among students.",
+        "Academic pressure and workload can be intense.",
+        "Maintaining a high CGPA requires consistent effort.",
+        "Limited free time during placement and project seasons."
+      ]
+    },
+    "features": [
+      "Well-known for competitive programming and coding contests.",
+      "Strong focus on internships and real-world projects.",
+      "Active technical clubs and CSE-related student chapters.",
+      "Access to industry talks, workshops, and alumni mentorship.",
+      "Good infrastructure and computing facilities."
+    ],
+    "one_line_summary": "A top-tier CSE program with strong placements and a competitive academic environment, ideal for students focused on software careers and higher studies.",
+    "additional_info": [
+      "Internship opportunities usually start from the 2nd or 3rd year, with many students securing multiple offers.",
+      "Core subjects like DSA, DBMS, OS, and CN are emphasized strongly.",
+      "Students often prepare for higher studies (MS, MBA, research) alongside placements.",
+      "Hackathons, coding competitions, and technical events are frequent.",
+      "Freshers are advised to build strong fundamentals in programming, mathematics, and problem-solving skills."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Computer Science and Engineering (Artificial Intelligence and Machine Learning)",
+    "about": "Computer Science and Engineering (AI & ML) at RVCE is a specialized program designed to focus on artificial intelligence, machine learning, data science, deep learning, and related emerging technologies, while also covering core computer science fundamentals. The course emphasizes both theoretical concepts and practical implementation through projects, labs, and industry-oriented learning.",
+    "admission_cutoffs": "KCET cutoffs for CSE (AI & ML) are highly competitive and usually close to core CSE ranks. For General Merit category, cutoffs are typically in the range of 2k–5k ranks (approximate and based on recent trends). COMEDK cutoffs are also within the top few hundred to thousand ranks. Exact values vary each year depending on demand and seat availability.",
+    "placements": "Average package for CSE (AI & ML) students is approximately 8–11 LPA (based on recent placement trends and shared placement pools with core CSE). The highest packages often cross 40–60 LPA when international and off-campus offers are included. Major recruiters include Amazon, Microsoft, Adobe, Cisco, Accenture, TCS, Infosys, Bosch, and AI-focused startups. Placement consistency has been strong over the last 3–4 batches due to overlap with CSE recruitment opportunities.",
+    "pros_cons": {
+      "pros": [
+        "High demand specialization with strong industry relevance.",
+        "Good placement opportunities similar to core CSE.",
+        "Strong exposure to AI, ML, and data science projects.",
+        "Access to research, internships, and hackathons.",
+        "Location advantage in Bengaluru with AI-focused startups and tech companies."
+      ],
+      "cons": [
+        "Heavy academic workload due to specialized subjects.",
+        "Requires strong math and statistics background.",
+        "High competition among peers.",
+        "Fast-changing technology requires continuous self-learning."
+      ]
+    },
+    "features": [
+      "Dedicated AI and ML-focused curriculum.",
+      "Hands-on projects in machine learning and data analytics.",
+      "Participation in hackathons and AI competitions.",
+      "Industry workshops and guest lectures.",
+      "Active student technical communities related to data science and AI."
+    ],
+    "one_line_summary": "A future-focused CSE specialization with strong placement potential, ideal for students interested in AI, data science, and emerging technologies.",
+    "additional_info": [
+      "Internship opportunities usually begin from the 2nd or 3rd year, especially in data science and AI roles.",
+      "Subjects include machine learning, deep learning, data mining, and computer vision along with core CS topics.",
+      "Students can pursue higher studies (MS, research) in AI-related fields or join industry roles directly.",
+      "Hackathons and project-based learning play a major role in skill development.",
+      "Freshers are advised to strengthen basics in Python, linear algebra, probability, and data structures."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Computer Science and Engineering (Cyber Security)",
+    "about": "Computer Science and Engineering (Cyber Security) at RVCE is a specialized program that focuses on protecting computer systems, networks, and data from cyber threats. Along with core computer science subjects, the curriculum covers cryptography, network security, ethical hacking, digital forensics, cloud security, and secure software development, preparing students for roles in information security and cyber defense.",
+    "admission_cutoffs": "KCET cutoffs for CSE (Cyber Security) are highly competitive and generally close to core CSE and AI & ML branches. For the General Merit category, typical cutoffs are in the range of 3k–6k ranks (approximate and based on recent trends). COMEDK cutoffs are also within the top few hundred to thousand ranks. Actual values change every year depending on demand and seat availability.",
+    "placements": "Average package for CSE (Cyber Security) students is approximately 7–10 LPA (based on recent placement trends and shared recruitment opportunities with core CSE). Highest packages have crossed 40–60 LPA when international and off-campus offers are included. Recruiters include Amazon, Microsoft, Cisco, Accenture, Deloitte, TCS, Infosys, EY, IBM, and several cyber security startups. Placement performance has remained strong over the last 3–4 batches due to overlap with CSE hiring pools.",
+    "pros_cons": {
+      "pros": [
+        "High-demand specialization with growing industry relevance.",
+        "Good placement opportunities similar to core CSE.",
+        "Strong focus on network security, cryptography, and ethical hacking.",
+        "Exposure to real-world security tools and labs.",
+        "Bengaluru location advantage with access to tech companies and security firms."
+      ],
+      "cons": [
+        "Curriculum can be intensive and technically demanding.",
+        "Requires continuous learning due to evolving cyber threats.",
+        "High competition among students.",
+        "Practical labs and projects can be time-consuming."
+      ]
+    },
+    "features": [
+      "Specialized cyber security and network security labs.",
+      "Hands-on training in ethical hacking and digital forensics.",
+      "Participation in capture-the-flag (CTF) competitions and security hackathons.",
+      "Industry interaction through workshops and expert talks.",
+      "Opportunities for security-focused internships and certifications."
+    ],
+    "one_line_summary": "A career-oriented CSE specialization focused on digital security, offering strong placements and excellent scope in the cyber security domain.",
+    "additional_info": [
+      "Internships typically start from the 2nd or 3rd year in IT security and network roles.",
+      "Core subjects include cryptography, network security, cloud security, and secure coding practices.",
+      "Students can pursue higher studies or specialized certifications such as CEH, Security+, and CISSP.",
+      "CTF contests and cyber security events help in building strong practical skills.",
+      "Freshers are advised to build strong foundations in networking, operating systems, and programming."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Computer Science and Engineering (Data Science)",
+    "about": "Computer Science and Engineering (Data Science) at RVCE is a specialized undergraduate program that blends core computer science with statistics, data analytics, and machine learning. The curriculum focuses on extracting insights from large datasets using programming, statistical methods, and data-driven modeling, while maintaining strong foundations in algorithms, databases, and software engineering.",
+    "admission_cutoffs": "KCET cutoffs for CSE (Data Science) are highly competitive and usually slightly lower than core CSE but close to AI & ML and Cyber Security branches. For the General Merit category, cutoffs are typically in the range of 3k–6k ranks (approximate and based on recent years). COMEDK cutoffs generally fall within the top few hundred to thousand ranks. Exact cutoffs vary each year based on demand and seat availability.",
+    "placements": "Average package for CSE (Data Science) students is approximately 7–10 LPA (based on recent placement trends and shared placement opportunities with core CSE). The highest packages have crossed 40–60 LPA when international and off-campus offers are included. Recruiters include Amazon, Microsoft, Adobe, Goldman Sachs, Walmart Global Tech, Accenture, Deloitte, TCS, Infosys, and data-driven startups. Placement consistency has been strong over the last 3–4 batches due to a common CSE placement pool.",
+    "pros_cons": {
+      "pros": [
+        "High-demand specialization with strong industry relevance.",
+        "Good placement opportunities similar to core CSE.",
+        "Strong focus on data analysis, machine learning, and statistics.",
+        "Good exposure to real-world datasets, projects, and internships.",
+        "Bengaluru location advantage with analytics and tech companies."
+      ],
+      "cons": [
+        "Requires solid understanding of mathematics and statistics.",
+        "Heavy project and lab workload in later semesters.",
+        "High competition among peers.",
+        "Continuous self-learning needed to stay industry-ready."
+      ]
+    },
+    "features": [
+      "Dedicated curriculum in data science and analytics.",
+      "Hands-on projects using Python, R, and data visualization tools.",
+      "Exposure to machine learning and big data concepts.",
+      "Industry workshops, guest lectures, and hackathons.",
+      "Active student communities related to analytics and AI."
+    ],
+    "one_line_summary": "A modern CSE specialization focused on data-driven problem solving, offering strong placements and excellent scope in analytics and AI-related roles.",
+    "additional_info": [
+      "Internship opportunities usually begin from the 2nd or 3rd year in data analytics and ML roles.",
+      "Key subjects include statistics, data mining, machine learning, and big data systems.",
+      "Graduates commonly pursue roles as data analysts, data scientists, ML engineers, or higher studies.",
+      "Hackathons and project-based learning play a major role in skill development.",
+      "Freshers are advised to strengthen basics in Python, probability, linear algebra, and data structures."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Electrical and Electronics Engineering",
+    "about": "Electrical and Electronics Engineering (EEE) at RVCE is a core engineering branch that focuses on electrical systems, power engineering, electronics, control systems, and emerging areas like renewable energy and electric vehicles. The program balances strong theoretical foundations with practical labs, projects, and industry exposure, making it suitable for both core electrical roles and interdisciplinary careers.",
+    "admission_cutoffs": "KCET cutoffs for EEE at RVCE are competitive but lower than CSE branches. For the General Merit category, typical cutoffs are in the range of 6k–10k ranks (approximate and based on recent years). COMEDK cutoffs generally fall within the top few thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for EEE students is approximately 6–8 LPA (based on recent placement trends). The highest packages have crossed 30–40 LPA in some years, including off-campus offers. Core recruiters include Siemens, ABB, Schneider Electric, Bosch, L&T, and Texas Instruments, while IT and analytics companies also recruit EEE students. Placement consistency has been good over the last 3–4 batches, with opportunities in both core and software roles.",
+    "pros_cons": {
+      "pros": [
+        "Strong core engineering foundation with diverse career options.",
+        "Good exposure to power systems, control systems, and electronics.",
+        "Opportunities in core electrical, PSU, EV, and renewable energy sectors.",
+        "Scope to move into software, analytics, or management roles.",
+        "Reputed faculty and good lab infrastructure."
+      ],
+      "cons": [
+        "Curriculum is academically demanding and concept-heavy.",
+        "Core electrical roles may offer fewer openings compared to IT.",
+        "Higher focus on self-preparation needed for PSUs and core jobs.",
+        "Workload can be high due to labs and theory-heavy subjects."
+      ]
+    },
+    "features": [
+      "Well-equipped electrical and power engineering labs.",
+      "Exposure to control systems, power electronics, and smart grids.",
+      "Industry-oriented projects and internships.",
+      "Opportunities for research and higher studies.",
+      "Active technical clubs and IEEE student chapters."
+    ],
+    "one_line_summary": "A strong core engineering branch offering versatile career paths in electrical, energy, and software-related fields.",
+    "additional_info": [
+      "Internships usually begin from the 2nd or 3rd year in core electrical or IT roles.",
+      "Key subjects include power systems, electrical machines, control systems, and power electronics.",
+      "Students often prepare for PSUs, higher studies, or IT placements alongside academics.",
+      "Growing scope in EVs, renewable energy, and automation sectors.",
+      "Freshers are advised to build strong fundamentals in mathematics, circuit theory, and control systems."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Electronics and Communication Engineering",
+    "about": "Electronics and Communication Engineering (ECE) at RVCE is one of the flagship core branches, focusing on electronics, communication systems, embedded systems, VLSI, signal processing, and emerging areas like IoT and wireless technologies. The program combines strong theoretical foundations with hands-on labs, projects, and industry exposure, making it suitable for both core electronics and software-oriented careers.",
+    "admission_cutoffs": "KCET cutoffs for ECE at RVCE are competitive and generally just below CSE branches. For the General Merit category, typical cutoffs range from 3k–6k ranks (approximate and based on recent years). COMEDK cutoffs usually fall within the top few hundred to thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for ECE students is approximately 7–9 LPA (based on recent placement trends). The highest packages have crossed 40–50 LPA in some years, including off-campus and international offers. Core recruiters include Texas Instruments, Qualcomm, Intel, Nvidia, Samsung, Bosch, and Micron, while IT and product-based companies also recruit ECE students. Placement consistency has been strong over the last 3–4 batches.",
+    "pros_cons": {
+      "pros": [
+        "Strong core engineering branch with wide career options.",
+        "Good exposure to VLSI, embedded systems, and communication technologies.",
+        "Opportunities in both core electronics and software roles.",
+        "Strong placement record with reputed core and IT companies.",
+        "Good scope for higher studies and research."
+      ],
+      "cons": [
+        "Academically demanding with heavy theory and labs.",
+        "Core electronics roles can be highly competitive.",
+        "Requires strong math and signal-processing fundamentals.",
+        "Workload increases significantly in higher semesters."
+      ]
+    },
+    "features": [
+      "Advanced labs for VLSI, embedded systems, and communication.",
+      "Industry-oriented projects and internships.",
+      "Active technical clubs, IEEE chapters, and research groups.",
+      "Exposure to IoT, wireless, and semiconductor technologies.",
+      "Regular workshops, hackathons, and expert lectures."
+    ],
+    "one_line_summary": "A versatile and respected core branch offering strong placements and diverse career paths in electronics, communication, and software domains.",
+    "additional_info": [
+      "Internships typically start from the 2nd or 3rd year in core electronics or IT roles.",
+      "Key subjects include analog and digital electronics, signals, VLSI, and communication systems.",
+      "Many students pursue higher studies (MS, MTech, research) in India and abroad.",
+      "Good preparation pathway for semiconductor and core electronics industries.",
+      "Freshers are advised to strengthen basics in mathematics, circuit theory, and programming."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Electronics and Telecommunication Engineering",
+    "about": "Electronics and Telecommunication Engineering (ETE) at RVCE focuses on communication systems, electronics, signal processing, networking, and modern telecommunication technologies. The program is closely aligned with Electronics and Communication Engineering but places extra emphasis on wireless communication, networking, and telecom systems, along with a solid foundation in core electronics and computer-related subjects.",
+    "admission_cutoffs": "KCET cutoffs for ETE at RVCE are competitive but generally slightly lower than ECE. For the General Merit category, typical cutoffs range from 5k–8k ranks (approximate and based on recent years). COMEDK cutoffs usually fall within the top few thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for ETE students is approximately 6–8 LPA (based on recent placement trends). The highest packages have crossed 30–40 LPA in some years, including off-campus offers. Recruiters include Qualcomm, Samsung, Nokia, Ericsson, Bosch, Cisco, and several IT and product-based companies. Placement consistency has been good over the last 3–4 batches, with many opportunities shared with ECE and CSE recruitment pools.",
+    "pros_cons": {
+      "pros": [
+        "Strong focus on communication and telecom technologies.",
+        "Opportunities in both core electronics and IT/software roles.",
+        "Good placement opportunities with overlap from ECE and CSE.",
+        "Relevant curriculum for wireless, networking, and IoT domains.",
+        "Reputed faculty and decent lab infrastructure."
+      ],
+      "cons": [
+        "Telecom core roles are relatively fewer compared to software jobs.",
+        "Curriculum can be concept-heavy and math-intensive.",
+        "Requires continuous self-learning to stay updated with telecom advancements.",
+        "Core telecom placements can be competitive."
+      ]
+    },
+    "features": [
+      "Labs focused on communication systems and networking.",
+      "Exposure to wireless, mobile, and optical communication.",
+      "Industry-oriented projects and internships.",
+      "Participation in technical clubs, IEEE chapters, and hackathons.",
+      "Opportunities to transition into software, data, or analytics roles."
+    ],
+    "one_line_summary": "A communication-focused engineering branch offering good flexibility between core electronics, telecom, and software careers.",
+    "additional_info": [
+      "Internships usually begin from the 2nd or 3rd year in telecom, electronics, or IT roles.",
+      "Key subjects include signals and systems, digital communication, wireless networks, and networking fundamentals.",
+      "Many students prepare for IT placements alongside core subjects.",
+      "Scope exists in telecom, networking, IoT, and semiconductor-related roles.",
+      "Freshers are advised to build strong basics in signals, mathematics, and programming."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Mechanical Engineering",
+    "about": "Mechanical Engineering at RVCE is a core engineering branch that focuses on the design, analysis, manufacturing, and maintenance of mechanical systems. The program covers fundamentals such as mechanics, thermodynamics, fluid mechanics, materials science, and manufacturing, along with modern areas like CAD/CAM, robotics, automation, and sustainable energy systems. It is known for strong academics, practical exposure, and diverse career options.",
+    "admission_cutoffs": "KCET cutoffs for Mechanical Engineering at RVCE are competitive but lower compared to CSE and ECE branches. For the General Merit category, typical cutoffs range from 8k–15k ranks (approximate and based on recent years). COMEDK cutoffs usually fall within the top few thousand to ten thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for Mechanical Engineering students is approximately 5–7 LPA (based on recent placement trends). The highest packages have crossed 25–35 LPA in some years, including off-campus offers. Core recruiters include Bosch, Mercedes-Benz, Toyota, L&T, Tata Motors, Mahindra, Siemens, and Schneider Electric, while IT, analytics, and consulting companies also recruit mechanical students. Placement consistency has been moderate to good over the last 3–4 batches.",
+    "pros_cons": {
+      "pros": [
+        "Strong core engineering foundation with wide applicability.",
+        "Opportunities in manufacturing, automotive, aerospace, and energy sectors.",
+        "Good exposure to design, analysis, and production engineering.",
+        "Flexibility to move into software, analytics, or management roles.",
+        "Reputed faculty and well-equipped labs."
+      ],
+      "cons": [
+        "Core mechanical roles may have lower pay compared to CSE.",
+        "Curriculum is theory-heavy and concept-intensive.",
+        "Core job opportunities can be limited compared to IT roles.",
+        "Higher self-effort needed for internships and core placements."
+      ]
+    },
+    "features": [
+      "Advanced labs for manufacturing, thermal, and design engineering.",
+      "Exposure to CAD/CAM, CNC, robotics, and automation.",
+      "Industry-oriented projects and internships.",
+      "Opportunities for research, higher studies, and PSUs.",
+      "Active technical clubs and SAE/ASME student chapters."
+    ],
+    "one_line_summary": "A versatile core engineering branch offering strong fundamentals and diverse career paths across mechanical, automotive, and interdisciplinary fields.",
+    "additional_info": [
+      "Internships typically start from the 2nd or 3rd year in core mechanical or allied domains.",
+      "Key subjects include thermodynamics, fluid mechanics, strength of materials, and manufacturing processes.",
+      "Many students prepare for PSUs, higher studies (MTech/MS), or transition to IT roles.",
+      "Growing scope in EVs, robotics, automation, and sustainable energy sectors.",
+      "Freshers are advised to build strong fundamentals in mathematics, mechanics, and engineering drawing."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Industrial Engineering and Management",
+    "about": "Industrial Engineering and Management (IEM) at RVCE is an interdisciplinary program that blends core engineering concepts with management, operations, and optimization techniques. The curriculum focuses on production planning, operations research, quality management, supply chain, ergonomics, and data-driven decision-making, preparing students for roles that bridge engineering and business.",
+    "admission_cutoffs": "KCET cutoffs for IEM at RVCE are moderately competitive compared to other branches. For the General Merit category, typical cutoffs range from 12k–20k ranks (approximate and based on recent years). COMEDK cutoffs usually fall within the top few thousand to ten thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for IEM students is approximately 5–7 LPA (based on recent placement trends). The highest packages have reached around 20–30 LPA in some years, including off-campus offers. Recruiters include Deloitte, EY, KPMG, Accenture, Bosch, Amazon, Flipkart, TCS, Infosys, and operations-focused roles in manufacturing and service companies. Placement consistency has been moderate to good over the last 3–4 batches.",
+    "pros_cons": {
+      "pros": [
+        "Unique blend of engineering and management subjects.",
+        "Good career options in operations, analytics, and consulting.",
+        "Opportunities in supply chain, quality, and process optimization roles.",
+        "Flexibility to move into IT, analytics, or MBA pathways.",
+        "Lower academic pressure compared to core branches like CSE or ECE."
+      ],
+      "cons": [
+        "Core engineering depth is less compared to Mechanical or EEE.",
+        "Management-oriented roles may require higher studies (MBA) for growth.",
+        "Placement packages are generally lower than top CSE branches.",
+        "Requires self-driven skill development in analytics and tools."
+      ]
+    },
+    "features": [
+      "Focus on operations research, supply chain, and quality management.",
+      "Exposure to industrial engineering tools and techniques.",
+      "Industry-oriented projects and internships.",
+      "Good foundation for analytics and management careers.",
+      "Active participation in workshops, case studies, and industry interactions."
+    ],
+    "one_line_summary": "An interdisciplinary branch combining engineering and management, ideal for students interested in operations, analytics, and business-oriented technical roles.",
+    "additional_info": [
+      "Internships usually start from the 2nd or 3rd year in operations, analytics, or IT roles.",
+      "Key subjects include operations research, production planning, quality control, and supply chain management.",
+      "Many graduates pursue MBA or management roles after a few years of experience.",
+      "Good scope in consulting, logistics, manufacturing, and service industries.",
+      "Freshers are advised to build basics in mathematics, statistics, and problem-solving skills."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Aero Space Engineering",
+    "about": "Aerospace Engineering at RVCE focuses on the design, analysis, and development of aircraft, spacecraft, and related systems. The program covers aerodynamics, propulsion, flight mechanics, structures, materials, and avionics, along with practical labs, simulations, and project-based learning. It is a niche core branch aimed at students interested in aviation, defense, space, and advanced mechanical systems.",
+    "admission_cutoffs": "KCET cutoffs for Aerospace Engineering at RVCE are competitive but lower compared to CSE and ECE branches due to limited intake and niche demand. For the General Merit category, typical cutoffs range from 10k–18k ranks (approximate and based on recent years). COMEDK cutoffs usually fall within the top few thousand to ten thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for Aerospace Engineering students is approximately 5–7 LPA (based on recent placement trends). The highest packages have reached around 20–30 LPA in some years, including off-campus offers. Core recruiters include ISRO (through exams), HAL, DRDO, Boeing, Airbus (limited roles), L&T, and Tata Advanced Systems, while many students also move into mechanical, analytics, or software roles. Placement consistency is moderate, with higher dependence on higher studies and competitive exams for core aerospace roles.",
+    "pros_cons": {
+      "pros": [
+        "Specialized and prestigious core engineering branch.",
+        "Strong foundation in aerodynamics, structures, and propulsion.",
+        "Opportunities in defense, space, and aviation sectors.",
+        "Good pathway for higher studies and research (MTech/MS/PhD).",
+        "Interdisciplinary exposure with mechanical and electronics domains."
+      ],
+      "cons": [
+        "Core aerospace jobs in India are limited and highly competitive.",
+        "Higher studies are often necessary for core roles.",
+        "Placement packages are generally lower compared to CSE branches.",
+        "Academically demanding with heavy mathematics and physics."
+      ]
+    },
+    "features": [
+      "Dedicated labs for aerodynamics, propulsion, and flight mechanics.",
+      "Use of simulation tools like CFD and structural analysis software.",
+      "Industry-oriented projects and research opportunities.",
+      "Exposure to aviation, defense, and space technologies.",
+      "Active technical clubs and aerospace-related student teams."
+    ],
+    "one_line_summary": "A niche and challenging core branch best suited for students passionate about aviation, space, and advanced engineering research.",
+    "additional_info": [
+      "Internships usually begin from the 2nd or 3rd year in research labs or aerospace-related organizations.",
+      "Key subjects include aerodynamics, propulsion, flight dynamics, and aerospace structures.",
+      "Many graduates pursue higher studies in India or abroad to enter core aerospace roles.",
+      "Good overlap with mechanical engineering opportunities in industry.",
+      "Freshers are advised to build strong fundamentals in mathematics, physics, and mechanics."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Civil Engineering",
+    "about": "Civil Engineering at RVCE is a core engineering branch that focuses on the planning, design, construction, and maintenance of infrastructure such as buildings, roads, bridges, water resources, and transportation systems. The program emphasizes strong fundamentals in structural engineering, geotechnical engineering, transportation, environmental engineering, and construction management, supported by practical labs, field exposure, and projects.",
+    "admission_cutoffs": "KCET cutoffs for Civil Engineering at RVCE are moderately competitive compared to other branches. For the General Merit category, typical cutoffs range from 15k–25k ranks (approximate and based on recent years). COMEDK cutoffs usually fall within the top few thousand to fifteen thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for Civil Engineering students is approximately 4–6 LPA (based on recent placement trends). The highest packages have reached around 15–20 LPA in some years, including off-campus offers. Core recruiters include L&T, Shapoorji Pallonji, Larsen & Toubro Construction, Tata Projects, NCC, Afcons, and Sobha, while some students also move into analytics, consulting, or government roles. Placement consistency has been moderate over the last 3–4 batches.",
+    "pros_cons": {
+      "pros": [
+        "Strong foundation in core civil engineering disciplines.",
+        "Good opportunities in infrastructure, construction, and public sector.",
+        "Reputed faculty and practical lab exposure.",
+        "Good pathway for higher studies, research, and government exams.",
+        "Growing relevance in sustainable and smart infrastructure projects."
+      ],
+      "cons": [
+        "Core civil packages are generally lower than IT branches.",
+        "Fieldwork and site-based jobs can be physically demanding.",
+        "Placement opportunities may be fewer compared to CSE/ECE.",
+        "Higher studies or competitive exams often needed for top roles."
+      ]
+    },
+    "features": [
+      "Well-equipped labs for structures, geotechnical, and environmental engineering.",
+      "Field visits, surveys, and practical site exposure.",
+      "Industry-oriented projects and internships.",
+      "Opportunities in construction management and infrastructure planning.",
+      "Active student chapters and technical societies."
+    ],
+    "one_line_summary": "A traditional core engineering branch offering stable career paths in infrastructure, construction, and public-sector domains.",
+    "additional_info": [
+      "Internships usually begin from the 2nd or 3rd year in construction firms or consultancy roles.",
+      "Key subjects include structural analysis, geotechnical engineering, transportation, and environmental engineering.",
+      "Many students prepare for GATE, PSUs, and government engineering services.",
+      "Scope exists in real estate, urban planning, and sustainable infrastructure.",
+      "Freshers are advised to build strong fundamentals in mathematics, mechanics, and engineering drawing."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Chemical Engineering",
+    "about": "Chemical Engineering at RVCE focuses on the application of chemistry, physics, biology, and mathematics to design and operate industrial chemical processes. The program covers core areas such as chemical process calculations, thermodynamics, fluid mechanics, heat and mass transfer, reaction engineering, process control, and plant design, along with exposure to emerging fields like materials, polymers, energy, and environmental engineering.",
+    "admission_cutoffs": "KCET cutoffs for Chemical Engineering at RVCE are moderately competitive. For the General Merit category, typical cutoffs range from 18k–30k ranks (approximate and based on recent years). COMEDK cutoffs usually fall within the top few thousand to twenty thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for Chemical Engineering students is approximately 4–6 LPA (based on recent placement trends). The highest packages have reached around 15–20 LPA in some years, including off-campus offers. Core recruiters include Reliance Industries, ONGC (through exams), Indian Oil, HPCL, BPCL, Biocon, Dr. Reddy’s, and Tata Chemicals, while some students also move into analytics, consulting, or IT roles. Placement consistency has been moderate over the last 3–4 batches.",
+    "pros_cons": {
+      "pros": [
+        "Strong foundation in core chemical engineering principles.",
+        "Opportunities in chemicals, pharmaceuticals, energy, and materials industries.",
+        "Good pathway for higher studies, research, and PSUs.",
+        "Relevance in sustainability, environmental, and process industries.",
+        "Interdisciplinary exposure with chemistry and mechanical domains."
+      ],
+      "cons": [
+        "Core chemical roles are limited and competitive in India.",
+        "Placement packages are generally lower than IT branches.",
+        "Higher studies or GATE are often required for PSUs and research roles.",
+        "Curriculum is concept-heavy and mathematically intensive."
+      ]
+    },
+    "features": [
+      "Well-equipped labs for chemical processes and unit operations.",
+      "Exposure to process simulation and plant design.",
+      "Industry-oriented projects and internships.",
+      "Opportunities in research, higher studies, and core industries.",
+      "Focus on safety, sustainability, and process optimization."
+    ],
+    "one_line_summary": "A core engineering branch offering strong fundamentals and opportunities in chemical, pharmaceutical, and energy-related industries.",
+    "additional_info": [
+      "Internships usually begin from the 2nd or 3rd year in chemical plants, labs, or R&D roles.",
+      "Key subjects include thermodynamics, mass transfer, reaction engineering, and process control.",
+      "Many students prepare for GATE, PSUs, and higher studies in India or abroad.",
+      "Scope exists in pharmaceuticals, polymers, energy, and environmental sectors.",
+      "Freshers are advised to build strong basics in chemistry, mathematics, and process calculations."
+    ]
+  },
+  {
+    "college_name": "R. V. College of Engineering",
+    "branch_name": "Bio-Technology",
+    "about": "Biotechnology at RVCE is an interdisciplinary engineering branch that applies principles of biology, chemistry, and engineering to develop products and technologies for healthcare, agriculture, pharmaceuticals, and environmental applications. The program focuses on molecular biology, genetic engineering, bioprocess engineering, bioinformatics, and industrial biotechnology, supported by laboratory work, projects, and research exposure.",
+    "admission_cutoffs": "KCET cutoffs for Biotechnology at RVCE are moderately competitive. For the General Merit category, typical cutoffs range from 20k–35k ranks (approximate and based on recent years). COMEDK cutoffs usually fall within the top few thousand to twenty-five thousand ranks. Exact cutoffs vary each year depending on demand and seat availability.",
+    "placements": "Average package for Biotechnology students is approximately 4–6 LPA (based on recent placement trends). The highest packages have reached around 12–18 LPA in some years, including off-campus offers. Core recruiters include Biocon, Syngene, Dr. Reddy’s, Serum Institute, Novozymes, and other pharma and biotech companies, while many students opt for higher studies, research, or transition into analytics and IT roles. Placement consistency has been moderate over the last 3–4 batches.",
+    "pros_cons": {
+      "pros": [
+        "Interdisciplinary branch with applications in healthcare and life sciences.",
+        "Good foundation for higher studies, research, and biotech careers.",
+        "Exposure to molecular biology, genetics, and bioinformatics.",
+        "Relevance in pharmaceuticals, diagnostics, and environmental sectors.",
+        "Opportunities in research labs and startups."
+      ],
+      "cons": [
+        "Core biotech job opportunities are limited at the undergraduate level.",
+        "Higher studies are often required for growth and specialization.",
+        "Placement packages are generally lower compared to IT branches.",
+        "Lab work can be time-consuming and academically demanding."
+      ]
+    },
+    "features": [
+      "Well-equipped biotechnology and molecular biology labs.",
+      "Exposure to genetic engineering and bioprocess techniques.",
+      "Industry-oriented projects and research internships.",
+      "Opportunities in bioinformatics and computational biology.",
+      "Active participation in seminars, workshops, and conferences."
+    ],
+    "one_line_summary": "An interdisciplinary branch best suited for students interested in life sciences, research, and higher studies in biotechnology.",
+    "additional_info": [
+      "Internships usually begin from the 2nd or 3rd year in research labs or biotech companies.",
+      "Key subjects include molecular biology, genetic engineering, biochemistry, and bioprocess engineering.",
+      "Many graduates pursue higher studies (MTech, MS, PhD) in India and abroad.",
+      "Growing scope in pharmaceuticals, diagnostics, and bioinformatics.",
+      "Freshers are advised to build strong fundamentals in biology, chemistry, and data analysis."
+    ]
+  } 
+]
+  

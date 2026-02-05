@@ -112,3 +112,16 @@ export interface Meeting {
   updated_at?: string
 }
 
+export interface BranchInsightsResponse {
+  about: string
+  admission_cutoffs: string
+  placements: string
+  pros_cons: {
+    pros: string[]
+    cons: string[]
+  }
+  features: string[]
+  one_line_summary: string
+  additional_info: string[]
+}
+
