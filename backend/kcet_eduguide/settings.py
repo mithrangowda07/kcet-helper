@@ -6,16 +6,14 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
-import pytesseract
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-if os.path.exists(TESSERACT_PATH):
-    pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+# Ubuntu/Linux Tesseract path
+TESSERACT_PATH = "/usr/bin/tesseract"
 
 
 # Quick-start development settings - unsuitable for production
