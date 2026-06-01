@@ -13,7 +13,10 @@ from .serializers import (
     CategorySerializer,
     ClusterSerializer,
 )
-from .branch_insights_service import get_branch_insights
+from insights_manager.services.insights_service import (
+    InsightNotFoundError,
+    fetch_insights_by_names,
+)
 
 
 @api_view(['GET'])
@@ -264,7 +267,7 @@ def cluster_list(request):
 @permission_classes([AllowAny])
 def branch_insights(request):
     """
-    Return AI-generated, web-searched insights for a specific college + branch.
+    Return branch insights for a specific college + branch (loaded from S3).
 
     Expected JSON body:
     {
@@ -285,7 +288,14 @@ def branch_insights(request):
         )
 
     try:
-        insights = get_branch_insights(college_name=college_name, branch_name=branch_name)
+        insights = fetch_insights_by_names(college_name=college_name, branch_name=branch_name)
+    except InsightNotFoundError as exc:
+        return Response(
+            {
+                'error': str(exc),
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
     except RuntimeError as exc:
         return Response(
             {

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import Navbar from './components/Navbar'
@@ -17,16 +17,20 @@ import Recommendations from './pages/Recommendations'
 import ProtectedRoute from './components/ProtectedRoute'
 // + add this import
 import BranchDetailPage from './pages/BranchDetailPage'
+import { AdminAuthProvider } from './contexts/AdminAuthContext'
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
 
 
-function App() {
+function AppShell() {
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
+
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-slate-50 dark:bg-[#111827]">
-            <Navbar />
-            <Routes>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#111827]">
+      {!isAdminRoute && <Navbar />}
+      <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<LoginRegister />} />
             <Route path="/register" element={<RegisterRoleSelection />} />
@@ -76,9 +80,37 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/admin/login"
+              element={
+                <AdminAuthProvider>
+                  <AdminLogin />
+                </AdminAuthProvider>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <AdminAuthProvider>
+                  <AdminProtectedRoute>
+                    <AdminDashboard />
+                  </AdminProtectedRoute>
+                </AdminAuthProvider>
+              }
+            />
+            <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-          </div>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <AppShell />
         </Router>
       </AuthProvider>
     </ThemeProvider>

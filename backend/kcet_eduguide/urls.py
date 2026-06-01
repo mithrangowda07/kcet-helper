@@ -16,6 +16,8 @@ def api_root(request):
         "counselling": "/api/counselling/",
         "reviews": "/api/reviews/",
         "meetings": "/api/meetings/",
+        "branch_insights": "/api/branch-insights/<branch_id>/",
+        "admin": "/api/admin/",
     })
 urlpatterns = [
     path('', lambda request: HttpResponseRedirect('/api/')),
@@ -27,5 +29,7 @@ urlpatterns = [
     path('api/counselling/', include('counselling.urls')),
     path('api/reviews/', include('reviews.urls')),
     path('api/meetings/', include('meetings.urls')),
+    path('api/admin/', include('insights_manager.urls')),
+    path('api/branch-insights/', include('insights_manager.public_urls')),
 ]
 

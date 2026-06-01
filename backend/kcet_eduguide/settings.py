@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'reviews',
     'meetings',
     'counselling',
+    'insights_manager',
 ]
 
 MIDDLEWARE = [
@@ -186,4 +187,21 @@ GOOGLE_CALENDAR_EMAIL = os.getenv('GOOGLE_CALENDAR_EMAIL', '')
 
 # Custom User Model (using Student)
 AUTH_USER_MODEL = 'students.Student'
+
+# AWS S3 — branch insights storage
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', '')
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'ap-south-1')
+AWS_S3_CUSTOM_DOMAIN = os.getenv('AWS_S3_CUSTOM_DOMAIN', '')
+AWS_S3_DEFAULT_ACL = os.getenv('AWS_S3_DEFAULT_ACL', '')
+AWS_S3_SIGNED_URL_EXPIRY = int(os.getenv('AWS_S3_SIGNED_URL_EXPIRY', '3600'))
+
+# Branch insight uploads
+BRANCH_INSIGHT_MAX_UPLOAD_BYTES = int(
+    os.getenv('BRANCH_INSIGHT_MAX_UPLOAD_BYTES', str(2 * 1024 * 1024))
+)
+ADMIN_JWT_ACCESS_LIFETIME_SECONDS = int(
+    os.getenv('ADMIN_JWT_ACCESS_LIFETIME_SECONDS', str(8 * 3600))
+)
 

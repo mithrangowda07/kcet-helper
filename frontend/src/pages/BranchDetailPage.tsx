@@ -281,6 +281,7 @@ const BranchDetailPage = () => {
   const [insightsData, setInsightsData] = useState<BranchInsightsResponse | null>(
     null
   );
+  const [insightsBranchKey, setInsightsBranchKey] = useState<string | null>(null);
 
   const prepareChartData = (
     categoryData?: Record<string, { r1?: any; r2?: any; r3?: any }>
@@ -359,16 +360,13 @@ const BranchDetailPage = () => {
     setInsightsOpen(true);
     setInsightsError(null);
 
-    // If we already have data for this branch + college, avoid refetching
-    if (insightsData) return;
+    if (insightsData && insightsBranchKey === branch.unique_key) return;
 
     try {
       setInsightsLoading(true);
-      const data = await branchService.insights(
-        branch.college.college_name,
-        branch.branch_name
-      );
+      const data = await branchService.insights(branch.unique_key);
       setInsightsData(data);
+      setInsightsBranchKey(branch.unique_key);
     } catch (err: unknown) {
       console.error(err);
       const message =
@@ -379,7 +377,7 @@ const BranchDetailPage = () => {
     } finally {
       setInsightsLoading(false);
     }
-  }, [branch, insightsData]);
+  }, [branch, insightsData, insightsBranchKey]);
 
   const formatCutoffForLLM = useCallback(() => {
     if (!cutoff?.categories) return "{}";

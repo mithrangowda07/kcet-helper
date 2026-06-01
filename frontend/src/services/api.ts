@@ -10,6 +10,8 @@ import type {
   Category,
   Cluster,
   BranchInsightsResponse,
+  AdminAccount,
+  AdminCollege,
 } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
@@ -53,7 +55,8 @@ api.interceptors.response.use(
     const isAuthEndpoint =
       url.includes('/auth/login/') ||
       url.includes('/auth/register/') ||
-      url.includes('/auth/refresh/')
+      url.includes('/auth/refresh/') ||
+      url.includes('/admin/login/')
 
     if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true
@@ -264,12 +267,110 @@ export const branchService = {
     return response.data
   },
 
-  insights: async (collegeName: string, branchName: string): Promise<BranchInsightsResponse> => {
-    const response = await api.post('/colleges/branch-insights/', {
-      college_name: collegeName,
-      branch_name: branchName,
-    })
+  insights: async (branchId: string): Promise<BranchInsightsResponse> => {
+    const response = await api.get(`/branch-insights/${branchId}/`)
     return response.data as BranchInsightsResponse
+  },
+}
+
+const adminApi = axios.create({
+  baseURL: API_BASE_URL,
+})
+
+adminApi.interceptors.request.use((config) => {
+  const tokens = adminAuthService.getTokens()
+  if (tokens?.access) {
+    config.headers.Authorization = `Bearer ${tokens.access}`
+  }
+  return config
+})
+
+adminApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const url: string = error.config?.url || ''
+    if (error.response?.status === 401 && !url.includes('/admin/login/')) {
+      adminAuthService.clearSession()
+      if (!window.location.pathname.startsWith('/admin/login')) {
+        window.location.href = '/admin/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+function getAdminTokens() {
+  const stored = localStorage.getItem('admin_tokens')
+  return stored ? JSON.parse(stored) : null
+}
+
+export const adminAuthService = {
+  getTokens: getAdminTokens,
+
+  setTokens: (tokens: { access: string }) => {
+    localStorage.setItem('admin_tokens', JSON.stringify(tokens))
+  },
+
+  getStoredAdmin: (): AdminAccount | null => {
+    const stored = localStorage.getItem('admin_user')
+    return stored ? JSON.parse(stored) : null
+  },
+
+  setStoredAdmin: (admin: AdminAccount) => {
+    localStorage.setItem('admin_user', JSON.stringify(admin))
+  },
+
+  clearSession: () => {
+    localStorage.removeItem('admin_tokens')
+    localStorage.removeItem('admin_user')
+  },
+
+  login: async (email: string, password: string) => {
+    const response = await api.post('/admin/login/', { email, password })
+    return response.data as { admin: AdminAccount; tokens: { access: string } }
+  },
+
+  me: async (): Promise<AdminAccount> => {
+    const response = await adminApi.get('/admin/me/')
+    return response.data.admin
+  },
+}
+
+export const adminInsightService = {
+  listColleges: async (): Promise<AdminCollege[]> => {
+    const response = await adminApi.get('/admin/colleges/')
+    return response.data
+  },
+
+  listBranches: async (collegeId: string): Promise<Branch[]> => {
+    const response = await adminApi.get(`/admin/colleges/${collegeId}/branches/`)
+    return response.data
+  },
+
+  upload: async (
+    payload: {
+      college_id: string
+      branch_id: string
+      json_text?: string
+      json_file?: File
+    },
+    onUploadProgress?: (event: { loaded: number; total?: number }) => void
+  ) => {
+    const formData = new FormData()
+    formData.append('college_id', payload.college_id)
+    formData.append('branch_id', payload.branch_id)
+    if (payload.json_text) {
+      formData.append('json_text', payload.json_text)
+    }
+    if (payload.json_file) {
+      formData.append('json_file', payload.json_file)
+    }
+
+    const response = await adminApi.post('/admin/branch-insights/upload/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    })
+    return response.data as { message: string }
   },
 }
 

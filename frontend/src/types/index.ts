@@ -30,6 +30,19 @@ export interface College {
   location: string
 }
 
+export interface AdminCollege extends College {
+  college_id: string
+  college_link?: string | null
+}
+
+export interface AdminAccount {
+  id: number
+  email: string
+  name: string
+  is_active: boolean
+  created_at: string
+}
+
 export interface Branch {
   unique_key: string
   public_id: string
