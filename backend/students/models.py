@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import Max
 from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from colleges.models import Branch
@@ -18,6 +17,11 @@ class Student(AbstractBaseUser, PermissionsMixin):
         ('counselling', 'Counselling'),
         ('studying', 'Studying'),
     ]
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        APPROVED = 'APPROVED', 'Approved'
+        REJECTED = 'REJECTED', 'Rejected'
 
     student_user_id = models.CharField(max_length=20, primary_key=True)
     type_of_student = models.CharField(max_length=20, choices=STUDENT_TYPE_CHOICES)
@@ -43,7 +47,21 @@ class Student(AbstractBaseUser, PermissionsMixin):
     profile_completed = models.BooleanField(default=False)
     usn = models.CharField(max_length=50, null=True, blank=True, unique=True)
     is_verified_student = models.BooleanField(default=False)
-    id_card_image = models.BinaryField(null=True, blank=True)  # Store image as binary data in MySQL LONGBLOB
+    id_card_url = models.URLField(max_length=1000, null=True, blank=True)
+    approval_status = models.CharField(
+        max_length=20,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+    )
+    reviewed_by = models.ForeignKey(
+        'insights_manager.AdminAccount',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_students',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, default='')
 
     USERNAME_FIELD = 'email_id'
     REQUIRED_FIELDS = ['phone_number', 'type_of_student']

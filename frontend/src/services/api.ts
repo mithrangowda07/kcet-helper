@@ -132,12 +132,8 @@ export const authService = {
     return response.data
   },
 
-  registerStudying: async (formData: FormData) => {
-    const response = await api.post('/auth/register/studying/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+  registerStudying: async (data: Record<string, unknown>) => {
+    const response = await api.post('/student/register/', data)
     return response.data
   },
 
@@ -160,24 +156,37 @@ export const authService = {
   clearTokens,
 }
 
-export const studentVerificationService = {
-  verify: async (
-    collegeName: string,
-    studentName: string,
-    usn: string,
-    idImage: File
-  ) => {
+export const studentService = {
+  uploadIdCard: async (file: File): Promise<{ id_card_url: string }> => {
     const formData = new FormData()
-    formData.append('college_name', collegeName)
-    formData.append('student_name', studentName)
-    formData.append('usn', usn)
-    formData.append('id_image', idImage)
-
-    const response = await api.post('/auth/student/verify/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    formData.append('file', file)
+    const response = await api.post('/student/upload-id-card/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
+    return response.data
+  },
+}
+
+export const adminStudentService = {
+  list: async (status: string = 'all', search: string = '') => {
+    const response = await adminApi.get('/admin/students/', {
+      params: { status, search },
+    })
+    return response.data
+  },
+
+  detail: async (studentId: string) => {
+    const response = await adminApi.get(`/admin/students/${studentId}/`)
+    return response.data
+  },
+
+  approve: async (studentId: string) => {
+    const response = await adminApi.post(`/admin/students/${studentId}/approve/`)
+    return response.data
+  },
+
+  reject: async (studentId: string, reason: string) => {
+    const response = await adminApi.post(`/admin/students/${studentId}/reject/`, { reason })
     return response.data
   },
 }

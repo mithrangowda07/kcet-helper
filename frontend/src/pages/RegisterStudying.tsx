@@ -1,18 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { authService, collegeService, branchService, categoryService } from '../services/api'
+import { authService, collegeService, branchService, categoryService, studentService } from '../services/api'
 import type { College, Branch, Category } from '../types'
 
 const RegisterStudying = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [verificationError, setVerificationError] = useState('')
-  const [verificationScores, setVerificationScores] = useState<{
-    college: number
-    name: number
-    usn: number
-  } | null>(null)
+  const [successMessage, setSuccessMessage] = useState('')
 
   const [colleges, setColleges] = useState<College[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
@@ -87,42 +82,44 @@ const RegisterStudying = () => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
     setError('')
-    setVerificationError('')
-    setVerificationScores(null)
+    setSuccessMessage('')
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file')
+      const allowed =
+        file.type.startsWith('image/') ||
+        file.type === 'application/pdf' ||
+        file.name.toLowerCase().endsWith('.pdf')
+      if (!allowed) {
+        setError('Please select a JPG, PNG, WEBP, or PDF file')
         return
       }
-      // Validate file size (10MB)
       if (file.size > 10 * 1024 * 1024) {
-        setError('Image file too large. Maximum size is 10MB.')
+        setError('File too large. Maximum size is 10MB.')
         return
       }
       setFormData((prev) => ({ ...prev, id_card_image: file }))
       setError('')
-      setVerificationError('')
-      setVerificationScores(null)
+      setSuccessMessage('')
 
-      // Create preview
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string)
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        setPreviewImage(null)
+      } else {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setPreviewImage(reader.result as string)
+        }
+        reader.readAsDataURL(file)
       }
-      reader.readAsDataURL(file)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setVerificationError('')
-    setVerificationScores(null)
+    setSuccessMessage('')
     setLoading(true)
 
     try {
@@ -173,86 +170,55 @@ const RegisterStudying = () => {
         return
       }
       if (!formData.id_card_image) {
-        setError('College ID card image is required')
+        setError('Student ID card upload is required')
         setLoading(false)
         return
       }
 
-      // Get college name from college_code
-      const selectedCollege = colleges.find((c) => c.college_code === formData.college_code)
-      if (!selectedCollege) {
-        setError('Invalid college selected')
-        setLoading(false)
-        return
-      }
+      const { id_card_url } = await studentService.uploadIdCard(formData.id_card_image)
 
-      // Create FormData for multipart/form-data
-      const formDataToSend = new FormData()
-      formDataToSend.append('name', formData.name.trim())
-      formDataToSend.append('email_id', formData.email_id.trim())
-      formDataToSend.append('phone_number', formData.phone_number.trim())
-      formDataToSend.append('password', formData.password)
-      formDataToSend.append('password_confirm', formData.password_confirm)
-      formDataToSend.append('college_code', formData.college_code)
-      formDataToSend.append('unique_key', formData.unique_key)
-      formDataToSend.append('year_of_starting', formData.year_of_starting)
-      formDataToSend.append('usn', formData.usn.trim())
+      const payload: Record<string, unknown> = {
+        name: formData.name.trim(),
+        email_id: formData.email_id.trim(),
+        phone_number: formData.phone_number.trim(),
+        password: formData.password,
+        password_confirm: formData.password_confirm,
+        college_code: formData.college_code,
+        unique_key: formData.unique_key,
+        year_of_starting: parseInt(formData.year_of_starting, 10),
+        usn: formData.usn.trim(),
+        id_card_url,
+      }
       if (formData.category) {
-        formDataToSend.append('category', formData.category)
-      }
-      formDataToSend.append('id_card_image', formData.id_card_image)
-
-      // Registration includes verification - atomic transaction
-      const response = await authService.registerStudying(formDataToSend)
-
-      // Check if verification failed
-      if (response.verification_scores) {
-        setVerificationScores({
-          college: response.verification_scores.college_score / 100,
-          name: response.verification_scores.name_score / 100,
-          usn: response.verification_scores.usn_score / 100,
-        })
-        setVerificationError(
-          response.message || 'Verification failed. Please ensure all information matches your ID card.'
-        )
-        setLoading(false)
-        return
+        payload.category = formData.category
       }
 
-      // Store tokens and user data
-      if (response.tokens) {
-        authService.setTokens(response.tokens)
-        if (response.student) {
-          localStorage.setItem('user', JSON.stringify(response.student))
-        }
-        // Update auth context by fetching user data
-        try {
-          const userData = await authService.me()
-          localStorage.setItem('user', JSON.stringify(userData))
-        } catch (err) {
-          console.error('Error fetching user data:', err)
-        }
-      }
+      const response = await authService.registerStudying(payload)
 
-      // Redirect to login page (as per requirements)
-      navigate('/auth?login=true', { replace: true })
+      setSuccessMessage(
+        response.message ||
+          'Registration submitted successfully.\n\nYour account is pending administrator approval.\nYou will receive an email once your application has been reviewed.'
+      )
+      setFormData({
+        name: '',
+        email_id: '',
+        phone_number: '',
+        password: '',
+        password_confirm: '',
+        college_code: '',
+        unique_key: '',
+        year_of_starting: '',
+        usn: '',
+        category: '',
+        id_card_image: null,
+      })
+      setPreviewImage(null)
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||
         err.response?.data?.error ||
         'Registration failed. Please try again.'
-
-      // Check if it's a verification error with scores
-      if (err.response?.data?.verification_scores) {
-        setVerificationScores({
-          college: err.response.data.verification_scores.college_score / 100,
-          name: err.response.data.verification_scores.name_score / 100,
-          usn: err.response.data.verification_scores.usn_score / 100,
-        })
-        setVerificationError(errorMessage)
-      } else {
-        setError(errorMessage)
-      }
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -267,7 +233,7 @@ const RegisterStudying = () => {
               Register as Studying Student
             </h1>
             <p className="text-slate-600 dark:text-gray-300">
-              Create your account and verify your college ID card
+              Create your account and upload your college student ID card for admin review
             </p>
           </div>
 
@@ -277,34 +243,22 @@ const RegisterStudying = () => {
             </div>
           )}
 
-          {verificationError && (
-            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">{verificationError}</p>
-              {verificationScores && (
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span>College Match:</span>
-                    <span className="font-semibold">
-                      {(verificationScores.college * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Name Match:</span>
-                    <span className="font-semibold">
-                      {(verificationScores.name * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>USN Match:</span>
-                    <span className="font-semibold">
-                      {(verificationScores.usn * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-              )}
+          {successMessage && (
+            <div className="mb-6 whitespace-pre-line rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200">
+              {successMessage}
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/auth?login=true')}
+                  className="text-sm font-semibold text-emerald-700 underline dark:text-emerald-300"
+                >
+                  Go to login
+                </button>
+              </div>
             </div>
           )}
 
+          {!successMessage && (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
@@ -505,13 +459,13 @@ const RegisterStudying = () => {
                 htmlFor="id_card_image"
                 className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2"
               >
-                College ID Card Image *
+                Upload Student ID Card *
               </label>
               <input
                 type="file"
                 id="id_card_image"
                 name="id_card_image"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,application/pdf,.pdf"
                 onChange={handleImageChange}
                 required
                 className="w-full px-4 py-2 border border-slate-300 dark:border-gray-600 rounded-lg
@@ -528,7 +482,7 @@ const RegisterStudying = () => {
                 </div>
               )}
               <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
-                Upload a clear image of your college ID card (Max 10MB)
+                Upload a clear photo or PDF of your college ID card (JPG, PNG, WEBP, PDF — max 10MB)
               </p>
             </div>
 
@@ -584,9 +538,10 @@ const RegisterStudying = () => {
                          text-white font-semibold py-3 px-6 rounded-lg transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Registering & Verifying...' : 'Register & Verify'}
+              {loading ? 'Submitting registration...' : 'Register'}
             </button>
           </form>
+          )}
 
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-600 dark:text-gray-400">

@@ -1,4 +1,6 @@
 import logging
+import os
+import uuid
 from typing import Any
 from urllib.parse import urlparse
 
@@ -88,6 +90,40 @@ def fetch_insight_json(*, s3_key: str | None = None, s3_url: str | None = None) 
     except (ClientError, BotoCoreError) as exc:
         logger.error('S3 fetch failed for key %s: %s', key, exc, exc_info=True)
         raise S3UploadError('Failed to fetch insight file from S3.') from exc
+
+
+def upload_student_id_card(
+    *,
+    content: bytes,
+    content_type: str,
+    original_filename: str = 'id-card',
+) -> dict[str, str]:
+    """Upload a student ID card image/PDF to the shared insights bucket."""
+    bucket = _get_required_setting('AWS_STORAGE_BUCKET_NAME')
+    extension = os.path.splitext(original_filename)[1].lower()
+    if extension not in ('.jpg', '.jpeg', '.png', '.pdf', '.webp'):
+        extension = '.jpg'
+    key = f'student-id-cards/{uuid.uuid4().hex}{extension}'
+    client = get_s3_client()
+
+    extra_args: dict[str, Any] = {'ContentType': content_type}
+    if getattr(settings, 'AWS_S3_DEFAULT_ACL', ''):
+        extra_args['ACL'] = settings.AWS_S3_DEFAULT_ACL
+
+    try:
+        client.put_object(Bucket=bucket, Key=key, Body=content, **extra_args)
+    except (ClientError, BotoCoreError) as exc:
+        logger.error('S3 student ID upload failed for key %s: %s', key, exc, exc_info=True)
+        raise S3UploadError('Failed to upload student ID card to S3.') from exc
+
+    return {'s3_key': key, 's3_url': build_public_url(key)}
+
+
+def extract_s3_key_from_url(s3_url: str) -> str | None:
+    if not s3_url:
+        return None
+    parsed = urlparse(s3_url)
+    return parsed.path.lstrip('/') or None
 
 
 def generate_presigned_url(s3_key: str, expires_in: int | None = None) -> str:

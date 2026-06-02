@@ -25,6 +25,14 @@ const ProtectedRoute = ({ children, requiredType }: ProtectedRouteProps) => {
     return <Navigate to="/" replace />
   }
 
+  if (
+    user?.type_of_student === 'studying' &&
+    user.approval_status &&
+    user.approval_status !== 'APPROVED'
+  ) {
+    return <Navigate to="/auth" replace state={{ approvalBlocked: true }} />
+  }
+
   return <>{children}</>
 }
 

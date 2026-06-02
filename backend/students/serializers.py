@@ -19,9 +19,15 @@ class StudentSerializer(serializers.ModelSerializer):
             'student_user_id', 'type_of_student', 'name', 'category', 'unique_key', 'unique_key_data',
             'year_of_starting', 'college_code', 'phone_number', 'email_id',
             'kcet_rank', 'is_active', 'profile_completed', 'created_at', 'last_login',
-            'usn', 'is_verified_student'
+            'usn', 'is_verified_student', 'approval_status', 'rejection_reason'
         ]
-        read_only_fields = ['student_user_id', 'created_at', 'last_login']
+        read_only_fields = [
+            'student_user_id',
+            'created_at',
+            'last_login',
+            'approval_status',
+            'rejection_reason',
+        ]
 
     def validate(self, attrs):
         """
@@ -321,13 +327,14 @@ class CounsellingStudentRegisterSerializer(serializers.ModelSerializer):
         
         student = Student(**validated_data)
         student.set_password(password)
-        student.is_verified_student = True  # Counselling students are auto-verified
+        student.is_verified_student = True
+        student.approval_status = Student.ApprovalStatus.APPROVED
         student.save()
         return student
 
 
 class StudyingStudentRegisterSerializer(serializers.ModelSerializer):
-    """Serializer for studying student registration with verification"""
+    """Serializer for studying student registration with manual ID card upload."""
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True, min_length=8)
     unique_key = serializers.SlugRelatedField(
@@ -335,14 +342,14 @@ class StudyingStudentRegisterSerializer(serializers.ModelSerializer):
         queryset=Branch.objects.all(),
         required=True
     )
-    id_card_image = serializers.ImageField(required=True, write_only=True)
+    id_card_url = serializers.URLField(required=True, max_length=1000)
 
     class Meta:
         model = Student
         fields = [
             'name', 'email_id', 'phone_number', 'password', 'password_confirm',
             'college_code', 'unique_key', 'year_of_starting', 'usn', 'category',
-            'id_card_image'
+            'id_card_url',
         ]
 
     def validate_email_id(self, value):
@@ -370,19 +377,13 @@ class StudyingStudentRegisterSerializer(serializers.ModelSerializer):
         
         return value
 
-    def validate_id_card_image(self, value):
-        """Validate image file"""
-        # Check file size (max 10MB)
-        if value.size > 10 * 1024 * 1024:
-            raise serializers.ValidationError('Image file too large. Maximum size is 10MB.')
-        
-        # Check MIME type
-        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-        if value.content_type not in allowed_types:
+    def validate_id_card_url(self, value):
+        from students.student_public_views import validate_id_card_url
+
+        if not validate_id_card_url(value):
             raise serializers.ValidationError(
-                f'Invalid image type. Allowed types: {", ".join(allowed_types)}'
+                'Invalid ID card URL. Upload the ID card first using the upload endpoint.'
             )
-        
         return value
 
     def validate(self, attrs):
@@ -428,6 +429,68 @@ class StudyingStudentRegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        # This method should not be called directly - use the view's atomic transaction
-        # But we need it for serializer validation
-        raise NotImplementedError("Use register_studying_student view instead")
+        raise NotImplementedError('Use register_studying_student view instead')
+
+
+class AdminStudentListSerializer(serializers.ModelSerializer):
+    college_name = serializers.SerializerMethodField()
+    department = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Student
+        fields = [
+            'student_user_id',
+            'name',
+            'email_id',
+            'college_name',
+            'department',
+            'created_at',
+            'approval_status',
+        ]
+
+    def get_college_name(self, obj):
+        if obj.unique_key and obj.unique_key.college:
+            return obj.unique_key.college.college_name
+        return obj.college_code or ''
+
+    def get_department(self, obj):
+        if obj.unique_key:
+            return obj.unique_key.branch_name
+        return ''
+
+
+class AdminStudentDetailSerializer(serializers.ModelSerializer):
+    college_name = serializers.SerializerMethodField()
+    department = serializers.SerializerMethodField()
+    reviewed_by_email = serializers.EmailField(source='reviewed_by.email', read_only=True, default=None)
+
+    class Meta:
+        model = Student
+        fields = [
+            'student_user_id',
+            'name',
+            'email_id',
+            'phone_number',
+            'college_name',
+            'department',
+            'college_code',
+            'year_of_starting',
+            'usn',
+            'category',
+            'created_at',
+            'approval_status',
+            'id_card_url',
+            'reviewed_by_email',
+            'reviewed_at',
+            'rejection_reason',
+        ]
+
+    def get_college_name(self, obj):
+        if obj.unique_key and obj.unique_key.college:
+            return obj.unique_key.college.college_name
+        return obj.college_code or ''
+
+    def get_department(self, obj):
+        if obj.unique_key:
+            return obj.unique_key.branch_name
+        return ''

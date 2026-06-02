@@ -86,8 +86,7 @@ kcet-helper/
    GOOGLE_CALENDAR_CREDENTIALS_PATH=/path/to/service-account-credentials.json
    GOOGLE_CALENDAR_EMAIL=your-calendar-email@example.com
 
-   # Tesseract OCR Path (Windows only)
-   TESSERACT_PATH=C:\Program Files\Tesseract-OCR\tesseract.exe
+   # OCR is handled by EasyOCR / OpenCV; no Tesseract binary is required.
    ```
 
 5. **Create MySQL database:**

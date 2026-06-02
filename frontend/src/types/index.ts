@@ -11,6 +11,39 @@ export interface Student {
   unique_key_data?: Branch
   year_of_starting?: number
   profile_completed: boolean
+  approval_status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  rejection_reason?: string
+}
+
+export interface AdminStudentListItem {
+  student_user_id: string
+  name: string
+  email_id: string
+  college_name: string
+  department: string
+  created_at: string
+  approval_status: 'PENDING' | 'APPROVED' | 'REJECTED'
+}
+
+export interface AdminStudentDetail {
+  student_user_id: string
+  name: string
+  email_id: string
+  phone_number: string
+  college_name: string
+  department: string
+  college_code: string
+  year_of_starting: number
+  usn: string
+  category?: string
+  created_at: string
+  approval_status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  id_card_url?: string
+  id_card_view_url?: string
+  id_card_download_url?: string
+  reviewed_by_email?: string
+  reviewed_at?: string
+  rejection_reason?: string
 }
 
 export interface Category {

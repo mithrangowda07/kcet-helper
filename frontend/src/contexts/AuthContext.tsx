@@ -34,6 +34,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('user', JSON.stringify(u))
   }
 
+  const isApprovedStudent = (student: Student | null) => {
+    if (!student) return false
+    if (student.type_of_student !== 'studying') return true
+    return !student.approval_status || student.approval_status === 'APPROVED'
+  }
+
   const clearAuthCompletely = () => {
     setUser(null)
     setTokens(null)
@@ -64,7 +70,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Prefer fresh user data if tokens exist
         if (storedTokens) {
           const me = await authService.me()
-          setAndPersistUser(me)
+          if (!isApprovedStudent(me)) {
+            clearAuthCompletely()
+          } else {
+            setAndPersistUser(me)
+          }
         }
       } catch (error) {
         console.error('Auth init failed:', error)
@@ -134,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && isApprovedStudent(user),
         loading,
       }}
     >

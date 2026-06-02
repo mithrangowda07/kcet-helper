@@ -23,6 +23,7 @@ urlpatterns = [
     path('', lambda request: HttpResponseRedirect('/api/')),
     path('admin/', admin.site.urls),
     path('api/auth/', include('students.urls')),
+    path('api/student/', include('students.student_urls')),
     path('api/colleges/', include('colleges.urls')),
     path('api/branches/', include(branch_urlpatterns)),
     path('api/search/', search, name='global-search'),

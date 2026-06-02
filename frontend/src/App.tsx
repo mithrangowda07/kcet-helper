@@ -19,8 +19,12 @@ import ProtectedRoute from './components/ProtectedRoute'
 import BranchDetailPage from './pages/BranchDetailPage'
 import { AdminAuthProvider } from './contexts/AdminAuthContext'
 import AdminLogin from './pages/admin/AdminLogin'
-import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
+import AdminLayout from './components/admin/AdminLayout'
+import AdminDashboardHome from './pages/admin/AdminDashboardHome'
+import BranchInsightPage from './pages/admin/BranchInsightPage'
+import CollegeStudentApproval from './pages/admin/CollegeStudentApproval'
+import CollegeStudentDetail from './pages/admin/CollegeStudentDetail'
 
 
 function AppShell() {
@@ -89,16 +93,22 @@ function AppShell() {
               }
             />
             <Route
-              path="/admin/dashboard"
+              path="/admin"
               element={
                 <AdminAuthProvider>
                   <AdminProtectedRoute>
-                    <AdminDashboard />
+                    <AdminLayout />
                   </AdminProtectedRoute>
                 </AdminAuthProvider>
               }
-            />
-            <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+            >
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboardHome />} />
+              <Route path="analytics/branch-insights" element={<BranchInsightPage />} />
+              <Route path="students/approvals" element={<CollegeStudentApproval />} />
+              <Route path="students/approvals/:studentId" element={<CollegeStudentDetail />} />
+            </Route>
+            <Route path="/admin/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
     </div>

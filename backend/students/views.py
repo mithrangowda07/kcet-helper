@@ -19,8 +19,6 @@ from .serializers import (
 )
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-from .verification_utils import verify_student_id
-from .models import StudentVerification
 from django.db import transaction
 from colleges.models import College
 
@@ -54,8 +52,8 @@ def register(request):
             # For studying students, set is_verified_student after creation
             # (verification was done before registration)
             if type_of_student == 'studying':
-                student.is_verified_student = True
-                # Use regular save() without update_fields to avoid issues with newly created objects
+                student.approval_status = Student.ApprovalStatus.PENDING
+                student.is_verified_student = False
                 student.save()
             
             student_data = StudentSerializer(student).data
@@ -160,6 +158,30 @@ def login(request):
                 {'error': 'Invalid credentials'}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+        if student.type_of_student == 'studying':
+            if student.approval_status == Student.ApprovalStatus.PENDING:
+                return Response(
+                    {
+                        'error': 'Account pending approval',
+                        'message': (
+                            'Your registration is pending administrator approval. '
+                            'You will receive an email once your application has been reviewed.'
+                        ),
+                        'approval_status': student.approval_status,
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            if student.approval_status == Student.ApprovalStatus.REJECTED:
+                return Response(
+                    {
+                        'error': 'Registration rejected',
+                        'message': 'Your student registration was rejected.',
+                        'approval_status': student.approval_status,
+                        'rejection_reason': student.rejection_reason,
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
         
         # Update last_login
         student.last_login = timezone.now()
@@ -214,75 +236,14 @@ class StudentTokenRefreshView(TokenRefreshView):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_student(request):
-    """
-    Verify student ID - same pattern as Flask version.
-    Stores image in MySQL database and returns it in response.
-    """
-    serializer = StudentVerificationSerializer(data=request.data)
-    
-    if not serializer.is_valid():
-        return Response(
-            {'errors': serializer.errors, 'message': 'Validation failed'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    college_name = serializer.validated_data['college_name']
-    student_name = serializer.validated_data['student_name']
-    usn = serializer.validated_data['usn']
-    id_image = serializer.validated_data['id_image']
-    
-    try:
-        # Read image data for storage
-        id_image.seek(0)
-        image_data = id_image.read()
-        id_image.seek(0)
-        
-        # Verify the ID image - EXACT SAME as Flask version
-        result = verify_student_id(id_image, college_name, student_name, usn)
-        
-        # Store verification record in database with image
-        verification_record = StudentVerification.objects.create(
-            college_name=college_name,
-            student_name=student_name,
-            usn=usn,
-            id_image=image_data,  # Store binary image data in MySQL
-            college_score=result['college_score'],
-            name_score=result['name_score'],
-            usn_score=result['usn_score'],
-            verified=result['verified']
-        )
-        
-        # EXACT SAME response format as Flask version
-        response_data = {
-            "verified": result["verified"],
-            "college_score": result["college_score"],
-            "name_score": result["name_score"],
-            "usn_score": result["usn_score"],
-            "image_base64": result["image_base64"]
-        }
-        
-        if "domain_score" in result:
-            response_data["domain_score"] = result["domain_score"]
-        
-        # Always return 200 OK (same as Flask)
-        return Response(response_data, status=status.HTTP_200_OK)
-            
-    except ValueError as e:
-        # Handle OCR/verification errors with clear messages
-        return Response({
-            'error': str(e),
-            'message': str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        # Log the full error for debugging but return user-friendly message
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Verification error: {str(e)}", exc_info=True)
-        
-        return Response({
-            'error': 'Internal server error during verification',
-            'message': f'Error processing ID image: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    """Deprecated: OCR ID verification removed in favor of manual admin approval."""
+    return Response(
+        {
+            'error': 'ID card scanning has been removed.',
+            'message': 'Upload your student ID card during registration for admin review.',
+        },
+        status=status.HTTP_410_GONE,
+    )
 
 
 @api_view(['POST'])
@@ -361,118 +322,53 @@ def register_counselling_student(request):
 @transaction.atomic
 def register_studying_student(request):
     """
-    Register a studying student with verification.
-    Verification and registration happen atomically in a single transaction.
+    Register a studying student with a pre-uploaded ID card URL (S3).
+    Account is created in PENDING approval state; no JWT is issued.
     """
     serializer = StudyingStudentRegisterSerializer(data=request.data)
-    
+
     if not serializer.is_valid():
         return Response({
             'errors': serializer.errors,
             'message': 'Validation failed. Please check the errors below.'
         }, status=status.HTTP_400_BAD_REQUEST)
-    
+
     email_id = serializer.validated_data.get('email_id', '').strip().lower()
-    student_name = serializer.validated_data.get('name', '')
     usn = serializer.validated_data.get('usn', '')
-    id_card_image = serializer.validated_data.get('id_card_image')
-    college_code = serializer.validated_data.get('college_code')
-    
-    # Check if email already exists
+
     if Student.objects.filter(email_id__iexact=email_id).exists():
         return Response({
             'error': 'Email already registered',
             'message': 'An account with this email already exists. Please use a different email or try logging in.',
             'field': 'email_id'
         }, status=status.HTTP_409_CONFLICT)
-    
-    # Get college name from college_code
+
     try:
-        college = College.objects.get(college_code=college_code)
-        college_name = college.college_name
-    except College.DoesNotExist:
-        return Response({
-            'error': 'Invalid college code',
-            'message': 'The provided college code is not valid.',
-            'field': 'college_code'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    try:
-        # STEP 1: Perform verification FIRST
-        id_card_image.seek(0)
-        verification_result = verify_student_id(
-            id_card_image, 
-            college_name, 
-            student_name, 
-            usn, 
-            email=email_id
-        )
-        
-        # STEP 2: If verification FAILS, do NOT create student record
-        if not verification_result['verified']:
-            return Response({
-                'error': 'Verification failed',
-                'message': 'Student ID verification failed. Please ensure all information matches your ID card.',
-                'verification_scores': {
-                    'college_score': verification_result['college_score'],
-                    'name_score': verification_result['name_score'],
-                    'usn_score': verification_result['usn_score'],
-                }
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # STEP 3: Verification PASSED - Create student record with image
-        # Read image data for storage
-        id_card_image.seek(0)
-        image_data = id_card_image.read()
-        
-        # Create student with all data
         validated_data = serializer.validated_data.copy()
         validated_data.pop('password_confirm')
-        validated_data.pop('id_card_image')  # Remove from validated_data, we'll set it separately
         password = validated_data.pop('password')
-        
-        # Normalize email
+
         validated_data['email_id'] = validated_data['email_id'].strip().lower()
         validated_data['type_of_student'] = 'studying'
-        
+        validated_data['approval_status'] = Student.ApprovalStatus.PENDING
+        validated_data['is_verified_student'] = False
+
         student = Student(**validated_data)
         student.set_password(password)
-        student.is_verified_student = True
-        student.id_card_image = image_data  # Store binary image data
         student.save()
-        
-        # Create verification record for audit trail
-        StudentVerification.objects.create(
-            college_name=college_name,
-            student_name=student_name,
-            usn=usn,
-            id_image=image_data,
-            college_score=verification_result['college_score'],
-            name_score=verification_result['name_score'],
-            usn_score=verification_result['usn_score'],
-            verified=True
-        )
-        
+
         student_data = StudentSerializer(student).data
-        
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(student)
-        
+
         return Response({
             'student': student_data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            },
-            'message': 'Registration and verification successful'
+            'approval_status': student.approval_status,
+            'message': (
+                'Registration submitted successfully.\n\n'
+                'Your account is pending administrator approval.\n'
+                'You will receive an email once your application has been reviewed.'
+            ),
         }, status=status.HTTP_201_CREATED)
-        
-    except ValueError as e:
-        # Handle OCR/verification errors
-        return Response({
-            'error': 'Verification error',
-            'message': str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
+
     except IntegrityError as e:
         # Rollback is automatic with @transaction.atomic
         error_message = str(e.args[0]) if e.args else str(e)
